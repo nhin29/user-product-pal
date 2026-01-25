@@ -29,8 +29,8 @@ export function DeleteProductTypeDialog({ open, onOpenChange, productType }: Del
       await deleteProductType.mutateAsync(productType.id);
 
       toast({
-        title: "Product type deleted",
-        description: "The product type has been deleted successfully.",
+        title: "Niche deleted",
+        description: "The niche has been deleted successfully.",
       });
 
       onOpenChange(false);
@@ -38,8 +38,8 @@ export function DeleteProductTypeDialog({ open, onOpenChange, productType }: Del
       toast({
         title: "Error",
         description: error?.message?.includes("violates foreign key") 
-          ? "Cannot delete product type. It is being used by products."
-          : "Failed to delete product type. Please try again.",
+          ? "Cannot delete niche. It is being used by products."
+          : "Failed to delete niche. Please try again.",
         variant: "destructive",
       });
     }
@@ -49,7 +49,7 @@ export function DeleteProductTypeDialog({ open, onOpenChange, productType }: Del
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Product Type</AlertDialogTitle>
+          <AlertDialogTitle>Delete Niche</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete "{productType?.name}"? This action cannot be undone.
           </AlertDialogDescription>

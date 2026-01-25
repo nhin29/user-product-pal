@@ -61,8 +61,8 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
       });
 
       toast({
-        title: "Product type created",
-        description: "The product type has been created successfully.",
+        title: "Niche created",
+        description: "The niche has been created successfully.",
       });
 
       form.reset();
@@ -70,7 +70,7 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create product type. Please try again.",
+        description: "Failed to create niche. Please try again.",
         variant: "destructive",
       });
     }
@@ -80,7 +80,7 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Product Type</DialogTitle>
+          <DialogTitle>Add Niche</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -93,7 +93,7 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter product type name"
+                      placeholder="Enter niche name"
                       {...field}
                       onChange={(e) => {
                         field.onChange(e);
@@ -115,7 +115,7 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
                 <FormItem>
                   <FormLabel>Slug</FormLabel>
                   <FormControl>
-                    <Input placeholder="product-type-slug" {...field} />
+                    <Input placeholder="niche-slug" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -130,7 +130,7 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter product type description"
+                      placeholder="Enter niche description"
                       className="resize-none"
                       {...field}
                     />
@@ -152,7 +152,7 @@ export function AddProductTypeDialog({ open, onOpenChange }: AddProductTypeDialo
                 {createProductType.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Product Type
+                Create Niche
               </Button>
             </div>
           </form>
