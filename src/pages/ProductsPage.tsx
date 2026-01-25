@@ -37,10 +37,14 @@ export default function ProductsPage() {
   const { toast } = useToast();
 
   const filteredProducts = products?.filter(
-    (product) =>
-      product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.platform.toLowerCase().includes(searchQuery.toLowerCase())
+    (product) => {
+      const categoryName = (product as any).categories?.name || "";
+      return (
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.platform.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
   );
 
   const handleDelete = async (id: string, title: string) => {
@@ -151,7 +155,9 @@ export default function ProductsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{product.category}</Badge>
+                        <Badge variant="secondary">
+                          {(product as any).categories?.name || "—"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
