@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Package, FolderOpen, Layers, Settings, LogOut } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Users", href: "/users", icon: Users },
   { name: "Products", href: "/products", icon: Package },
+  { name: "Categories", href: "/categories", icon: FolderOpen },
+  { name: "Product Types", href: "/product-types", icon: Layers },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
