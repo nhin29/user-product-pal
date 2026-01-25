@@ -53,14 +53,14 @@ export default function ProductTypesPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Product Types</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Niche</h1>
             <p className="mt-1 text-muted-foreground">
-              Manage product types for image generation.
+              Manage niches for product categorization.
             </p>
           </div>
           <Button onClick={() => setAddDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Product Type
+            Add Niche
           </Button>
         </div>
 
@@ -69,7 +69,7 @@ export default function ProductTypesPage() {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search product types..."
+              placeholder="Search niches..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -84,14 +84,14 @@ export default function ProductTypesPage() {
           </div>
         ) : error ? (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-            <p className="text-destructive">Failed to load product types</p>
+            <p className="text-destructive">Failed to load niches</p>
           </div>
         ) : (
           <div className="rounded-lg border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product Type</TableHead>
+                  <TableHead>Niche</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Created</TableHead>
@@ -102,7 +102,7 @@ export default function ProductTypesPage() {
                 {filteredProductTypes?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No product types found
+                      No niches found
                     </TableCell>
                   </TableRow>
                 ) : (

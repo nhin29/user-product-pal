@@ -6,7 +6,7 @@ const navigation = [
   { name: "Users", href: "/users", icon: Users },
   { name: "Products", href: "/products", icon: Package },
   { name: "Categories", href: "/categories", icon: FolderOpen },
-  { name: "Product Types", href: "/product-types", icon: Layers },
+  { name: "Niche", href: "/product-types", icon: Layers },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

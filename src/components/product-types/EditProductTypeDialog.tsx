@@ -74,15 +74,15 @@ export function EditProductTypeDialog({ open, onOpenChange, productType }: EditP
       });
 
       toast({
-        title: "Product type updated",
-        description: "The product type has been updated successfully.",
+        title: "Niche updated",
+        description: "The niche has been updated successfully.",
       });
 
       onOpenChange(false);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update product type. Please try again.",
+        description: "Failed to update niche. Please try again.",
         variant: "destructive",
       });
     }
@@ -92,7 +92,7 @@ export function EditProductTypeDialog({ open, onOpenChange, productType }: EditP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Product Type</DialogTitle>
+          <DialogTitle>Edit Niche</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -104,7 +104,7 @@ export function EditProductTypeDialog({ open, onOpenChange, productType }: EditP
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter product type name" {...field} />
+                    <Input placeholder="Enter niche name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -118,7 +118,7 @@ export function EditProductTypeDialog({ open, onOpenChange, productType }: EditP
                 <FormItem>
                   <FormLabel>Slug</FormLabel>
                   <FormControl>
-                    <Input placeholder="product-type-slug" {...field} />
+                    <Input placeholder="niche-slug" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,7 +133,7 @@ export function EditProductTypeDialog({ open, onOpenChange, productType }: EditP
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter product type description"
+                      placeholder="Enter niche description"
                       className="resize-none"
                       {...field}
                     />
