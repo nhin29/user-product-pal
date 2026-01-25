@@ -18,9 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
+import { useProducts, Product } from "@/hooks/useProducts";
 import { AddProductDialog } from "@/components/products/AddProductDialog";
-import { useToast } from "@/hooks/use-toast";
+import { EditProductDialog } from "@/components/products/EditProductDialog";
+import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
+import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog";
 
 const platformColors: Record<string, string> = {
   amazon: "bg-orange-500/10 text-orange-500 border-orange-500/20",
@@ -32,37 +34,35 @@ const platformColors: Record<string, string> = {
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
   const { data: products, isLoading, error } = useProducts();
-  const deleteProduct = useDeleteProduct();
-  const { toast } = useToast();
 
-  const filteredProducts = products?.filter(
-    (product) => {
-      const categoryName = (product as any).categories?.name || "";
-      return (
-        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.platform.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-  );
+  const filteredProducts = products?.filter((product) => {
+    const categoryName = (product as any).categories?.name || "";
+    return (
+      product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.platform.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
-  const handleDelete = async (id: string, title: string) => {
-    if (confirm(`Are you sure you want to delete "${title}"?`)) {
-      try {
-        await deleteProduct.mutateAsync(id);
-        toast({
-          title: "Product deleted",
-          description: "The product has been removed.",
-        });
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to delete product",
-        });
-      }
-    }
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (product: Product) => {
+    setSelectedProduct(product);
+    setDeleteDialogOpen(true);
+  };
+
+  const handlePreview = (product: Product) => {
+    setSelectedProduct(product);
+    setPreviewDialogOpen(true);
   };
 
   return (
@@ -129,7 +129,10 @@ export default function ProductsPage() {
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 overflow-hidden rounded-lg bg-muted">
+                          <div 
+                            className="h-10 w-10 overflow-hidden rounded-lg bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                            onClick={() => handlePreview(product)}
+                          >
                             {product.image_url ? (
                               <img
                                 src={product.image_url}
@@ -143,7 +146,10 @@ export default function ProductsPage() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-medium text-foreground line-clamp-1">
+                            <span 
+                              className="font-medium text-foreground line-clamp-1 cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => handlePreview(product)}
+                            >
                               {product.title}
                             </span>
                             {product.description && (
@@ -185,19 +191,17 @@ export default function ProductsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => window.open(product.image_url, "_blank")}
-                            >
+                            <DropdownMenuItem onClick={() => handlePreview(product)}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View Image
+                              Preview
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(product)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => handleDelete(product.id, product.title)}
+                              onClick={() => handleDelete(product)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -213,7 +217,23 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* Dialogs */}
         <AddProductDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+        <EditProductDialog 
+          open={editDialogOpen} 
+          onOpenChange={setEditDialogOpen} 
+          product={selectedProduct}
+        />
+        <DeleteProductDialog 
+          open={deleteDialogOpen} 
+          onOpenChange={setDeleteDialogOpen} 
+          product={selectedProduct}
+        />
+        <ProductPreviewDialog 
+          open={previewDialogOpen} 
+          onOpenChange={setPreviewDialogOpen} 
+          product={selectedProduct}
+        />
       </div>
     </AdminLayout>
   );
