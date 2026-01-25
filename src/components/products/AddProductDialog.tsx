@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,15 +27,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCreateProduct, useProductTypes, useCategories } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Upload, Link, X, ImageIcon } from "lucide-react";
 
 const productSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
-  image_url: z.string().url("Must be a valid URL"),
+  image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   prompt: z.string().min(1, "Prompt is required").max(2000, "Prompt too long"),
   platform: z.enum(["amazon", "shopify", "meta", "other"]),
   product_type_id: z.string().optional(),
@@ -52,6 +55,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
   const { data: productTypes } = useProductTypes();
   const { data: categories } = useCategories();
   const createProduct = useCreateProduct();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [imageTab, setImageTab] = useState<"upload" | "url">("upload");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -66,22 +75,99 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     },
   });
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file",
+          description: "Please select an image file",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Image must be less than 5MB",
+        });
+        return;
+      }
+      setUploadedFile(file);
+      const preview = URL.createObjectURL(file);
+      setUploadPreview(preview);
+    }
+  };
+
+  const clearUploadedFile = () => {
+    setUploadedFile(null);
+    if (uploadPreview) {
+      URL.revokeObjectURL(uploadPreview);
+      setUploadPreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     try {
+      setIsUploading(true);
+      let finalImageUrl = data.image_url || "";
+
+      // If upload tab is selected and file exists, upload it
+      if (imageTab === "upload" && uploadedFile) {
+        finalImageUrl = await uploadImage(uploadedFile);
+      }
+
+      if (!finalImageUrl) {
+        toast({
+          variant: "destructive",
+          title: "Image required",
+          description: "Please upload an image or enter an image URL",
+        });
+        setIsUploading(false);
+        return;
+      }
+
       await createProduct.mutateAsync({
         title: data.title,
         category_id: data.category_id,
-        image_url: data.image_url,
+        image_url: finalImageUrl,
         prompt: data.prompt,
         platform: data.platform,
         product_type_id: data.product_type_id || null,
         description: data.description || null,
       });
+
       toast({
         title: "Product created",
         description: "The product has been added successfully.",
       });
+      
+      // Reset form and state
       form.reset();
+      clearUploadedFile();
+      setImageTab("upload");
       onOpenChange(false);
     } catch (error: any) {
       toast({
@@ -89,11 +175,24 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         title: "Error",
         description: error.message || "Failed to create product",
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      form.reset();
+      clearUploadedFile();
+      setImageTab("upload");
+    }
+    onOpenChange(open);
+  };
+
+  const isPending = createProduct.isPending || isUploading;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Product</DialogTitle>
@@ -193,19 +292,78 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="image_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Image Upload/URL Section */}
+            <div className="space-y-2">
+              <FormLabel>Product Image</FormLabel>
+              <Tabs value={imageTab} onValueChange={(v) => setImageTab(v as "upload" | "url")}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload" className="gap-2">
+                    <Upload className="h-4 w-4" />
+                    Upload
+                  </TabsTrigger>
+                  <TabsTrigger value="url" className="gap-2">
+                    <Link className="h-4 w-4" />
+                    URL
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="upload" className="mt-3">
+                  <div className="space-y-3">
+                    {uploadPreview ? (
+                      <div className="relative">
+                        <img
+                          src={uploadPreview}
+                          alt="Preview"
+                          className="w-full h-40 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-7 w-7"
+                          onClick={clearUploadedFile}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          PNG, JPG, WEBP up to 5MB
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
+                  </div>
+                </TabsContent>
+                <TabsContent value="url" className="mt-3">
+                  <FormField
+                    control={form.control}
+                    name="image_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
 
             <FormField
               control={form.control}
@@ -247,12 +405,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleDialogClose(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createProduct.isPending}>
-                {createProduct.isPending && (
+              <Button type="submit" disabled={isPending}>
+                {isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Add Product
