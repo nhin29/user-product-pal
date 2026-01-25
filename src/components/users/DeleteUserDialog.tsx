@@ -8,10 +8,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUsers, UserWithRole } from "@/hooks/useUsers";
+import { useUsers, UserProfile } from "@/hooks/useUsers";
 
 interface DeleteUserDialogProps {
-  user: UserWithRole | null;
+  user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

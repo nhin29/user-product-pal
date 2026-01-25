@@ -9,23 +9,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUsers, UserWithRole } from "@/hooks/useUsers";
+import { useUsers, UserProfile } from "@/hooks/useUsers";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
 import { format } from "date-fns";
-
-const roleBadgeClass = (role: string | null) => {
-  switch (role) {
-    case "admin":
-      return "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-primary/10 text-primary";
-    case "editor":
-      return "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500";
-    case "viewer":
-      return "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground";
-    default:
-      return "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground";
-  }
-};
 
 const getInitials = (name: string | null) => {
   if (!name) return "?";
@@ -39,8 +26,8 @@ const getInitials = (name: string | null) => {
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [editUser, setEditUser] = useState<UserWithRole | null>(null);
-  const [deleteUser, setDeleteUser] = useState<UserWithRole | null>(null);
+  const [editUser, setEditUser] = useState<UserProfile | null>(null);
+  const [deleteUser, setDeleteUser] = useState<UserProfile | null>(null);
   const { users, isLoading, error } = useUsers();
 
   const filteredUsers = users.filter(
@@ -57,7 +44,7 @@ export default function UsersPage() {
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Users</h1>
             <p className="mt-1 text-muted-foreground">
-              Manage your team members and their permissions.
+              Manage your team members and their profiles.
             </p>
           </div>
         </div>
@@ -108,8 +95,8 @@ export default function UsersPage() {
               <thead>
                 <tr className="data-table-header">
                   <th className="px-6 py-3 text-left">User</th>
-                  <th className="px-6 py-3 text-left">Role</th>
                   <th className="px-6 py-3 text-left">Joined</th>
+                  <th className="px-6 py-3 text-left">Last Updated</th>
                   <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -136,19 +123,19 @@ export default function UsersPage() {
                             {user.display_name || "Unnamed User"}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {user.user_id.slice(0, 8)}...
+                            ID: {user.user_id.slice(0, 8)}...
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={roleBadgeClass(user.role)}>
-                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "No Role"}
+                      <span className="text-muted-foreground">
+                        {format(new Date(user.created_at), "MMM d, yyyy")}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-muted-foreground">
-                        {format(new Date(user.created_at), "MMM d, yyyy")}
+                        {format(new Date(user.updated_at), "MMM d, yyyy")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
