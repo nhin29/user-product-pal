@@ -9,19 +9,19 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { UserProfile } from "@/hooks/useUsers";
-import { UseMutationResult } from "@tanstack/react-query";
 
 interface DeleteUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  deleteUser: UseMutationResult<void, Error, string>;
+  onDelete: (userId: string) => Promise<void>;
+  isLoading: boolean;
 }
 
-export function DeleteUserDialog({ user, open, onOpenChange, deleteUser }: DeleteUserDialogProps) {
+export function DeleteUserDialog({ user, open, onOpenChange, onDelete, isLoading }: DeleteUserDialogProps) {
   const handleDelete = async () => {
     if (!user) return;
-    await deleteUser.mutateAsync(user.user_id);
+    await onDelete(user.user_id);
     onOpenChange(false);
   };
 
@@ -41,7 +41,7 @@ export function DeleteUserDialog({ user, open, onOpenChange, deleteUser }: Delet
             onClick={handleDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {deleteUser.isPending ? "Deleting..." : "Delete"}
+            {isLoading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

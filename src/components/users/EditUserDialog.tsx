@@ -11,20 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserProfile } from "@/hooks/useUsers";
-import { UseMutationResult } from "@tanstack/react-query";
 
 interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  updateUserProfile: UseMutationResult<void, Error, {
-    userId: string;
-    displayName: string;
-    avatarUrl?: string;
-  }>;
+  onSave: (userId: string, displayName: string) => Promise<void>;
+  isLoading: boolean;
 }
 
-export function EditUserDialog({ user, open, onOpenChange, updateUserProfile }: EditUserDialogProps) {
+export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: EditUserDialogProps) {
   const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
@@ -37,11 +33,7 @@ export function EditUserDialog({ user, open, onOpenChange, updateUserProfile }: 
     e.preventDefault();
     if (!user) return;
 
-    await updateUserProfile.mutateAsync({
-      userId: user.user_id,
-      displayName,
-    });
-
+    await onSave(user.user_id, displayName);
     onOpenChange(false);
   };
 
@@ -74,8 +66,8 @@ export function EditUserDialog({ user, open, onOpenChange, updateUserProfile }: 
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={updateUserProfile.isPending}>
-              {updateUserProfile.isPending ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

@@ -36,6 +36,14 @@ export default function UsersPage() {
       user.user_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleSaveUser = async (userId: string, displayName: string) => {
+    await updateUserProfile.mutateAsync({ userId, displayName });
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUser.mutateAsync(userId);
+  };
+
   return (
     <AdminLayout>
       <div className="animate-fade-in">
@@ -172,13 +180,15 @@ export default function UsersPage() {
           user={editUser}
           open={!!editUser}
           onOpenChange={(open) => !open && setEditUser(null)}
-          updateUserProfile={updateUserProfile}
+          onSave={handleSaveUser}
+          isLoading={updateUserProfile.isPending}
         />
         <DeleteUserDialog
           user={deleteUserData}
           open={!!deleteUserData}
           onOpenChange={(open) => !open && setDeleteUserData(null)}
-          deleteUser={deleteUser}
+          onDelete={handleDeleteUser}
+          isLoading={deleteUser.isPending}
         />
       </div>
     </AdminLayout>
