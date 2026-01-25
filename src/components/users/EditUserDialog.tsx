@@ -10,17 +10,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useUsers, UserProfile } from "@/hooks/useUsers";
+import { UserProfile } from "@/hooks/useUsers";
+import { UseMutationResult } from "@tanstack/react-query";
 
 interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  updateUserProfile: UseMutationResult<void, Error, {
+    userId: string;
+    displayName: string;
+    avatarUrl?: string;
+  }>;
 }
 
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+export function EditUserDialog({ user, open, onOpenChange, updateUserProfile }: EditUserDialogProps) {
   const [displayName, setDisplayName] = useState("");
-  const { updateUserProfile } = useUsers();
 
   useEffect(() => {
     if (user) {
