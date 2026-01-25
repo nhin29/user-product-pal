@@ -110,9 +110,17 @@ export default function CategoriesPage() {
                     <TableRow key={category.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                            <FolderOpen className="h-5 w-5 text-primary" />
-                          </div>
+                          {category.icon ? (
+                            <img
+                              src={category.icon}
+                              alt={category.name}
+                              className="h-10 w-10 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                              <FolderOpen className="h-5 w-5 text-primary" />
+                            </div>
+                          )}
                           <span className="font-medium text-foreground">
                             {category.name}
                           </span>
