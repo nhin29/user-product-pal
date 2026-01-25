@@ -5,6 +5,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 export type Product = Tables<"products">;
 export type ProductInsert = TablesInsert<"products">;
 export type ProductType = Tables<"product_types">;
+export type Category = Tables<"categories">;
 
 export function useProducts() {
   return useQuery({
@@ -12,7 +13,7 @@ export function useProducts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*, product_types(name, slug)")
+        .select("*, product_types(name, slug), categories(id, name, slug)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -27,6 +28,21 @@ export function useProductTypes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_types")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useCategories() {
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
         .select("*")
         .order("name");
 

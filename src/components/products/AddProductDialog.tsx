@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,13 +26,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useCreateProduct, useProductTypes } from "@/hooks/useProducts";
+import { useCreateProduct, useProductTypes, useCategories } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const productSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
-  category: z.string().min(1, "Category is required").max(100, "Category too long"),
+  category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
   image_url: z.string().url("Must be a valid URL"),
   prompt: z.string().min(1, "Prompt is required").max(2000, "Prompt too long"),
@@ -51,13 +50,14 @@ interface AddProductDialogProps {
 export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
   const { toast } = useToast();
   const { data: productTypes } = useProductTypes();
+  const { data: categories } = useCategories();
   const createProduct = useCreateProduct();
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       title: "",
-      category: "",
+      category_id: "",
       description: "",
       image_url: "",
       prompt: "",
@@ -70,7 +70,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     try {
       await createProduct.mutateAsync({
         title: data.title,
-        category: data.category,
+        category_id: data.category_id,
         image_url: data.image_url,
         prompt: data.prompt,
         platform: data.platform,
@@ -120,13 +120,24 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="category"
+                name="category_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Electronics" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories?.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
