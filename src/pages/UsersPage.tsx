@@ -27,8 +27,8 @@ const getInitials = (name: string | null) => {
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
-  const [deleteUser, setDeleteUser] = useState<UserProfile | null>(null);
-  const { users, isLoading, error } = useUsers();
+  const [deleteUserData, setDeleteUserData] = useState<UserProfile | null>(null);
+  const { users, isLoading, error, deleteUser, updateUserProfile } = useUsers();
 
   const filteredUsers = users.filter(
     (user) =>
@@ -152,7 +152,7 @@ export default function UsersPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => setDeleteUser(user)}
+                            onClick={() => setDeleteUserData(user)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
@@ -172,11 +172,13 @@ export default function UsersPage() {
           user={editUser}
           open={!!editUser}
           onOpenChange={(open) => !open && setEditUser(null)}
+          updateUserProfile={updateUserProfile}
         />
         <DeleteUserDialog
-          user={deleteUser}
-          open={!!deleteUser}
-          onOpenChange={(open) => !open && setDeleteUser(null)}
+          user={deleteUserData}
+          open={!!deleteUserData}
+          onOpenChange={(open) => !open && setDeleteUserData(null)}
+          deleteUser={deleteUser}
         />
       </div>
     </AdminLayout>

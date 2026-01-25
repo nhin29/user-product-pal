@@ -8,17 +8,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useUsers, UserProfile } from "@/hooks/useUsers";
+import { UserProfile } from "@/hooks/useUsers";
+import { UseMutationResult } from "@tanstack/react-query";
 
 interface DeleteUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  deleteUser: UseMutationResult<void, Error, string>;
 }
 
-export function DeleteUserDialog({ user, open, onOpenChange }: DeleteUserDialogProps) {
-  const { deleteUser } = useUsers();
-
+export function DeleteUserDialog({ user, open, onOpenChange, deleteUser }: DeleteUserDialogProps) {
   const handleDelete = async () => {
     if (!user) return;
     await deleteUser.mutateAsync(user.user_id);
