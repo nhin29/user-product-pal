@@ -38,7 +38,7 @@ const productSchema = z.object({
   category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  prompt: z.string().min(1, "Prompt is required").max(2000, "Prompt too long"),
+  prompt: z.string().min(1, "Prompt is required").max(10000, "Prompt too long"),
   platform: z.enum(["amazon", "shopify", "meta", "other"]),
   product_type_id: z.string().optional(),
 });
