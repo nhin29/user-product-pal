@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface UserAnalytics {
   totalClicks: number;
   totalCopies: number;
+  totalSaves: number;
   totalPageViews: number;
   totalEvents: number;
 }
@@ -14,6 +15,7 @@ interface ProductInteraction {
   image_url: string;
   clicks: number;
   copies: number;
+  saves: number;
 }
 
 interface ActivityEvent {
@@ -31,6 +33,7 @@ export function useUserAnalytics(userId: string) {
       const [
         { count: totalClicks },
         { count: totalCopies },
+        { count: totalSaves },
         { count: totalPageViews },
         { count: totalEvents },
       ] = await Promise.all([
@@ -45,6 +48,11 @@ export function useUserAnalytics(userId: string) {
           .eq("user_id", userId)
           .eq("interaction_type", "copy"),
         supabase
+          .from("prompt_interactions")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("interaction_type", "save"),
+        supabase
           .from("analytics_events")
           .select("*", { count: "exact", head: true })
           .eq("user_id", userId)
@@ -58,6 +66,7 @@ export function useUserAnalytics(userId: string) {
       return {
         totalClicks: totalClicks || 0,
         totalCopies: totalCopies || 0,
+        totalSaves: totalSaves || 0,
         totalPageViews: totalPageViews || 0,
         totalEvents: totalEvents || 0,
       };
@@ -77,15 +86,17 @@ export function useUserAnalytics(userId: string) {
       if (error) throw error;
 
       // Count interactions per product
-      const productCounts: Record<string, { clicks: number; copies: number }> = {};
+      const productCounts: Record<string, { clicks: number; copies: number; saves: number }> = {};
       (interactions || []).forEach((i) => {
         if (!productCounts[i.product_id]) {
-          productCounts[i.product_id] = { clicks: 0, copies: 0 };
+          productCounts[i.product_id] = { clicks: 0, copies: 0, saves: 0 };
         }
         if (i.interaction_type === "click") {
           productCounts[i.product_id].clicks++;
         } else if (i.interaction_type === "copy") {
           productCounts[i.product_id].copies++;
+        } else if (i.interaction_type === "save") {
+          productCounts[i.product_id].saves++;
         }
       });
 
@@ -107,8 +118,9 @@ export function useUserAnalytics(userId: string) {
           image_url: p.image_url,
           clicks: productCounts[p.id]?.clicks || 0,
           copies: productCounts[p.id]?.copies || 0,
+          saves: productCounts[p.id]?.saves || 0,
         }))
-        .sort((a, b) => b.clicks + b.copies - (a.clicks + a.copies));
+        .sort((a, b) => b.clicks + b.copies + b.saves - (a.clicks + a.copies + a.saves));
     },
     enabled: !!userId,
   });
