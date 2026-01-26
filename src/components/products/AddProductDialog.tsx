@@ -86,14 +86,6 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         });
         return;
       }
-      if (file.size > 15 * 1024 * 1024) {
-        toast({
-          variant: "destructive",
-          title: "File too large",
-          description: "Image must be less than 15MB",
-        });
-        return;
-      }
       setUploadedFile(file);
       const preview = URL.createObjectURL(file);
       setUploadPreview(preview);
@@ -335,7 +327,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                           Click to upload or drag and drop
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          PNG, JPG, WEBP up to 15MB
+                          PNG, JPG, WEBP (no size limit)
                         </p>
                       </div>
                     )}
