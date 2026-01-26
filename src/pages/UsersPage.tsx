@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ const getInitials = (name: string | null) => {
 };
 
 export default function UsersPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
   const [deleteUserData, setDeleteUserData] = useState<UserProfile | null>(null);
@@ -157,6 +159,12 @@ export default function UsersPage() {
                           <DropdownMenuItem onClick={() => setEditUser(user)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/users/${user.user_id}/analytics`)}
+                          >
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            Analytics
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
