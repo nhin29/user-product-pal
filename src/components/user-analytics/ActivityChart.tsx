@@ -24,6 +24,7 @@ interface ChartDataPoint {
   date: string;
   clicks: number;
   copies: number;
+  saves: number;
   pageViews: number;
   events: number;
 }
@@ -44,6 +45,10 @@ const chartConfig = {
     label: "Copies",
     color: "hsl(var(--chart-2))",
   },
+  saves: {
+    label: "Saves",
+    color: "hsl(var(--chart-5))",
+  },
   pageViews: {
     label: "Page Views",
     color: "hsl(var(--chart-3))",
@@ -61,12 +66,13 @@ const periods = [
   { value: "90d", label: "Last 90 days" },
 ];
 
-type MetricKey = "clicks" | "copies" | "pageViews" | "events";
+type MetricKey = "clicks" | "copies" | "saves" | "pageViews" | "events";
 
 export function ActivityChart({ data, isLoading, period, onPeriodChange }: ActivityChartProps) {
   const [visibleLines, setVisibleLines] = useState<Record<MetricKey, boolean>>({
     clicks: true,
     copies: true,
+    saves: true,
     pageViews: true,
     events: true,
   });
@@ -78,6 +84,7 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
   const metrics: { key: MetricKey; label: string; color: string }[] = [
     { key: "clicks", label: "Clicks", color: "hsl(var(--chart-1))" },
     { key: "copies", label: "Copies", color: "hsl(var(--chart-2))" },
+    { key: "saves", label: "Saves", color: "hsl(var(--chart-5))" },
     { key: "pageViews", label: "Page Views", color: "hsl(var(--chart-3))" },
     { key: "events", label: "Events", color: "hsl(var(--chart-4))" },
   ];
@@ -185,6 +192,17 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
                   strokeWidth={2}
                   dot={{ r: 3, fill: "hsl(var(--chart-2))" }}
                   activeDot={{ r: 5, fill: "hsl(var(--chart-2))" }}
+                />
+              )}
+              {visibleLines.saves && (
+                <Line
+                  type="monotone"
+                  dataKey="saves"
+                  name="Saves"
+                  stroke="hsl(var(--chart-5))"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "hsl(var(--chart-5))" }}
+                  activeDot={{ r: 5, fill: "hsl(var(--chart-5))" }}
                 />
               )}
               {visibleLines.pageViews && (

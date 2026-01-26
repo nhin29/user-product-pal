@@ -6,6 +6,7 @@ interface ChartDataPoint {
   date: string;
   clicks: number;
   copies: number;
+  saves: number;
   pageViews: number;
   events: number;
 }
@@ -63,6 +64,7 @@ export function useUserAnalyticsChart(userId: string, period: string) {
           date: dateKey,
           clicks: 0,
           copies: 0,
+          saves: 0,
           pageViews: 0,
           events: 0,
         };
@@ -76,6 +78,8 @@ export function useUserAnalyticsChart(userId: string, period: string) {
             dataMap[dateKey].clicks++;
           } else if (i.interaction_type === "copy") {
             dataMap[dateKey].copies++;
+          } else if (i.interaction_type === "save") {
+            dataMap[dateKey].saves++;
           }
         }
       });
