@@ -1,12 +1,13 @@
-import { Users, Package, FolderOpen, Layers, Eye, MousePointerClick, Copy, Activity } from "lucide-react";
+import { Users, Package, FolderOpen, Layers, MousePointerClick, Copy } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { useDashboardStats, useRecentActivity } from "@/hooks/useDashboardStats";
+import { useDashboardStats, useTopClickedProducts, useTopCopiedProducts } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: activities, isLoading: activitiesLoading } = useRecentActivity();
+  const { data: topClicked, isLoading: clickedLoading } = useTopClickedProducts();
+  const { data: topCopied, isLoading: copiedLoading } = useTopCopiedProducts();
 
   const statCards = [
     {
@@ -30,38 +31,80 @@ export default function Dashboard() {
       icon: Layers,
     },
     {
-      title: "Page Views",
-      value: stats?.pageViews || 0,
-      icon: Eye,
-    },
-    {
-      title: "Total Events",
-      value: stats?.totalEvents || 0,
-      icon: Activity,
-    },
-    {
-      title: "Prompt Clicks",
-      value: stats?.totalInteractions || 0,
+      title: "Total Clicks",
+      value: stats?.totalClicks || 0,
       icon: MousePointerClick,
     },
     {
-      title: "Prompt Copies",
-      value: stats?.promptCopies || 0,
+      title: "Total Copies",
+      value: stats?.totalCopies || 0,
       icon: Copy,
     },
   ];
 
-  const getEventIcon = (eventType: string) => {
-    switch (eventType) {
-      case "navigation":
-        return "🧭";
-      case "prompt":
-        return "📋";
-      case "interaction":
-        return "👆";
-      default:
-        return "📊";
+  const ProductList = ({ 
+    products, 
+    isLoading, 
+    emptyMessage 
+  }: { 
+    products?: { id: string; title: string; image_url: string; count: number }[];
+    isLoading: boolean;
+    emptyMessage: string;
+  }) => {
+    if (isLoading) {
+      return (
+        <div className="divide-y divide-border">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-4 px-6 py-4">
+              <Skeleton className="h-12 w-12 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+              <Skeleton className="h-6 w-12 rounded-full" />
+            </div>
+          ))}
+        </div>
+      );
     }
+
+    if (!products || products.length === 0) {
+      return (
+        <div className="px-6 py-8 text-center text-muted-foreground">
+          {emptyMessage}
+        </div>
+      );
+    }
+
+    return (
+      <div className="divide-y divide-border">
+        {products.map((product, index) => (
+          <div
+            key={product.id}
+            className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-muted/30"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+              {index + 1}
+            </div>
+            <img
+              src={product.image_url}
+              alt={product.title}
+              className="h-12 w-12 rounded-lg object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground truncate">
+                {product.title}
+              </p>
+            </div>
+            <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1">
+              <span className="text-sm font-semibold text-primary">
+                {product.count}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -71,14 +114,14 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="mt-1 text-muted-foreground">
-            Real-time analytics from your database.
+            Product analytics and performance overview.
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {statsLoading
-            ? Array.from({ length: 8 }).map((_, index) => (
+            ? Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="stat-card animate-fade-in">
                   <Skeleton className="h-10 w-10 rounded-lg" />
                   <div className="mt-4 space-y-2">
@@ -92,58 +135,36 @@ export default function Dashboard() {
               ))}
         </div>
 
-        {/* Recent Activity */}
-        <div className="data-table">
-          <div className="border-b border-border px-6 py-4">
-            <h2 className="text-lg font-semibold text-foreground">
-              Recent Activity
-            </h2>
+        {/* Top Products Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Most Clicked Products */}
+          <div className="data-table">
+            <div className="border-b border-border px-6 py-4 flex items-center gap-2">
+              <MousePointerClick className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">
+                Most Clicked Products
+              </h2>
+            </div>
+            <ProductList
+              products={topClicked}
+              isLoading={clickedLoading}
+              emptyMessage="No click data yet."
+            />
           </div>
-          <div className="divide-y divide-border">
-            {activitiesLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="flex items-center justify-between px-6 py-4">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-48" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              ))
-            ) : activities && activities.length > 0 ? (
-              activities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/30"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                      <span className="text-lg">
-                        {getEventIcon(activity.eventType)}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {activity.user}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.action}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {activity.time}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="px-6 py-8 text-center text-muted-foreground">
-                No recent activity found.
-              </div>
-            )}
+
+          {/* Most Copied Products */}
+          <div className="data-table">
+            <div className="border-b border-border px-6 py-4 flex items-center gap-2">
+              <Copy className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">
+                Most Copied Products
+              </h2>
+            </div>
+            <ProductList
+              products={topCopied}
+              isLoading={copiedLoading}
+              emptyMessage="No copy data yet."
+            />
           </div>
         </div>
       </div>
