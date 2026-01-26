@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3 } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,6 +106,7 @@ export default function UsersPage() {
               <thead>
                 <tr className="data-table-header">
                   <th className="px-6 py-3 text-left">User</th>
+                  <th className="px-6 py-3 text-left">Purchase Status</th>
                   <th className="px-6 py-3 text-left">Joined</th>
                   <th className="px-6 py-3 text-left">Last Updated</th>
                   <th className="px-6 py-3 text-right">Actions</th>
@@ -137,6 +139,19 @@ export default function UsersPage() {
                           </p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.is_purchase ? (
+                        <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30">
+                          <Check className="mr-1 h-3 w-3" />
+                          Purchased
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                          <X className="mr-1 h-3 w-3" />
+                          Not Purchased
+                        </Badge>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-muted-foreground">
