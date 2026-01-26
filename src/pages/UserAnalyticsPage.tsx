@@ -44,10 +44,13 @@ const StatCard = ({
 
 const getEventIcon = (eventType: string) => {
   switch (eventType) {
+    case "navigation":
     case "pageview":
       return <Eye className="h-4 w-4 text-blue-500" />;
+    case "interaction":
     case "click":
       return <MousePointer className="h-4 w-4 text-green-500" />;
+    case "prompt":
     case "copy":
       return <Copy className="h-4 w-4 text-purple-500" />;
     default:
@@ -56,8 +59,14 @@ const getEventIcon = (eventType: string) => {
 };
 
 const getEventDescription = (event: { event_type: string; event_name: string; page_path: string | null }) => {
-  if (event.event_type === "pageview") {
+  if (event.event_type === "navigation" || event.event_type === "pageview") {
     return `Viewed ${event.page_path || "a page"}`;
+  }
+  if (event.event_name === "prompt_click") {
+    return "Clicked on a prompt";
+  }
+  if (event.event_name === "prompt_copy") {
+    return "Copied a prompt";
   }
   return event.event_name || event.event_type;
 };
