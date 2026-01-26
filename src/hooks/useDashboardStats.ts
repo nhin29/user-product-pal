@@ -6,18 +6,15 @@ interface DashboardStats {
   totalProducts: number;
   totalCategories: number;
   totalProductTypes: number;
-  totalEvents: number;
-  totalInteractions: number;
-  pageViews: number;
-  promptCopies: number;
+  totalClicks: number;
+  totalCopies: number;
 }
 
-interface RecentActivity {
+interface TopProduct {
   id: string;
-  user: string;
-  action: string;
-  time: string;
-  eventType: string;
+  title: string;
+  image_url: string;
+  count: number;
 }
 
 export function useDashboardStats() {
@@ -29,18 +26,14 @@ export function useDashboardStats() {
         { count: totalProducts },
         { count: totalCategories },
         { count: totalProductTypes },
-        { count: totalEvents },
-        { count: totalInteractions },
-        { count: pageViews },
-        { count: promptCopies },
+        { count: totalClicks },
+        { count: totalCopies },
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("products").select("*", { count: "exact", head: true }),
         supabase.from("categories").select("*", { count: "exact", head: true }),
         supabase.from("product_types").select("*", { count: "exact", head: true }),
-        supabase.from("analytics_events").select("*", { count: "exact", head: true }),
-        supabase.from("prompt_interactions").select("*", { count: "exact", head: true }),
-        supabase.from("analytics_events").select("*", { count: "exact", head: true }).eq("event_name", "page_view"),
+        supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "click"),
         supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "copy"),
       ]);
 
@@ -49,65 +42,95 @@ export function useDashboardStats() {
         totalProducts: totalProducts || 0,
         totalCategories: totalCategories || 0,
         totalProductTypes: totalProductTypes || 0,
-        totalEvents: totalEvents || 0,
-        totalInteractions: totalInteractions || 0,
-        pageViews: pageViews || 0,
-        promptCopies: promptCopies || 0,
+        totalClicks: totalClicks || 0,
+        totalCopies: totalCopies || 0,
       };
     },
   });
 }
 
-export function useRecentActivity() {
+export function useTopClickedProducts() {
   return useQuery({
-    queryKey: ["recent-activity"],
-    queryFn: async (): Promise<RecentActivity[]> => {
-      const { data: events, error } = await supabase
-        .from("analytics_events")
-        .select("id, event_name, event_type, page_path, created_at, user_id")
-        .order("created_at", { ascending: false })
-        .limit(10);
+    queryKey: ["top-clicked-products"],
+    queryFn: async (): Promise<TopProduct[]> => {
+      // Get click counts per product
+      const { data: interactions, error: interactionsError } = await supabase
+        .from("prompt_interactions")
+        .select("product_id")
+        .eq("interaction_type", "click");
 
-      if (error) throw error;
+      if (interactionsError) throw interactionsError;
 
-      return (events || []).map((event) => {
-        const getActionText = () => {
-          switch (event.event_name) {
-            case "page_view":
-              return `Viewed ${event.page_path || "a page"}`;
-            case "prompt_click":
-              return "Clicked on a prompt";
-            case "prompt_copy":
-              return "Copied a prompt";
-            case "click":
-              return "Interacted with UI";
-            default:
-              return event.event_name;
-          }
-        };
-
-        const getTimeAgo = (dateStr: string) => {
-          const date = new Date(dateStr);
-          const now = new Date();
-          const diffMs = now.getTime() - date.getTime();
-          const diffMins = Math.floor(diffMs / 60000);
-          const diffHours = Math.floor(diffMins / 60);
-          const diffDays = Math.floor(diffHours / 24);
-
-          if (diffMins < 1) return "Just now";
-          if (diffMins < 60) return `${diffMins} min ago`;
-          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-          return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
-        };
-
-        return {
-          id: event.id,
-          user: event.user_id ? `User ${event.user_id.slice(0, 8)}...` : "Anonymous",
-          action: getActionText(),
-          time: getTimeAgo(event.created_at),
-          eventType: event.event_type,
-        };
+      // Count clicks per product
+      const clickCounts: Record<string, number> = {};
+      (interactions || []).forEach((i) => {
+        clickCounts[i.product_id] = (clickCounts[i.product_id] || 0) + 1;
       });
+
+      // Get product details
+      const productIds = Object.keys(clickCounts);
+      if (productIds.length === 0) return [];
+
+      const { data: products, error: productsError } = await supabase
+        .from("products")
+        .select("id, title, image_url")
+        .in("id", productIds);
+
+      if (productsError) throw productsError;
+
+      // Combine and sort by count
+      return (products || [])
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          image_url: p.image_url,
+          count: clickCounts[p.id] || 0,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+    },
+  });
+}
+
+export function useTopCopiedProducts() {
+  return useQuery({
+    queryKey: ["top-copied-products"],
+    queryFn: async (): Promise<TopProduct[]> => {
+      // Get copy counts per product
+      const { data: interactions, error: interactionsError } = await supabase
+        .from("prompt_interactions")
+        .select("product_id")
+        .eq("interaction_type", "copy");
+
+      if (interactionsError) throw interactionsError;
+
+      // Count copies per product
+      const copyCounts: Record<string, number> = {};
+      (interactions || []).forEach((i) => {
+        copyCounts[i.product_id] = (copyCounts[i.product_id] || 0) + 1;
+      });
+
+      // Get product details
+      const productIds = Object.keys(copyCounts);
+      if (productIds.length === 0) return [];
+
+      const { data: products, error: productsError } = await supabase
+        .from("products")
+        .select("id, title, image_url")
+        .in("id", productIds);
+
+      if (productsError) throw productsError;
+
+      // Combine and sort by count
+      return (products || [])
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          image_url: p.image_url,
+          count: copyCounts[p.id] || 0,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
     },
   });
 }
