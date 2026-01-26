@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MousePointer, Copy, Eye, Activity, Loader2 } from "lucide-react";
+import { ArrowLeft, MousePointer, Copy, Eye, Activity } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserAnalytics } from "@/hooks/useUserAnalytics";
+import { useUserAnalyticsChart } from "@/hooks/useUserAnalyticsChart";
 import { useUsers } from "@/hooks/useUsers";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 
 const StatCard = ({
   title,
@@ -62,6 +65,7 @@ const getEventDescription = (event: { event_type: string; event_name: string; pa
 export default function UserAnalyticsPage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const [chartPeriod, setChartPeriod] = useState("7d");
   const { users } = useUsers();
   const {
     stats,
@@ -71,6 +75,7 @@ export default function UserAnalyticsPage() {
     recentActivity,
     isLoadingActivity,
   } = useUserAnalytics(userId || "");
+  const { data: chartData, isLoading: isLoadingChart } = useUserAnalyticsChart(userId || "", chartPeriod);
 
   const user = users.find((u) => u.user_id === userId);
 
@@ -151,6 +156,16 @@ export default function UserAnalyticsPage() {
             icon={Activity}
             description="All tracked events"
             isLoading={isLoadingStats}
+          />
+        </div>
+
+        {/* Activity Chart */}
+        <div className="mb-8">
+          <ActivityChart
+            data={chartData || []}
+            isLoading={isLoadingChart}
+            period={chartPeriod}
+            onPeriodChange={setChartPeriod}
           />
         </div>
 
