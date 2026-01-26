@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          element_id: string | null
+          element_text: string | null
+          event_data: Json | null
+          event_name: string
+          event_type: string
+          id: string
+          page_path: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          element_id?: string | null
+          element_text?: string | null
+          event_data?: Json | null
+          event_name: string
+          event_type: string
+          id?: string
+          page_path?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          element_id?: string | null
+          element_text?: string | null
+          event_data?: Json | null
+          event_name?: string
+          event_type?: string
+          id?: string
+          page_path?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -145,6 +184,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      prompt_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          product_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          product_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          product_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_interactions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
