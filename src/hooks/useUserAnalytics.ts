@@ -48,7 +48,7 @@ export function useUserAnalytics(userId: string) {
           .from("analytics_events")
           .select("*", { count: "exact", head: true })
           .eq("user_id", userId)
-          .eq("event_type", "pageview"),
+          .eq("event_type", "navigation"),
         supabase
           .from("analytics_events")
           .select("*", { count: "exact", head: true })
