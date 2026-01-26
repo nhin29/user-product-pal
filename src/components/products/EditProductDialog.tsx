@@ -103,11 +103,11 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 15 * 1024 * 1024) {
         toast({
           variant: "destructive",
           title: "File too large",
-          description: "Image must be less than 5MB",
+          description: "Image must be less than 15MB",
         });
         return;
       }
@@ -353,7 +353,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                           Click to upload new image
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          PNG, JPG, WEBP up to 5MB
+                          PNG, JPG, WEBP up to 15MB
                         </p>
                       </div>
                     )}
