@@ -8,6 +8,7 @@ interface DashboardStats {
   totalProductTypes: number;
   totalClicks: number;
   totalCopies: number;
+  totalSaves: number;
 }
 
 interface TopProduct {
@@ -28,6 +29,7 @@ export function useDashboardStats() {
         { count: totalProductTypes },
         { count: totalClicks },
         { count: totalCopies },
+        { count: totalSaves },
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("products").select("*", { count: "exact", head: true }),
@@ -35,6 +37,7 @@ export function useDashboardStats() {
         supabase.from("product_types").select("*", { count: "exact", head: true }),
         supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "click"),
         supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "copy"),
+        supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "save"),
       ]);
 
       return {
@@ -44,6 +47,7 @@ export function useDashboardStats() {
         totalProductTypes: totalProductTypes || 0,
         totalClicks: totalClicks || 0,
         totalCopies: totalCopies || 0,
+        totalSaves: totalSaves || 0,
       };
     },
   });
@@ -128,6 +132,49 @@ export function useTopCopiedProducts() {
           title: p.title,
           image_url: p.image_url,
           count: copyCounts[p.id] || 0,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+    },
+  });
+}
+
+export function useTopSavedProducts() {
+  return useQuery({
+    queryKey: ["top-saved-products"],
+    queryFn: async (): Promise<TopProduct[]> => {
+      // Get save counts per product
+      const { data: interactions, error: interactionsError } = await supabase
+        .from("prompt_interactions")
+        .select("product_id")
+        .eq("interaction_type", "save");
+
+      if (interactionsError) throw interactionsError;
+
+      // Count saves per product
+      const saveCounts: Record<string, number> = {};
+      (interactions || []).forEach((i) => {
+        saveCounts[i.product_id] = (saveCounts[i.product_id] || 0) + 1;
+      });
+
+      // Get product details
+      const productIds = Object.keys(saveCounts);
+      if (productIds.length === 0) return [];
+
+      const { data: products, error: productsError } = await supabase
+        .from("products")
+        .select("id, title, image_url")
+        .in("id", productIds);
+
+      if (productsError) throw productsError;
+
+      // Combine and sort by count
+      return (products || [])
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          image_url: p.image_url,
+          count: saveCounts[p.id] || 0,
         }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
