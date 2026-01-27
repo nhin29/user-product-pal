@@ -8,17 +8,32 @@ export type ProductUpdate = TablesUpdate<"products">;
 export type ProductType = Tables<"product_types">;
 export type Category = Tables<"categories">;
 
-export function useProducts() {
+export interface PaginatedProducts {
+  data: Product[];
+  count: number;
+}
+
+export function useProducts(page: number = 1, pageSize: number = 10, search: string = "") {
   return useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
+    queryKey: ["products", page, pageSize, search],
+    queryFn: async (): Promise<PaginatedProducts> => {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
         .from("products")
-        .select("*, product_types(name, slug), categories(id, name, slug)")
-        .order("created_at", { ascending: false });
+        .select("*, product_types(name, slug), categories(id, name, slug)", { count: "exact" });
+
+      if (search) {
+        query = query.or(`title.ilike.%${search}%,platform.ilike.%${search}%`);
+      }
+
+      const { data, error, count } = await query
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
-      return data;
+      return { data: data || [], count: count || 0 };
     },
   });
 }
