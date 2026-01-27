@@ -26,6 +26,19 @@ interface ActivityEvent {
   created_at: string;
 }
 
+export interface OnboardingResponse {
+  niche: string[] | null;
+  niche_other: string | null;
+  primary_goal: string | null;
+  design_goal: string | null;
+  monthly_revenue: string | null;
+  products_monthly: string | null;
+  sales_channels: string | null;
+  problems_before: string[] | null;
+  why_peelkit: string | null;
+  completed_at: string | null;
+}
+
 export function useUserAnalytics(userId: string) {
   const statsQuery = useQuery({
     queryKey: ["user-analytics-stats", userId],
@@ -141,6 +154,21 @@ export function useUserAnalytics(userId: string) {
     enabled: !!userId,
   });
 
+  const onboardingQuery = useQuery({
+    queryKey: ["user-onboarding-response", userId],
+    queryFn: async (): Promise<OnboardingResponse | null> => {
+      const { data, error } = await supabase
+        .from("onboarding_responses")
+        .select("niche, niche_other, primary_goal, design_goal, monthly_revenue, products_monthly, sales_channels, problems_before, why_peelkit, completed_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
   return {
     stats: statsQuery.data,
     isLoadingStats: statsQuery.isLoading,
@@ -148,5 +176,7 @@ export function useUserAnalytics(userId: string) {
     isLoadingProducts: productInteractionsQuery.isLoading,
     recentActivity: recentActivityQuery.data || [],
     isLoadingActivity: recentActivityQuery.isLoading,
+    onboardingResponse: onboardingQuery.data,
+    isLoadingOnboarding: onboardingQuery.isLoading,
   };
 }

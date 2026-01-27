@@ -109,6 +109,57 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_responses: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          design_goal: string | null
+          id: string
+          monthly_revenue: string | null
+          niche: string[] | null
+          niche_other: string | null
+          primary_goal: string | null
+          problems_before: string[] | null
+          products_monthly: string | null
+          sales_channels: string | null
+          updated_at: string
+          user_id: string
+          why_peelkit: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          design_goal?: string | null
+          id?: string
+          monthly_revenue?: string | null
+          niche?: string[] | null
+          niche_other?: string | null
+          primary_goal?: string | null
+          problems_before?: string[] | null
+          products_monthly?: string | null
+          sales_channels?: string | null
+          updated_at?: string
+          user_id: string
+          why_peelkit?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          design_goal?: string | null
+          id?: string
+          monthly_revenue?: string | null
+          niche?: string[] | null
+          niche_other?: string | null
+          primary_goal?: string | null
+          problems_before?: string[] | null
+          products_monthly?: string | null
+          sales_channels?: string | null
+          updated_at?: string
+          user_id?: string
+          why_peelkit?: string | null
+        }
+        Relationships: []
+      }
       product_types: {
         Row: {
           created_at: string
@@ -194,6 +245,8 @@ export type Database = {
           display_name: string | null
           id: string
           is_purchase: boolean
+          onboarding_completed: boolean
+          product_ids: string[] | null
           updated_at: string
           user_id: string
         }
@@ -203,6 +256,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_purchase?: boolean
+          onboarding_completed?: boolean
+          product_ids?: string[] | null
           updated_at?: string
           user_id: string
         }
@@ -212,6 +267,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_purchase?: boolean
+          onboarding_completed?: boolean
+          product_ids?: string[] | null
           updated_at?: string
           user_id?: string
         }
