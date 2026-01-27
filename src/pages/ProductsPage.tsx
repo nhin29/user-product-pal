@@ -49,6 +49,7 @@ export default function ProductsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [nicheFilter, setNicheFilter] = useState("");
+  const [platformFilter, setPlatformFilter] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -57,7 +58,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter);
+  const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter, platformFilter);
   const { data: categories } = useCategories();
   const { data: productTypes } = useProductTypes();
   
@@ -94,15 +95,21 @@ export default function ProductsPage() {
     setCurrentPage(1);
   };
 
+  const handlePlatformChange = (value: string) => {
+    setPlatformFilter(value === "all" ? "" : value);
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setCategoryFilter("");
     setNicheFilter("");
+    setPlatformFilter("");
     setSearchQuery("");
     setDebouncedSearch("");
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = categoryFilter || nicheFilter || debouncedSearch;
+  const hasActiveFilters = categoryFilter || nicheFilter || platformFilter || debouncedSearch;
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
@@ -209,6 +216,18 @@ export default function ProductsPage() {
                   {type.name}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={platformFilter || "all"} onValueChange={handlePlatformChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Platforms</SelectItem>
+              <SelectItem value="amazon">Amazon</SelectItem>
+              <SelectItem value="shopify">Shopify</SelectItem>
+              <SelectItem value="meta">Meta</SelectItem>
             </SelectContent>
           </Select>
 

@@ -18,10 +18,11 @@ export function useProducts(
   pageSize: number = 10, 
   search: string = "",
   categoryId: string = "",
-  productTypeId: string = ""
+  productTypeId: string = "",
+  platform: string = ""
 ) {
   return useQuery({
-    queryKey: ["products", page, pageSize, search, categoryId, productTypeId],
+    queryKey: ["products", page, pageSize, search, categoryId, productTypeId, platform],
     queryFn: async (): Promise<PaginatedProducts> => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -40,6 +41,10 @@ export function useProducts(
 
       if (productTypeId) {
         query = query.eq("product_type_id", productTypeId);
+      }
+
+      if (platform) {
+        query = query.eq("platform", platform);
       }
 
       const { data, error, count } = await query
