@@ -13,9 +13,15 @@ export interface PaginatedProducts {
   count: number;
 }
 
-export function useProducts(page: number = 1, pageSize: number = 10, search: string = "") {
+export function useProducts(
+  page: number = 1, 
+  pageSize: number = 10, 
+  search: string = "",
+  categoryId: string = "",
+  productTypeId: string = ""
+) {
   return useQuery({
-    queryKey: ["products", page, pageSize, search],
+    queryKey: ["products", page, pageSize, search, categoryId, productTypeId],
     queryFn: async (): Promise<PaginatedProducts> => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -26,6 +32,14 @@ export function useProducts(page: number = 1, pageSize: number = 10, search: str
 
       if (search) {
         query = query.or(`title.ilike.%${search}%,platform.ilike.%${search}%`);
+      }
+
+      if (categoryId) {
+        query = query.eq("category_id", categoryId);
+      }
+
+      if (productTypeId) {
+        query = query.eq("product_type_id", productTypeId);
       }
 
       const { data, error, count } = await query
