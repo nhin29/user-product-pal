@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, FolderOpen, Layers, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -7,7 +7,6 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Categories", href: "/categories", icon: FolderOpen },
   { name: "Niche", href: "/product-types", icon: Layers },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
