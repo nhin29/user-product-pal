@@ -4,6 +4,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ import { AddProductDialog } from "@/components/products/AddProductDialog";
 import { EditProductDialog } from "@/components/products/EditProductDialog";
 import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
 import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog";
+import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
 
 const platformColors: Record<string, string> = {
   amazon: "bg-orange-500/10 text-orange-500 border-orange-500/20",
@@ -49,13 +51,18 @@ export default function ProductsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch);
   
   const products = data?.data || [];
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  const allSelected = products.length > 0 && products.every((p) => selectedIds.includes(p.id));
+  const someSelected = products.some((p) => selectedIds.includes(p.id));
 
   // Debounce search
   const handleSearchChange = (value: string) => {
@@ -88,6 +95,29 @@ export default function ProductsPage() {
     setPreviewDialogOpen(true);
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => {
+        const newIds = products.map((p) => p.id);
+        return [...new Set([...prev, ...newIds])];
+      });
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !products.some((p) => p.id === id)));
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((i) => i !== id));
+    }
+  };
+
+  const handleBulkDeleteSuccess = () => {
+    setSelectedIds([]);
+  };
+
   return (
     <AdminLayout>
       <div className="animate-fade-in">
@@ -99,10 +129,21 @@ export default function ProductsPage() {
               Manage your product catalog and images.
             </p>
           </div>
-          <Button onClick={() => setAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedIds.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={() => setBulkDeleteDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete ({selectedIds.length})
+              </Button>
+            )}
+            <Button onClick={() => setAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -133,6 +174,14 @@ export default function ProductsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all"
+                        className={someSelected && !allSelected ? "data-[state=checked]:bg-primary/50" : ""}
+                      />
+                    </TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Platform</TableHead>
@@ -144,13 +193,20 @@ export default function ProductsPage() {
                 <TableBody>
                   {products.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No products found
                       </TableCell>
                     </TableRow>
                   ) : (
                     products.map((product) => (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.id} className={selectedIds.includes(product.id) ? "bg-muted/50" : ""}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.includes(product.id)}
+                          onCheckedChange={(checked) => handleSelectOne(product.id, !!checked)}
+                          aria-label={`Select ${product.title}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div 
@@ -328,6 +384,12 @@ export default function ProductsPage() {
           open={previewDialogOpen} 
           onOpenChange={setPreviewDialogOpen} 
           product={selectedProduct}
+        />
+        <BulkDeleteProductsDialog
+          open={bulkDeleteDialogOpen}
+          onOpenChange={setBulkDeleteDialogOpen}
+          productIds={selectedIds}
+          onSuccess={handleBulkDeleteSuccess}
         />
       </div>
     </AdminLayout>
