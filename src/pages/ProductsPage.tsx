@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, MoreHorizontal, Edit, Trash2, Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Edit, Trash2, Eye, Loader2, ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProducts, Product } from "@/hooks/useProducts";
+import { useProducts, useCategories, useProductTypes, Product } from "@/hooks/useProducts";
 import { AddProductDialog } from "@/components/products/AddProductDialog";
 import { EditProductDialog } from "@/components/products/EditProductDialog";
 import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
@@ -47,6 +47,8 @@ export default function ProductsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [nicheFilter, setNicheFilter] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -55,7 +57,9 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch);
+  const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter);
+  const { data: categories } = useCategories();
+  const { data: productTypes } = useProductTypes();
   
   const products = data?.data || [];
   const totalCount = data?.count || 0;
@@ -79,6 +83,26 @@ export default function ProductsPage() {
     setPageSize(Number(value));
     setCurrentPage(1);
   };
+
+  const handleCategoryChange = (value: string) => {
+    setCategoryFilter(value === "all" ? "" : value);
+    setCurrentPage(1);
+  };
+
+  const handleNicheChange = (value: string) => {
+    setNicheFilter(value === "all" ? "" : value);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setCategoryFilter("");
+    setNicheFilter("");
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = categoryFilter || nicheFilter || debouncedSearch;
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
@@ -146,9 +170,9 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-sm">
+        {/* Search and Filters */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <div className="relative max-w-sm flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search products..."
@@ -157,6 +181,43 @@ export default function ProductsPage() {
               className="pl-10"
             />
           </div>
+          
+          <Select value={categoryFilter || "all"} onValueChange={handleCategoryChange}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories?.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={nicheFilter || "all"} onValueChange={handleNicheChange}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Niche" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Niches</SelectItem>
+              {productTypes?.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="h-10">
+              <X className="mr-1 h-4 w-4" />
+              Clear
+            </Button>
+          )}
         </div>
 
         {/* Products Table */}
