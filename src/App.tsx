@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthGuard } from "@/components/layout/AuthGuard";
+import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import UsersPage from "./pages/UsersPage";
 import UserAnalyticsPage from "./pages/UserAnalyticsPage";
@@ -19,15 +21,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/:userId/analytics" element={<UserAnalyticsPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/product-types" element={<ProductTypesPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthGuard>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/users/:userId/analytics" element={<UserAnalyticsPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/product-types" element={<ProductTypesPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthGuard>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
