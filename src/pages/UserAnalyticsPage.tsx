@@ -266,7 +266,7 @@ export default function UserAnalyticsPage() {
                 Latest events from this user
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-h-[400px] overflow-y-auto">
               {isLoadingActivity ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map((i) => (
