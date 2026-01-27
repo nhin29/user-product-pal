@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Package, FolderOpen, Layers } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -41,14 +41,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        {/* Footer */}
-        <div className="border-t border-sidebar-border p-3">
-          <button className="nav-link w-full text-sidebar-muted hover:text-destructive">
-            <LogOut className="h-5 w-5" />
-            <span>Logout</span>
-          </button>
-        </div>
       </div>
     </aside>
   );
