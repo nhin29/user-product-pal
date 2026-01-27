@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, FolderOpen, Layers } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -11,6 +11,12 @@ const navigation = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("isAuthenticated");
+    navigate("/login");
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar">
@@ -41,6 +47,17 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Footer */}
+        <div className="border-t border-sidebar-border p-3">
+          <button 
+            onClick={handleLogout}
+            className="nav-link w-full text-sidebar-muted hover:text-destructive"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
     </aside>
   );
