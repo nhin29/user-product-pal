@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, MoreHorizontal, Edit, Trash2, Eye, Loader2 } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Edit, Trash2, Eye, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useProducts, Product } from "@/hooks/useProducts";
 import { AddProductDialog } from "@/components/products/AddProductDialog";
 import { EditProductDialog } from "@/components/products/EditProductDialog";
@@ -31,24 +38,40 @@ const platformColors: Record<string, string> = {
   other: "bg-muted text-muted-foreground",
 };
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
-  const { data: products, isLoading, error } = useProducts();
+  const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch);
+  
+  const products = data?.data || [];
+  const totalCount = data?.count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
-  const filteredProducts = products?.filter((product) => {
-    const categoryName = (product as any).categories?.name || "";
-    return (
-      product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.platform.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  // Debounce search
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+    // Simple debounce with setTimeout
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(Number(value));
+    setCurrentPage(1);
+  };
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
@@ -89,7 +112,7 @@ export default function ProductsPage() {
             <Input
               placeholder="Search products..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -105,27 +128,28 @@ export default function ProductsPage() {
             <p className="text-destructive">Failed to load products</p>
           </div>
         ) : (
-          <div className="rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Platform</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts?.length === 0 ? (
+          <>
+            <div className="rounded-lg border bg-card">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No products found
-                    </TableCell>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Platform</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredProducts?.map((product) => (
+                </TableHeader>
+                <TableBody>
+                  {products.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No products found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    products.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -210,11 +234,82 @@ export default function ProductsPage() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Rows per page:</span>
+                <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+                  <SelectTrigger className="w-[70px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="ml-4">
+                  {totalCount > 0 
+                    ? `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`
+                    : "0 results"
+                  }
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Dialogs */}
