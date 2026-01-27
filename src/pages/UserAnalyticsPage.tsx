@@ -10,7 +10,7 @@ import { useUserAnalyticsChart } from "@/hooks/useUserAnalyticsChart";
 import { useUsers } from "@/hooks/useUsers";
 import { formatDistanceToNow } from "date-fns";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
-
+import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
 const StatCard = ({
   title,
   value,
@@ -83,9 +83,10 @@ export default function UserAnalyticsPage() {
     isLoadingProducts,
     recentActivity,
     isLoadingActivity,
+    onboardingResponse,
+    isLoadingOnboarding,
   } = useUserAnalytics(userId || "");
   const { data: chartData, isLoading: isLoadingChart } = useUserAnalyticsChart(userId || "", chartPeriod);
-
   const user = users.find((u) => u.user_id === userId);
 
   const getInitials = (name: string | null) => {
@@ -175,6 +176,14 @@ export default function UserAnalyticsPage() {
           />
         </div>
 
+        {/* Onboarding Responses */}
+        <div className="mb-8">
+          <OnboardingResponseCard
+            data={onboardingResponse || null}
+            isLoading={isLoadingOnboarding}
+          />
+        </div>
+
         {/* Activity Chart */}
         <div className="mb-8">
           <ActivityChart
@@ -184,7 +193,6 @@ export default function UserAnalyticsPage() {
             onPeriodChange={setChartPeriod}
           />
         </div>
-
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Product Interactions */}
           <Card>
