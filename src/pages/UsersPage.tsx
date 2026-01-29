@@ -106,9 +106,9 @@ export default function UsersPage() {
               <thead>
                 <tr className="data-table-header">
                   <th className="px-6 py-3 text-left">User</th>
+                  <th className="px-6 py-3 text-left">Email</th>
                   <th className="px-6 py-3 text-left">Purchase Status</th>
                   <th className="px-6 py-3 text-left">Joined</th>
-                  <th className="px-6 py-3 text-left">Last Updated</th>
                   <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -141,6 +141,11 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      <span className="text-muted-foreground">
+                        {user.email || "No email"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       {user.is_purchase ? (
                         <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30">
                           <Check className="mr-1 h-3 w-3" />
@@ -156,11 +161,6 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <span className="text-muted-foreground">
                         {format(new Date(user.created_at), "MMM d, yyyy")}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-muted-foreground">
-                        {format(new Date(user.updated_at), "MMM d, yyyy")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
