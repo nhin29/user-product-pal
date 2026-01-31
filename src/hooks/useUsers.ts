@@ -25,9 +25,7 @@ export function useUsers() {
     queryKey: ["users"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .rpc("get_profiles_with_email");
 
       if (error) throw error;
       return data as UserProfile[];
