@@ -16,16 +16,18 @@ interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, displayName: string) => Promise<void>;
+  onSave: (userId: string, displayName: string, email?: string) => Promise<void>;
   isLoading: boolean;
 }
 
 export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: EditUserDialogProps) {
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.display_name || "");
+      setEmail(user.email || "");
     }
   }, [user]);
 
@@ -33,7 +35,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     e.preventDefault();
     if (!user) return;
 
-    await onSave(user.user_id, displayName);
+    const newEmail = email !== user.email ? email : undefined;
+    await onSave(user.user_id, displayName, newEmail);
     onOpenChange(false);
   };
 
@@ -48,6 +51,16 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email"
+              />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="displayName">Display Name</Label>
               <Input
