@@ -60,20 +60,30 @@ export function useUsers() {
     mutationFn: async ({
       userId,
       displayName,
-      avatarUrl,
+      email,
     }: {
       userId: string;
       displayName: string;
-      avatarUrl?: string;
+      email?: string;
     }) => {
-      const { error } = await supabase
+      // Update profile display name
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           display_name: displayName,
-          avatar_url: avatarUrl,
         })
         .eq("user_id", userId);
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // If email changed, update via edge function
+      if (email) {
+        const { data, error: emailError } = await supabase.functions.invoke(
+          "update-user-email",
+          { body: { userId, newEmail: email } }
+        );
+        if (emailError) throw emailError;
+        if (data?.error) throw new Error(data.error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
