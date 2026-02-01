@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -153,6 +153,7 @@ export default function UsersPage() {
                         </Badge>
                       ) : user.product_ids && user.product_ids.length > 0 ? (
                         <Badge variant="default" className="bg-amber-500/20 text-amber-600 border-amber-500/30">
+                          <Hand className="mr-1 h-3 w-3" />
                           Manual
                         </Badge>
                       ) : (
