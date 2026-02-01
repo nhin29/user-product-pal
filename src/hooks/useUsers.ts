@@ -9,6 +9,7 @@ export interface UserProfile {
   avatar_url: string | null;
   email: string | null;
   is_purchase: boolean;
+  product_ids: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,17 +62,26 @@ export function useUsers() {
       userId,
       displayName,
       email,
+      productIds,
     }: {
       userId: string;
       displayName: string;
       email?: string;
+      productIds?: string[];
     }) => {
-      // Update profile display name
+      // Build update object
+      const updateData: { display_name: string; product_ids?: string[] } = {
+        display_name: displayName,
+      };
+      
+      if (productIds !== undefined) {
+        updateData.product_ids = productIds;
+      }
+
+      // Update profile
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({
-          display_name: displayName,
-        })
+        .update(updateData)
         .eq("user_id", userId);
       if (profileError) throw profileError;
 
