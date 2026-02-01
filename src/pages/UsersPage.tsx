@@ -151,6 +151,10 @@ export default function UsersPage() {
                           <Check className="mr-1 h-3 w-3" />
                           Purchased
                         </Badge>
+                      ) : user.product_ids && user.product_ids.length > 0 ? (
+                        <Badge variant="default" className="bg-amber-500/20 text-amber-600 border-amber-500/30">
+                          Manual
+                        </Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-muted text-muted-foreground">
                           <X className="mr-1 h-3 w-3" />
