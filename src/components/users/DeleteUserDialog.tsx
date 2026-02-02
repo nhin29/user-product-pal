@@ -1,6 +1,6 @@
+import { useState } from "react";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { UserProfile } from "@/hooks/useUsers";
 
 interface DeleteUserDialogProps {
@@ -19,10 +20,19 @@ interface DeleteUserDialogProps {
 }
 
 export function DeleteUserDialog({ user, open, onOpenChange, onDelete, isLoading }: DeleteUserDialogProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
     if (!user) return;
-    await onDelete(user.user_id);
-    onOpenChange(false);
+    setIsDeleting(true);
+    try {
+      await onDelete(user.user_id);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Delete failed:", error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -32,17 +42,18 @@ export function DeleteUserDialog({ user, open, onOpenChange, onDelete, isLoading
           <AlertDialogTitle>Delete User</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete "{user?.display_name || 'this user'}"? This action
-            cannot be undone and will remove all associated data.
+            cannot be undone and will remove all associated data including their authentication account.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
+          <AlertDialogCancel disabled={isDeleting || isLoading}>Cancel</AlertDialogCancel>
+          <Button
+            variant="destructive"
             onClick={handleDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isDeleting || isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete"}
-          </AlertDialogAction>
+            {isDeleting || isLoading ? "Deleting..." : "Delete"}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
