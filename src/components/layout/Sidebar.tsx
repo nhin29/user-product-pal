@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -13,9 +14,9 @@ export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("isAuthenticated");
-    navigate("/login");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
   };
 
   return (
