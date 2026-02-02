@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,7 @@ export default function UsersPage() {
                 <tr className="data-table-header">
                   <th className="px-6 py-3 text-left">User</th>
                   <th className="px-6 py-3 text-left">Email</th>
+                  <th className="px-6 py-3 text-left">Role</th>
                   <th className="px-6 py-3 text-left">Purchase Status</th>
                   <th className="px-6 py-3 text-left">Joined</th>
                   <th className="px-6 py-3 text-right">Actions</th>
@@ -144,6 +145,24 @@ export default function UsersPage() {
                       <span className="text-muted-foreground">
                         {user.email || "No email"}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.role === "admin" ? (
+                        <Badge variant="default" className="bg-purple-500/20 text-purple-600 border-purple-500/30">
+                          <Shield className="mr-1 h-3 w-3" />
+                          Admin
+                        </Badge>
+                      ) : user.role === "editor" ? (
+                        <Badge variant="default" className="bg-blue-500/20 text-blue-600 border-blue-500/30">
+                          <User className="mr-1 h-3 w-3" />
+                          Editor
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                          <User className="mr-1 h-3 w-3" />
+                          {user.role || "Viewer"}
+                        </Badge>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {user.is_purchase ? (

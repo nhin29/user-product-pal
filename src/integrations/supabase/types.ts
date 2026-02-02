@@ -343,6 +343,7 @@ export type Database = {
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[]
+          role: string
           updated_at: string
           user_id: string
         }[]

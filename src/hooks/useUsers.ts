@@ -12,6 +12,7 @@ export interface UserProfile {
   product_ids: string[] | null;
   created_at: string;
   updated_at: string;
+  role: string | null;
 }
 
 export function useUsers() {
