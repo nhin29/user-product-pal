@@ -189,6 +189,7 @@ export type Database = {
           category_id: string
           created_at: string
           description: string | null
+          display_order: number | null
           id: string
           image_url: string
           platform: string
@@ -201,6 +202,7 @@ export type Database = {
           category_id: string
           created_at?: string
           description?: string | null
+          display_order?: number | null
           id?: string
           image_url: string
           platform?: string
@@ -213,6 +215,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           description?: string | null
+          display_order?: number | null
           id?: string
           image_url?: string
           platform?: string

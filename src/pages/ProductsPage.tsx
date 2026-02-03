@@ -1,16 +1,23 @@
-import { useState } from "react";
-import { Search, Plus, MoreHorizontal, Edit, Trash2, Eye, Loader2, ChevronLeft, ChevronRight, Filter, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, Plus, Trash2, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -26,23 +33,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProducts, useCategories, useProductTypes, Product } from "@/hooks/useProducts";
+import { useProducts, useCategories, useProductTypes, Product, useReorderProducts } from "@/hooks/useProducts";
 import { AddProductDialog } from "@/components/products/AddProductDialog";
 import { EditProductDialog } from "@/components/products/EditProductDialog";
 import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
 import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog";
 import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
-
-const platformColors: Record<string, string> = {
-  amazon: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  shopify: "bg-green-500/10 text-green-500 border-green-500/20",
-  meta: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  other: "bg-muted text-muted-foreground",
-};
+import { SortableProductRow } from "@/components/products/SortableProductRow";
+import { useToast } from "@/hooks/use-toast";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export default function ProductsPage() {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,11 +60,12 @@ export default function ProductsPage() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  
+
   const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter, platformFilter);
   const { data: categories } = useCategories();
   const { data: productTypes } = useProductTypes();
-  
+  const reorderProducts = useReorderProducts();
+
   const products = data?.data || [];
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -69,11 +73,28 @@ export default function ProductsPage() {
   const allSelected = products.length > 0 && products.every((p) => selectedIds.includes(p.id));
   const someSelected = products.some((p) => selectedIds.includes(p.id));
 
+  // Check if any filters are active (drag disabled when filters active)
+  const hasActiveFilters = categoryFilter || nicheFilter || platformFilter || debouncedSearch;
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Product IDs for sortable context
+  const productIds = useMemo(() => products.map((p) => p.id), [products]);
+
   // Debounce search
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
-    // Simple debounce with setTimeout
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(value);
     }, 300);
@@ -108,8 +129,6 @@ export default function ProductsPage() {
     setDebouncedSearch("");
     setCurrentPage(1);
   };
-
-  const hasActiveFilters = categoryFilter || nicheFilter || platformFilter || debouncedSearch;
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
@@ -147,6 +166,45 @@ export default function ProductsPage() {
 
   const handleBulkDeleteSuccess = () => {
     setSelectedIds([]);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = products.findIndex((p) => p.id === active.id);
+      const newIndex = products.findIndex((p) => p.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // Calculate new order values
+      const reorderedProducts = [...products];
+      const [movedProduct] = reorderedProducts.splice(oldIndex, 1);
+      reorderedProducts.splice(newIndex, 0, movedProduct);
+
+      // Calculate base offset for current page
+      const baseOrder = (currentPage - 1) * pageSize;
+
+      // Update display_order for all affected products
+      const updates = reorderedProducts.map((product, index) => ({
+        id: product.id,
+        display_order: baseOrder + index + 1,
+      }));
+
+      try {
+        await reorderProducts.mutateAsync(updates);
+        toast({
+          title: "Order updated",
+          description: "Product order has been saved.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error updating order",
+          description: "Failed to save the new order.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   return (
@@ -188,7 +246,7 @@ export default function ProductsPage() {
               className="pl-10"
             />
           </div>
-          
+
           <Select value={categoryFilter || "all"} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-[180px]">
               <Filter className="mr-2 h-4 w-4" />
@@ -239,6 +297,14 @@ export default function ProductsPage() {
           )}
         </div>
 
+        {/* Drag hint */}
+        {!hasActiveFilters && products.length > 1 && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <GripVertical className="h-4 w-4" />
+            <span>Drag rows to reorder products</span>
+          </div>
+        )}
+
         {/* Products Table */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -251,129 +317,57 @@ export default function ProductsPage() {
         ) : (
           <>
             <div className="rounded-lg border bg-card">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={handleSelectAll}
-                        aria-label="Select all"
-                        className={someSelected && !allSelected ? "data-[state=checked]:bg-primary/50" : ""}
-                      />
-                    </TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Platform</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.length === 0 ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        No products found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    products.map((product) => (
-                    <TableRow key={product.id} className={selectedIds.includes(product.id) ? "bg-muted/50" : ""}>
-                      <TableCell>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedIds.includes(product.id)}
-                          onCheckedChange={(checked) => handleSelectOne(product.id, !!checked)}
-                          aria-label={`Select ${product.title}`}
+                          checked={allSelected}
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all"
+                          className={someSelected && !allSelected ? "data-[state=checked]:bg-primary/50" : ""}
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="h-10 w-10 overflow-hidden rounded-lg bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
-                            onClick={() => handlePreview(product)}
-                          >
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.title}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                                IMG
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-col">
-                            <span 
-                              className="font-medium text-foreground line-clamp-1 cursor-pointer hover:text-primary transition-colors"
-                              onClick={() => handlePreview(product)}
-                            >
-                              {product.title}
-                            </span>
-                            {product.description && (
-                              <span className="text-xs text-muted-foreground line-clamp-1">
-                                {product.description}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {(product as any).categories?.name || "—"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={platformColors[product.platform] || platformColors.other}
-                        >
-                          {product.platform}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-muted-foreground text-sm">
-                          {(product as any).product_types?.name || "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-muted-foreground text-sm">
-                          {new Date(product.created_at).toLocaleDateString()}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handlePreview(product)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              Preview
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(product)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleDelete(product)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Platform</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {products.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          No products found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      <SortableContext items={productIds} strategy={verticalListSortingStrategy}>
+                        {products.map((product) => (
+                          <SortableProductRow
+                            key={product.id}
+                            product={product}
+                            isSelected={selectedIds.includes(product.id)}
+                            onSelect={handleSelectOne}
+                            onPreview={handlePreview}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            isDragDisabled={!!hasActiveFilters}
+                          />
+                        ))}
+                      </SortableContext>
+                    )}
+                  </TableBody>
+                </Table>
+              </DndContext>
             </div>
 
             {/* Pagination */}
@@ -393,10 +387,9 @@ export default function ProductsPage() {
                   </SelectContent>
                 </Select>
                 <span className="ml-4">
-                  {totalCount > 0 
+                  {totalCount > 0
                     ? `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`
-                    : "0 results"
-                  }
+                    : "0 results"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -450,19 +443,19 @@ export default function ProductsPage() {
 
         {/* Dialogs */}
         <AddProductDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
-        <EditProductDialog 
-          open={editDialogOpen} 
-          onOpenChange={setEditDialogOpen} 
+        <EditProductDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
           product={selectedProduct}
         />
-        <DeleteProductDialog 
-          open={deleteDialogOpen} 
-          onOpenChange={setDeleteDialogOpen} 
+        <DeleteProductDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
           product={selectedProduct}
         />
-        <ProductPreviewDialog 
-          open={previewDialogOpen} 
-          onOpenChange={setPreviewDialogOpen} 
+        <ProductPreviewDialog
+          open={previewDialogOpen}
+          onOpenChange={setPreviewDialogOpen}
           product={selectedProduct}
         />
         <BulkDeleteProductsDialog

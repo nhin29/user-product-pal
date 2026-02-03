@@ -48,7 +48,7 @@ export function useProducts(
       }
 
       const { data, error, count } = await query
-        .order("created_at", { ascending: false })
+        .order("display_order", { ascending: true })
         .range(from, to);
 
       if (error) throw error;
@@ -148,6 +148,26 @@ export function useDeleteProducts() {
   return useMutation({
     mutationFn: async (ids: string[]) => {
       const { error } = await supabase.from("products").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+}
+
+export function useReorderProducts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (updates: { id: string; display_order: number }[]) => {
+      // Update each product's display_order
+      const promises = updates.map(({ id, display_order }) =>
+        supabase.from("products").update({ display_order }).eq("id", id)
+      );
+      
+      const results = await Promise.all(promises);
+      const error = results.find((r) => r.error)?.error;
       if (error) throw error;
     },
     onSuccess: () => {
