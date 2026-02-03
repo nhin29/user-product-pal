@@ -152,15 +152,10 @@ export default function UsersPage() {
                           <Shield className="mr-1 h-3 w-3" />
                           Admin
                         </Badge>
-                      ) : user.role === "editor" ? (
-                        <Badge variant="default" className="bg-blue-500/20 text-blue-600 border-blue-500/30">
-                          <User className="mr-1 h-3 w-3" />
-                          Editor
-                        </Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-muted text-muted-foreground">
                           <User className="mr-1 h-3 w-3" />
-                          {user.role || "Viewer"}
+                          Viewer
                         </Badge>
                       )}
                     </td>

@@ -22,7 +22,6 @@ import { UserProfile } from "@/hooks/useUsers";
 
 const ROLE_OPTIONS = [
   { value: "admin", label: "Admin" },
-  { value: "editor", label: "Editor" },
   { value: "viewer", label: "Viewer" },
 ] as const;
 
