@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +19,8 @@ interface SheetRow {
 interface SyncRequest {
   sheetId: string;
   sheetName: string;
-  columnMapping: {
+  mode?: "headers" | "data";
+  columnMapping?: {
     title: string;
     category: string;
     description?: string;
@@ -36,7 +36,6 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const exp = now + 3600;
 
-  // Create JWT header and payload
   const header = { alg: "RS256", typ: "JWT" };
   const payload = {
     iss: serviceAccount.client_email,
@@ -46,8 +45,6 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
     iat: now,
   };
 
-  // Base64url encode
-  const encoder = new TextEncoder();
   const toBase64Url = (obj: any) =>
     btoa(JSON.stringify(obj))
       .replace(/\+/g, "-")
@@ -58,7 +55,6 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   const payloadB64 = toBase64Url(payload);
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  // Import the private key and sign
   const pemContents = serviceAccount.private_key
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
@@ -74,6 +70,7 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
     ["sign"]
   );
 
+  const encoder = new TextEncoder();
   const signature = await crypto.subtle.sign(
     "RSASSA-PKCS1-v1_5",
     cryptoKey,
@@ -87,7 +84,6 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 
   const jwt = `${unsignedToken}.${signatureB64}`;
 
-  // Exchange JWT for access token
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -128,16 +124,6 @@ async function fetchSheetData(
   return data.values || [];
 }
 
-// Convert column letter to index (A=0, B=1, etc.)
-function columnToIndex(col: string): number {
-  const upper = col.toUpperCase();
-  let index = 0;
-  for (let i = 0; i < upper.length; i++) {
-    index = index * 26 + (upper.charCodeAt(i) - 64);
-  }
-  return index - 1;
-}
-
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -150,13 +136,13 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const serviceAccount = JSON.parse(serviceAccountJson);
-    const { sheetId, sheetName, columnMapping }: SyncRequest = await req.json();
+    const { sheetId, sheetName, mode = "data", columnMapping }: SyncRequest = await req.json();
 
     if (!sheetId || !sheetName) {
       throw new Error("Missing sheetId or sheetName");
     }
 
-    console.log(`Syncing sheet: ${sheetId}, tab: ${sheetName}`);
+    console.log(`Mode: ${mode}, Sheet: ${sheetId}, Tab: ${sheetName}`);
 
     // Get access token
     const accessToken = await getAccessToken(serviceAccount);
@@ -166,6 +152,30 @@ serve(async (req: Request): Promise<Response> => {
     const rows = await fetchSheetData(accessToken, sheetId, sheetName);
     console.log(`Fetched ${rows.length} rows`);
 
+    if (rows.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, headers: [], products: [] }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const headerRow = rows[0];
+
+    // MODE: headers - just return column headers
+    if (mode === "headers") {
+      const headers = headerRow.map((header: string, index: number) => ({
+        name: header || `Column ${index + 1}`,
+        index,
+      }));
+      
+      console.log(`Returning ${headers.length} headers`);
+      return new Response(
+        JSON.stringify({ success: true, headers }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // MODE: data - fetch products with column mapping
     if (rows.length < 2) {
       return new Response(
         JSON.stringify({ success: true, message: "No data rows found", products: [] }),
@@ -173,31 +183,42 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Skip header row, parse data rows
-    const headerRow = rows[0];
     const dataRows = rows.slice(1);
 
-    // Map columns
-    const mapping = columnMapping || {
-      title: "A",
-      category: "B",
-      description: "C",
-      image_url: "D",
-      prompt: "E",
-      platform: "F",
-      product_type: "G",
+    if (!columnMapping) {
+      throw new Error("columnMapping is required for data mode");
+    }
+
+    // Parse column mapping (can be index number or column name)
+    const getColumnIndex = (value: string | number): number => {
+      if (typeof value === "number") return value;
+      const num = parseInt(value, 10);
+      if (!isNaN(num)) return num;
+      // Find by header name
+      const idx = headerRow.findIndex((h: string) => 
+        h?.toLowerCase() === value?.toLowerCase()
+      );
+      return idx >= 0 ? idx : -1;
     };
+
+    const titleIdx = getColumnIndex(columnMapping.title);
+    const categoryIdx = getColumnIndex(columnMapping.category);
+    const descriptionIdx = columnMapping.description ? getColumnIndex(columnMapping.description) : -1;
+    const imageUrlIdx = getColumnIndex(columnMapping.image_url);
+    const promptIdx = getColumnIndex(columnMapping.prompt);
+    const platformIdx = getColumnIndex(columnMapping.platform);
+    const productTypeIdx = columnMapping.product_type ? getColumnIndex(columnMapping.product_type) : -1;
 
     const products: SheetRow[] = dataRows
       .filter((row) => row && row.length > 0)
       .map((row) => ({
-        title: row[columnToIndex(mapping.title)] || "",
-        category: row[columnToIndex(mapping.category)] || "",
-        description: mapping.description ? row[columnToIndex(mapping.description)] || "" : "",
-        image_url: row[columnToIndex(mapping.image_url)] || "",
-        prompt: row[columnToIndex(mapping.prompt)] || "",
-        platform: row[columnToIndex(mapping.platform)] || "other",
-        product_type: mapping.product_type ? row[columnToIndex(mapping.product_type)] || "" : "",
+        title: titleIdx >= 0 ? row[titleIdx] || "" : "",
+        category: categoryIdx >= 0 ? row[categoryIdx] || "" : "",
+        description: descriptionIdx >= 0 ? row[descriptionIdx] || "" : "",
+        image_url: imageUrlIdx >= 0 ? row[imageUrlIdx] || "" : "",
+        prompt: promptIdx >= 0 ? row[promptIdx] || "" : "",
+        platform: platformIdx >= 0 ? row[platformIdx] || "other" : "other",
+        product_type: productTypeIdx >= 0 ? row[productTypeIdx] || "" : "",
       }))
       .filter((p) => p.title && p.image_url && p.prompt);
 
