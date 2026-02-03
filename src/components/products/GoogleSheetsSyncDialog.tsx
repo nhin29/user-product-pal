@@ -23,12 +23,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
 export interface SheetProduct {
-  title: string;
-  category: string;
-  image_url: string;
-  prompt: string;
+  title: string | null;
+  category: string | null;
+  image_url: string | null;
+  prompt: string | null;
   platform: string;
-  product_type?: string;
+  product_type: string | null;
 }
 
 interface SheetColumn {
