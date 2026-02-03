@@ -126,7 +126,14 @@ async function fetchSheetValues(
   if (!response.ok) {
     const error = await response.json();
     console.error("Sheets API error:", error);
-    throw new Error(`Failed to fetch sheet: ${error.error?.message || response.statusText}`);
+    
+    // Check for sheet/tab not found error
+    const errorMessage = error.error?.message || response.statusText;
+    if (response.status === 400 && errorMessage.includes("Unable to parse range")) {
+      throw new Error(`SHEET_NOT_FOUND:The tab "${sheetName}" was not found in this spreadsheet. Please check the tab name and try again.`);
+    }
+    
+    throw new Error(`Failed to fetch sheet: ${errorMessage}`);
   }
 
   const data = await response.json();
