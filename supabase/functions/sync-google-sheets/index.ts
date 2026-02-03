@@ -57,23 +57,43 @@ async function downloadAndUploadImage(
     }
     
     console.log(`Downloading Google Drive file: ${fileId}`);
-    
-    // Download file from Google Drive using alt=media
-    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    const downloadResponse = await fetch(downloadUrl, {
+
+    // Attempt #1: Drive API (requires the file be shared with the service account)
+    const apiUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    let downloadResponse = await fetch(apiUrl, {
       headers: { Authorization: `Bearer ${driveAccessToken}` },
+      redirect: "follow",
     });
-    
+
+    // Attempt #2: Public link fallback (works when file is truly public but not shared with service account)
     if (!downloadResponse.ok) {
-      console.error(`Failed to download from Drive: ${downloadResponse.status} ${downloadResponse.statusText}`);
-      // Return the converted URL as fallback
+      console.warn(
+        `Drive API download failed (${downloadResponse.status}). Trying public uc?export=download fallback...`
+      );
+      const publicUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      downloadResponse = await fetch(publicUrl, { redirect: "follow" });
+    }
+
+    if (!downloadResponse.ok) {
+      console.error(
+        `Failed to download image (api+public): ${downloadResponse.status} ${downloadResponse.statusText}`
+      );
+      // Return the public URL as the last resort (UI may still render if Drive allows it)
       return `https://drive.google.com/uc?export=download&id=${fileId}`;
     }
-    
-    const contentType = downloadResponse.headers.get("content-type") || "image/jpeg";
+
+    const contentType = downloadResponse.headers.get("content-type") || "";
     const imageBuffer = await downloadResponse.arrayBuffer();
-    
-    console.log(`Downloaded ${imageBuffer.byteLength} bytes, content-type: ${contentType}`);
+
+    console.log(`Downloaded ${imageBuffer.byteLength} bytes, content-type: ${contentType || "(none)"}`);
+
+    // If Drive returned HTML, it usually means a permission/confirmation page, not the image bytes.
+    if (contentType.includes("text/html") || imageBuffer.byteLength < 100) {
+      console.warn(
+        `Drive returned non-image payload (content-type=${contentType}, bytes=${imageBuffer.byteLength}). Returning Drive URL.`
+      );
+      return `https://drive.google.com/uc?export=download&id=${fileId}`;
+    }
     
     // Determine file extension from content type
     let extension = "jpg";
@@ -88,10 +108,13 @@ async function downloadAndUploadImage(
     
     // Upload to Supabase Storage
     const supabase = getSupabaseClient();
+    const fileBytes = new Uint8Array(imageBuffer);
+
     const { data, error } = await supabase.storage
       .from("product-images")
-      .upload(filename, imageBuffer, {
-        contentType,
+      .upload(filename, fileBytes, {
+        contentType: contentType || "application/octet-stream",
+        cacheControl: "3600",
         upsert: true,
       });
     
