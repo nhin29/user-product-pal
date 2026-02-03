@@ -18,7 +18,7 @@ interface SheetRow {
 interface SyncRequest {
   sheetId: string;
   sheetName: string;
-  headerRow?: number; // 1-indexed row number for headers (default: 1)
+  headerRow?: number;
   mode?: "headers" | "data";
   columnMapping?: {
     title: number;
@@ -38,7 +38,7 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   const header = { alg: "RS256", typ: "JWT" };
   const payload = {
     iss: serviceAccount.client_email,
-    scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
+    scope: "https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly",
     aud: "https://oauth2.googleapis.com/token",
     exp,
     iat: now,
@@ -101,13 +101,14 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   return tokenData.access_token;
 }
 
-// Fetch data from Google Sheets
-async function fetchSheetData(
+// Fetch data from Google Sheets with specified render option
+async function fetchSheetValues(
   accessToken: string,
   sheetId: string,
-  sheetName: string
+  sheetName: string,
+  valueRenderOption: string = "FORMATTED_VALUE"
 ): Promise<any[][]> {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName)}?valueRenderOption=${valueRenderOption}`;
   
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -121,6 +122,78 @@ async function fetchSheetData(
 
   const data = await response.json();
   return data.values || [];
+}
+
+// Fetch spreadsheet with grid data to get embedded images
+async function fetchSheetWithGridData(
+  accessToken: string,
+  sheetId: string,
+  sheetName: string
+): Promise<any> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?ranges=${encodeURIComponent(sheetName)}&includeGridData=true`;
+  
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error("Sheets API grid data error:", error);
+    return null;
+  }
+
+  return await response.json();
+}
+
+// Extract URL from IMAGE() formula
+function extractImageUrlFromFormula(formula: string): string | null {
+  if (!formula || typeof formula !== "string") return null;
+  
+  // Match =IMAGE("url") or =IMAGE("url", ...) patterns
+  const patterns = [
+    /=IMAGE\s*\(\s*"([^"]+)"/i,
+    /=IMAGE\s*\(\s*'([^']+)'/i,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = formula.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return null;
+}
+
+// Check if value looks like a URL
+function isUrl(value: string): boolean {
+  if (!value) return false;
+  return value.startsWith("http://") || value.startsWith("https://") || value.startsWith("//");
+}
+
+// Convert Google Drive sharing link to direct image URL
+function convertGoogleDriveUrl(url: string): string {
+  if (!url) return url;
+  
+  // Handle various Google Drive URL formats
+  // Format: https://drive.google.com/file/d/FILE_ID/view?...
+  const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveFileMatch) {
+    return `https://drive.google.com/uc?export=view&id=${driveFileMatch[1]}`;
+  }
+  
+  // Format: https://drive.google.com/open?id=FILE_ID
+  const driveOpenMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (driveOpenMatch) {
+    return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
+  }
+  
+  // Format: https://drive.google.com/uc?id=FILE_ID (already correct)
+  if (url.includes("drive.google.com/uc")) {
+    return url;
+  }
+  
+  return url;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -141,19 +214,23 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Missing sheetId or sheetName");
     }
 
-    // Validate headerRow
-    const headerRowIndex = Math.max(0, headerRow - 1); // Convert to 0-indexed
-
+    const headerRowIndex = Math.max(0, headerRow - 1);
     console.log(`Mode: ${mode}, Sheet: ${sheetId}, Tab: ${sheetName}, Header Row: ${headerRow}`);
 
-    // Get access token
     const accessToken = await getAccessToken(serviceAccount);
     console.log("Got access token");
 
-    // Fetch sheet data
-    const rows = await fetchSheetData(accessToken, sheetId, sheetName);
-    console.log(`Fetched ${rows.length} rows`);
+    // Fetch both formatted values and formulas
+    const [formattedRows, formulaRows, gridData] = await Promise.all([
+      fetchSheetValues(accessToken, sheetId, sheetName, "FORMATTED_VALUE"),
+      fetchSheetValues(accessToken, sheetId, sheetName, "FORMULA"),
+      mode === "data" ? fetchSheetWithGridData(accessToken, sheetId, sheetName) : null,
+    ]);
 
+    console.log(`Fetched ${formattedRows.length} rows (formatted), ${formulaRows.length} rows (formulas)`);
+
+    const rows = formattedRows;
+    
     if (rows.length === 0) {
       return new Response(
         JSON.stringify({ success: true, headers: [], products: [] }),
@@ -161,7 +238,6 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if we have enough rows for the specified header row
     if (rows.length <= headerRowIndex) {
       return new Response(
         JSON.stringify({ success: false, error: `Sheet doesn't have enough rows. Header row ${headerRow} not found.` }),
@@ -171,7 +247,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const headerRowData = rows[headerRowIndex];
 
-    // MODE: headers - just return column headers
+    // MODE: headers
     if (mode === "headers") {
       const headers = headerRowData.map((header: string, index: number) => ({
         name: (header && header.trim()) || `Column ${index + 1}`,
@@ -185,9 +261,31 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // MODE: data - fetch products with column mapping
-    // Data rows start after the header row
+    // MODE: data
     const dataRows = rows.slice(headerRowIndex + 1);
+    const formulaDataRows = formulaRows.slice(headerRowIndex + 1);
+    
+    // Extract embedded images from grid data
+    let embeddedImages: Map<string, string> = new Map();
+    if (gridData?.sheets?.[0]?.data?.[0]?.rowData) {
+      const rowData = gridData.sheets[0].data[0].rowData;
+      rowData.forEach((row: any, rowIdx: number) => {
+        if (row?.values) {
+          row.values.forEach((cell: any, colIdx: number) => {
+            // Check for cell image (userEnteredValue with image)
+            if (cell?.userEnteredValue?.image?.sourceUri) {
+              embeddedImages.set(`${rowIdx}-${colIdx}`, cell.userEnteredValue.image.sourceUri);
+              console.log(`Found embedded image at ${rowIdx}-${colIdx}: ${cell.userEnteredValue.image.sourceUri}`);
+            }
+            // Check for hyperlink with image
+            if (cell?.hyperlink) {
+              console.log(`Found hyperlink at ${rowIdx}-${colIdx}: ${cell.hyperlink}`);
+            }
+          });
+        }
+      });
+    }
+    console.log(`Found ${embeddedImages.size} embedded images in grid data`);
     
     if (dataRows.length === 0) {
       return new Response(
@@ -200,12 +298,10 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("columnMapping is required for data mode");
     }
 
-    // Parse column mapping (can be index number or column name)
     const getColumnIndex = (value: string | number): number => {
       if (typeof value === "number") return value;
       const num = parseInt(value, 10);
       if (!isNaN(num)) return num;
-      // Find by header name
       const idx = headerRowData.findIndex((h: string) => 
         h?.toLowerCase() === value?.toLowerCase()
       );
@@ -222,22 +318,54 @@ serve(async (req: Request): Promise<Response> => {
     console.log(`Column indices - title: ${titleIdx}, category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}`);
     console.log(`Processing ${dataRows.length} data rows`);
 
-    // Log first row's raw data for debugging
+    // Log first row's raw data
     if (dataRows.length > 0) {
-      const firstRow = dataRows[0];
-      console.log(`First data row has ${firstRow.length} cells`);
-      console.log(`First row raw data: ${JSON.stringify(firstRow.slice(0, 10))}`); // Log first 10 cells
+      console.log(`First data row formatted: ${JSON.stringify(dataRows[0].slice(0, 10))}`);
+      if (formulaDataRows[0]) {
+        console.log(`First data row formulas: ${JSON.stringify(formulaDataRows[0].slice(0, 10))}`);
+      }
     }
 
     const products: SheetRow[] = dataRows
       .filter((row) => row && row.length > 0)
       .map((row, rowIndex) => {
-        // Safely get value from row, handling sparse arrays
+        const formulaRow = formulaDataRows[rowIndex] || [];
+        
         const getValue = (idx: number): string | null => {
-          if (idx < 0 || idx >= row.length) return null;
-          const val = row[idx];
-          if (val === undefined || val === null || val === "") return null;
-          return String(val).trim();
+          if (idx < 0) return null;
+          
+          // First check formatted value
+          const formattedVal = idx < row.length ? row[idx] : undefined;
+          const formulaVal = idx < formulaRow.length ? formulaRow[idx] : undefined;
+          
+          // Try to extract image URL from formula (e.g., =IMAGE("url"))
+          if (formulaVal && typeof formulaVal === "string" && formulaVal.toUpperCase().includes("IMAGE(")) {
+            const imageUrl = extractImageUrlFromFormula(formulaVal);
+            if (imageUrl) {
+              console.log(`Extracted image URL from formula: ${imageUrl}`);
+              return convertGoogleDriveUrl(imageUrl);
+            }
+          }
+          
+          // Check for embedded image in grid data
+          // Row index in grid data = headerRowIndex + 1 + rowIndex
+          const gridRowIdx = headerRowIndex + 1 + rowIndex;
+          const embeddedImageKey = `${gridRowIdx}-${idx}`;
+          if (embeddedImages.has(embeddedImageKey)) {
+            return embeddedImages.get(embeddedImageKey)!;
+          }
+          
+          // Return formatted value if it exists
+          if (formattedVal === undefined || formattedVal === null || formattedVal === "") return null;
+          
+          const strVal = String(formattedVal).trim();
+          
+          // Convert Google Drive URLs to direct image URLs
+          if (isUrl(strVal)) {
+            return convertGoogleDriveUrl(strVal);
+          }
+          
+          return strVal;
         };
 
         const product = {
@@ -245,14 +373,13 @@ serve(async (req: Request): Promise<Response> => {
           category: getValue(categoryIdx),
           image_url: getValue(imageUrlIdx),
           prompt: getValue(promptIdx),
-          platform: getValue(platformIdx) || "other",
+          platform: getValue(platformIdx)?.toLowerCase() || "other",
           product_type: getValue(productTypeIdx),
         };
         
-        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title || '(empty)'}", category="${product.category || '(empty)'}", image_url="${(product.image_url || '').substring(0, 50) || '(empty)'}...", prompt length=${product.prompt?.length || 0}`);
+        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title || '(empty)'}", category="${product.category || '(empty)'}", image_url="${(product.image_url || '').substring(0, 80) || '(empty)'}", prompt length=${product.prompt?.length || 0}`);
         return product;
       })
-      // Only filter out completely empty rows
       .filter((p) => p.title || p.image_url || p.prompt || p.category);
 
     console.log(`Parsed ${products.length} products`);
