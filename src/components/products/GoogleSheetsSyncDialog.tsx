@@ -11,16 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useCreateProduct, useCategories, useProductTypes } from "@/hooks/useProducts";
 import { Loader2, RefreshCw, FileSpreadsheet } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
-interface GoogleSheetsSyncDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-interface SheetProduct {
+export interface SheetProduct {
   title: string;
   category: string;
   description?: string;
@@ -30,13 +25,30 @@ interface SheetProduct {
   product_type?: string;
 }
 
-export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncDialogProps) {
-  const { toast } = useToast();
-  const { data: categories } = useCategories();
-  const { data: productTypes } = useProductTypes();
-  const createProduct = useCreateProduct();
+interface GoogleSheetsSyncDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onProductsFetched?: (products: SheetProduct[]) => void;
+}
 
-  const [sheetId, setSheetId] = useState("");
+// Parse Sheet ID from various Google Sheets URL formats
+function parseSheetIdFromUrl(url: string): string | null {
+  const patterns = [
+    /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
+    /^([a-zA-Z0-9-_]+)$/, // Direct ID
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }: GoogleSheetsSyncDialogProps) {
+  const { toast } = useToast();
+
+  const [sheetUrl, setSheetUrl] = useState("");
   const [sheetName, setSheetName] = useState("Sheet1");
   const [columnMapping, setColumnMapping] = useState({
     title: "A",
@@ -49,12 +61,17 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
   });
 
   const [isFetching, setIsFetching] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
   const [fetchedProducts, setFetchedProducts] = useState<SheetProduct[]>([]);
 
   const handleFetch = async () => {
-    if (!sheetId.trim()) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter a Sheet ID" });
+    if (!sheetUrl.trim()) {
+      toast({ variant: "destructive", title: "Error", description: "Please enter a Google Sheet URL" });
+      return;
+    }
+
+    const sheetId = parseSheetIdFromUrl(sheetUrl.trim());
+    if (!sheetId) {
+      toast({ variant: "destructive", title: "Error", description: "Invalid Google Sheet URL" });
       return;
     }
 
@@ -63,16 +80,21 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
 
     try {
       const { data, error } = await supabase.functions.invoke("sync-google-sheets", {
-        body: { sheetId: sheetId.trim(), sheetName: sheetName.trim(), columnMapping },
+        body: { sheetId, sheetName: sheetName.trim(), columnMapping },
       });
 
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
 
-      setFetchedProducts(data.products || []);
+      const products = data.products || [];
+      setFetchedProducts(products);
+      
+      // Pass products to parent
+      onProductsFetched?.(products);
+      
       toast({
         title: "Fetched successfully",
-        description: `Found ${data.products?.length || 0} products from Google Sheets`,
+        description: `Found ${products.length} products from Google Sheets`,
       });
     } catch (error: any) {
       console.error("Fetch error:", error);
@@ -86,76 +108,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
     }
   };
 
-  const handleImport = async () => {
-    if (fetchedProducts.length === 0) {
-      toast({ variant: "destructive", title: "Error", description: "No products to import" });
-      return;
-    }
-
-    setIsImporting(true);
-    let successCount = 0;
-    let errorCount = 0;
-
-    try {
-      for (const product of fetchedProducts) {
-        // Find category by name
-        const category = categories?.find(
-          (c) => c.name.toLowerCase() === product.category.toLowerCase()
-        );
-        if (!category) {
-          console.warn(`Category not found: ${product.category}`);
-          errorCount++;
-          continue;
-        }
-
-        // Find product type by name (optional)
-        const productType = productTypes?.find(
-          (t) => t.name.toLowerCase() === product.product_type?.toLowerCase()
-        );
-
-        // Validate platform
-        const validPlatforms = ["amazon", "shopify", "meta", "other"];
-        const platform = validPlatforms.includes(product.platform.toLowerCase())
-          ? product.platform.toLowerCase()
-          : "other";
-
-        try {
-          await createProduct.mutateAsync({
-            title: product.title,
-            category_id: category.id,
-            description: product.description || null,
-            image_url: product.image_url,
-            prompt: product.prompt,
-            platform: platform as "amazon" | "shopify" | "meta" | "other",
-            product_type_id: productType?.id || null,
-          });
-          successCount++;
-        } catch (err) {
-          console.error(`Failed to create product: ${product.title}`, err);
-          errorCount++;
-        }
-      }
-
-      toast({
-        title: "Import complete",
-        description: `Successfully imported ${successCount} products. ${errorCount > 0 ? `${errorCount} failed.` : ""}`,
-      });
-
-      if (successCount > 0) {
-        setFetchedProducts([]);
-        onOpenChange(false);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Import failed",
-        description: error.message,
-      });
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
@@ -165,34 +117,30 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
             Sync from Google Sheets
           </DialogTitle>
           <DialogDescription>
-            Import products from your Google Sheet. Make sure the sheet is shared with your service account.
+            Fetch products from your Google Sheet. Make sure the sheet is shared with your service account.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Sheet ID & Name */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="sheetId">Sheet ID</Label>
-              <Input
-                id="sheetId"
-                placeholder="1BxiMVs0XRA5..."
-                value={sheetId}
-                onChange={(e) => setSheetId(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                From URL: /spreadsheets/d/<strong>SHEET_ID</strong>/edit
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sheetName">Tab Name</Label>
-              <Input
-                id="sheetName"
-                placeholder="Sheet1"
-                value={sheetName}
-                onChange={(e) => setSheetName(e.target.value)}
-              />
-            </div>
+          {/* Sheet URL & Tab Name */}
+          <div className="space-y-2">
+            <Label htmlFor="sheetUrl">Google Sheet URL</Label>
+            <Input
+              id="sheetUrl"
+              placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5.../edit"
+              value={sheetUrl}
+              onChange={(e) => setSheetUrl(e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="sheetName">Tab Name</Label>
+            <Input
+              id="sheetName"
+              placeholder="Sheet1"
+              value={sheetName}
+              onChange={(e) => setSheetName(e.target.value)}
+            />
           </div>
 
           {/* Column Mapping */}
@@ -228,8 +176,11 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
           {/* Preview */}
           {fetchedProducts.length > 0 && (
             <div className="space-y-2">
-              <Label>Preview ({fetchedProducts.length} products)</Label>
-              <ScrollArea className="h-[200px] rounded-md border p-2">
+              <div className="flex items-center justify-between">
+                <Label>Fetched Products</Label>
+                <Badge variant="secondary">{fetchedProducts.length} products</Badge>
+              </div>
+              <ScrollArea className="h-[250px] rounded-md border p-2">
                 <div className="space-y-2">
                   {fetchedProducts.map((product, idx) => (
                     <div
@@ -239,7 +190,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
                       <img
                         src={product.image_url}
                         alt={product.title}
-                        className="h-10 w-10 rounded object-cover"
+                        className="h-12 w-12 rounded object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "/placeholder.svg";
                         }}
@@ -249,23 +200,19 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange }: GoogleSheetsSyncD
                         <p className="text-xs text-muted-foreground">
                           {product.category} • {product.platform}
                         </p>
+                        {product.prompt && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {product.prompt}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
-
-              <Button
-                onClick={handleImport}
-                disabled={isImporting}
-                variant="default"
-                className="w-full"
-              >
-                {isImporting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Import {fetchedProducts.length} Products
-              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Products are displayed in UI only (not saved to database)
+              </p>
             </div>
           )}
         </div>
