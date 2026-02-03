@@ -127,6 +127,14 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
         title: "Columns loaded",
         description: `Found ${headers.length} columns in the sheet`,
       });
+
+       if (Array.isArray((data as any)?.warnings) && (data as any).warnings.length > 0) {
+         toast({
+           variant: "destructive",
+           title: "Sheet warning",
+           description: (data as any).warnings[0],
+         });
+       }
     } catch (error: any) {
       console.error("Fetch headers error:", error);
       toast({
@@ -187,6 +195,14 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
         title: "Products fetched",
         description: `Found ${products.length} products`,
       });
+
+       if (Array.isArray((data as any)?.warnings) && (data as any).warnings.length > 0) {
+         toast({
+           variant: "destructive",
+           title: "Image import warning",
+           description: (data as any).warnings[0],
+         });
+       }
     } catch (error: any) {
       console.error("Fetch products error:", error);
       toast({
