@@ -15,6 +15,15 @@ interface SheetRow {
   product_type: string | null;
 }
 
+interface SyncResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+  headers?: { name: string; index: number }[];
+  products?: SheetRow[];
+  warnings?: string[];
+}
+
 interface SyncRequest {
   sheetId: string;
   sheetName: string;
@@ -231,9 +240,9 @@ serve(async (req: Request): Promise<Response> => {
 
     const rows = formattedRows;
     
-    if (rows.length === 0) {
+     if (rows.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, headers: [], products: [] }),
+         JSON.stringify({ success: true, headers: [], products: [], warnings: [] } satisfies SyncResponse),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -256,7 +265,7 @@ serve(async (req: Request): Promise<Response> => {
       
       console.log(`Returning ${headers.length} headers from row ${headerRow}:`, headers.map((h: any) => h.name).join(", "));
       return new Response(
-        JSON.stringify({ success: true, headers }),
+         JSON.stringify({ success: true, headers, warnings: [] } satisfies SyncResponse),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -267,6 +276,7 @@ serve(async (req: Request): Promise<Response> => {
     
     // Extract embedded images from grid data
     let embeddedImages: Map<string, string> = new Map();
+     const warnings: string[] = [];
     if (gridData?.sheets?.[0]?.data?.[0]?.rowData) {
       const rowData = gridData.sheets[0].data[0].rowData;
       rowData.forEach((row: any, rowIdx: number) => {
@@ -289,7 +299,7 @@ serve(async (req: Request): Promise<Response> => {
     
     if (dataRows.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, message: "No data rows found", products: [] }),
+         JSON.stringify({ success: true, message: "No data rows found", products: [], warnings: [] } satisfies SyncResponse),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -384,12 +394,28 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Parsed ${products.length} products`);
 
+     // If user mapped an image column but we never found any URLs nor embedded image URLs,
+     // it is very likely the sheet uses "Insert > Image" (image-in-cell) which does NOT
+     // provide a retrievable URL in the Sheets API.
+     if (
+       imageUrlIdx >= 0 &&
+       embeddedImages.size === 0 &&
+       products.length > 0 &&
+       products.every((p) => !p.image_url)
+     ) {
+       const headerName = headerRowData?.[imageUrlIdx] || `Column ${imageUrlIdx + 1}`;
+       warnings.push(
+         `The mapped image column "${headerName}" appears to contain inserted images (not URLs). Google Sheets API cannot extract those images. Use a column with a public image URL / Google Drive link, or store the image as an =IMAGE("url") formula.`
+       );
+     }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: `Found ${products.length} products`,
-        products 
-      }),
+         products,
+         warnings,
+       } satisfies SyncResponse),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
