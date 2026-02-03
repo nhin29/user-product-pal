@@ -217,22 +217,39 @@ function isUrl(value: string): boolean {
 // Convert Google Drive sharing link to direct image URL
 function convertGoogleDriveUrl(url: string): string {
   if (!url) return url;
+
+  // Prefer a direct content response for <img> usage.
+  // `uc?export=view` often returns an HTML wrapper depending on file settings.
+  // `uc?export=download` is more reliable for direct binary.
   
   // Handle various Google Drive URL formats
   // Format: https://drive.google.com/file/d/FILE_ID/view?...
   const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveFileMatch) {
-    return `https://drive.google.com/uc?export=view&id=${driveFileMatch[1]}`;
+    return `https://drive.google.com/uc?export=download&id=${driveFileMatch[1]}`;
   }
   
   // Format: https://drive.google.com/open?id=FILE_ID
   const driveOpenMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
   if (driveOpenMatch) {
-    return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
+    return `https://drive.google.com/uc?export=download&id=${driveOpenMatch[1]}`;
   }
   
-  // Format: https://drive.google.com/uc?id=FILE_ID (already correct)
+  // Format: https://drive.google.com/uc?...&id=FILE_ID
   if (url.includes("drive.google.com/uc")) {
+    try {
+      const u = new URL(url);
+      // Force export=download for reliability
+      u.searchParams.set("export", "download");
+      return u.toString();
+    } catch {
+      return url.replace("export=view", "export=download");
+    }
+  }
+
+  // Format: https://drive.google.com/thumbnail?id=FILE_ID...
+  // Keep as-is (already intended for images)
+  if (url.includes("drive.google.com/thumbnail")) {
     return url;
   }
   
