@@ -72,6 +72,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
   const [sheetUrl, setSheetUrl] = useState("");
   const [sheetName, setSheetName] = useState("Sheet1");
+  const [headerRow, setHeaderRow] = useState(1);
   const [columns, setColumns] = useState<SheetColumn[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
     title: "",
@@ -87,7 +88,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [fetchedProducts, setFetchedProducts] = useState<SheetProduct[]>([]);
 
-  // Auto-fetch headers when URL changes
+  // Fetch headers when URL or header row changes
   useEffect(() => {
     const sheetId = parseSheetIdFromUrl(sheetUrl);
     if (sheetId && sheetName) {
@@ -96,7 +97,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
       }, 500);
       return () => clearTimeout(timeoutId);
     }
-  }, [sheetUrl, sheetName]);
+  }, [sheetUrl, sheetName, headerRow]);
 
   const fetchHeaders = async (sheetId: string) => {
     setIsFetchingHeaders(true);
@@ -105,7 +106,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
     try {
       const { data, error } = await supabase.functions.invoke("sync-google-sheets", {
-        body: { sheetId, sheetName: sheetName.trim(), mode: "headers" },
+        body: { sheetId, sheetName: sheetName.trim(), headerRow, mode: "headers" },
       });
 
       if (error) throw error;
@@ -175,7 +176,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
       );
 
       const { data, error } = await supabase.functions.invoke("sync-google-sheets", {
-        body: { sheetId, sheetName: sheetName.trim(), mode: "data", columnMapping: mappingForApi },
+        body: { sheetId, sheetName: sheetName.trim(), headerRow, mode: "data", columnMapping: mappingForApi },
       });
 
       if (error) throw error;
@@ -234,23 +235,36 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
             />
           </div>
           
-          {/* Tab Name */}
-          <div className="space-y-2">
-            <Label htmlFor="sheetName">Tab Name</Label>
-            <div className="flex gap-2">
+          {/* Tab Name & Header Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sheetName">Tab Name</Label>
               <Input
                 id="sheetName"
                 placeholder="Sheet1"
                 value={sheetName}
                 onChange={(e) => setSheetName(e.target.value)}
-                className="flex-1"
               />
-              {isFetchingHeaders && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading...
-                </div>
-              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="headerRow">Header Row</Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  id="headerRow"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={headerRow}
+                  onChange={(e) => setHeaderRow(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20"
+                />
+                <span className="text-xs text-muted-foreground flex-1">
+                  Row with column names
+                </span>
+                {isFetchingHeaders && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
             </div>
           </div>
 

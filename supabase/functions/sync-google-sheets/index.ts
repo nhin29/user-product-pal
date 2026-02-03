@@ -19,6 +19,7 @@ interface SheetRow {
 interface SyncRequest {
   sheetId: string;
   sheetName: string;
+  headerRow?: number; // 1-indexed row number for headers (default: 1)
   mode?: "headers" | "data";
   columnMapping?: {
     title: string;
@@ -136,13 +137,16 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const serviceAccount = JSON.parse(serviceAccountJson);
-    const { sheetId, sheetName, mode = "data", columnMapping }: SyncRequest = await req.json();
+    const { sheetId, sheetName, headerRow = 1, mode = "data", columnMapping }: SyncRequest = await req.json();
 
     if (!sheetId || !sheetName) {
       throw new Error("Missing sheetId or sheetName");
     }
 
-    console.log(`Mode: ${mode}, Sheet: ${sheetId}, Tab: ${sheetName}`);
+    // Validate headerRow
+    const headerRowIndex = Math.max(0, headerRow - 1); // Convert to 0-indexed
+
+    console.log(`Mode: ${mode}, Sheet: ${sheetId}, Tab: ${sheetName}, Header Row: ${headerRow}`);
 
     // Get access token
     const accessToken = await getAccessToken(serviceAccount);
@@ -159,16 +163,24 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const headerRow = rows[0];
+    // Check if we have enough rows for the specified header row
+    if (rows.length <= headerRowIndex) {
+      return new Response(
+        JSON.stringify({ success: false, error: `Sheet doesn't have enough rows. Header row ${headerRow} not found.` }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const headerRowData = rows[headerRowIndex];
 
     // MODE: headers - just return column headers
     if (mode === "headers") {
-      const headers = headerRow.map((header: string, index: number) => ({
-        name: header || `Column ${index + 1}`,
+      const headers = headerRowData.map((header: string, index: number) => ({
+        name: (header && header.trim()) || `Column ${index + 1}`,
         index,
       }));
       
-      console.log(`Returning ${headers.length} headers`);
+      console.log(`Returning ${headers.length} headers from row ${headerRow}:`, headers.map((h: any) => h.name).join(", "));
       return new Response(
         JSON.stringify({ success: true, headers }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -176,14 +188,15 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // MODE: data - fetch products with column mapping
-    if (rows.length < 2) {
+    // Data rows start after the header row
+    const dataRows = rows.slice(headerRowIndex + 1);
+    
+    if (dataRows.length === 0) {
       return new Response(
         JSON.stringify({ success: true, message: "No data rows found", products: [] }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    const dataRows = rows.slice(1);
 
     if (!columnMapping) {
       throw new Error("columnMapping is required for data mode");
@@ -195,7 +208,7 @@ serve(async (req: Request): Promise<Response> => {
       const num = parseInt(value, 10);
       if (!isNaN(num)) return num;
       // Find by header name
-      const idx = headerRow.findIndex((h: string) => 
+      const idx = headerRowData.findIndex((h: string) => 
         h?.toLowerCase() === value?.toLowerCase()
       );
       return idx >= 0 ? idx : -1;
