@@ -1,10 +1,118 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+// Initialize Supabase client for storage operations
+function getSupabaseClient() {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  return createClient(supabaseUrl, supabaseServiceKey);
+}
+
+// Extract Google Drive file ID from various URL formats
+function extractGoogleDriveFileId(url: string): string | null {
+  if (!url) return null;
+  
+  // Format: https://drive.google.com/file/d/FILE_ID/view?...
+  const driveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveFileMatch) return driveFileMatch[1];
+  
+  // Format: https://drive.google.com/open?id=FILE_ID
+  const driveOpenMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (driveOpenMatch) return driveOpenMatch[1];
+  
+  // Format: https://drive.google.com/uc?...&id=FILE_ID
+  if (url.includes("drive.google.com/uc")) {
+    try {
+      const u = new URL(url);
+      const id = u.searchParams.get("id");
+      if (id) return id;
+    } catch {
+      const match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match) return match[1];
+    }
+  }
+  
+  return null;
+}
+
+// Download image from Google Drive and upload to Supabase Storage
+async function downloadAndUploadImage(
+  driveAccessToken: string,
+  imageUrl: string,
+  productIndex: number
+): Promise<string | null> {
+  try {
+    const fileId = extractGoogleDriveFileId(imageUrl);
+    
+    if (!fileId) {
+      // Not a Google Drive URL, return as-is
+      console.log(`Not a Google Drive URL, returning as-is: ${imageUrl.substring(0, 50)}...`);
+      return imageUrl;
+    }
+    
+    console.log(`Downloading Google Drive file: ${fileId}`);
+    
+    // Download file from Google Drive using alt=media
+    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const downloadResponse = await fetch(downloadUrl, {
+      headers: { Authorization: `Bearer ${driveAccessToken}` },
+    });
+    
+    if (!downloadResponse.ok) {
+      console.error(`Failed to download from Drive: ${downloadResponse.status} ${downloadResponse.statusText}`);
+      // Return the converted URL as fallback
+      return `https://drive.google.com/uc?export=download&id=${fileId}`;
+    }
+    
+    const contentType = downloadResponse.headers.get("content-type") || "image/jpeg";
+    const imageBuffer = await downloadResponse.arrayBuffer();
+    
+    console.log(`Downloaded ${imageBuffer.byteLength} bytes, content-type: ${contentType}`);
+    
+    // Determine file extension from content type
+    let extension = "jpg";
+    if (contentType.includes("png")) extension = "png";
+    else if (contentType.includes("gif")) extension = "gif";
+    else if (contentType.includes("webp")) extension = "webp";
+    else if (contentType.includes("svg")) extension = "svg";
+    
+    // Generate unique filename using timestamp and index
+    const timestamp = Date.now();
+    const filename = `sheets-import/${timestamp}-${productIndex}-${fileId.substring(0, 8)}.${extension}`;
+    
+    // Upload to Supabase Storage
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.storage
+      .from("product-images")
+      .upload(filename, imageBuffer, {
+        contentType,
+        upsert: true,
+      });
+    
+    if (error) {
+      console.error(`Failed to upload to Supabase Storage: ${error.message}`);
+      return `https://drive.google.com/uc?export=download&id=${fileId}`;
+    }
+    
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filename);
+    
+    console.log(`Uploaded to Supabase Storage: ${publicUrlData.publicUrl}`);
+    return publicUrlData.publicUrl;
+    
+  } catch (error) {
+    console.error(`Error processing image: ${error}`);
+    return imageUrl; // Return original URL as fallback
+  }
+}
 
 interface SheetRow {
   title: string | null;
@@ -407,7 +515,8 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    const products: SheetRow[] = dataRows
+    // First pass: extract raw data without image processing
+    const rawProducts = dataRows
       .filter((row) => row && row.length > 0)
       .map((row, rowIndex) => {
         const formulaRow = formulaDataRows[rowIndex] || [];
@@ -424,7 +533,7 @@ serve(async (req: Request): Promise<Response> => {
             const imageUrl = extractImageUrlFromFormula(formulaVal);
             if (imageUrl) {
               console.log(`Extracted image URL from formula: ${imageUrl}`);
-              return convertGoogleDriveUrl(imageUrl);
+              return imageUrl; // Return raw URL, will process later
             }
           }
           
@@ -442,19 +551,13 @@ serve(async (req: Request): Promise<Response> => {
           const hyperlinkKey = `${gridRowIdx}-${idx}`;
           const hyperlink = cellHyperlinks.get(hyperlinkKey);
           if (hyperlink && (!formattedVal || String(formattedVal).trim() === "")) {
-            return convertGoogleDriveUrl(hyperlink);
+            return hyperlink; // Return raw URL, will process later
           }
           
           // Return formatted value if it exists
           if (formattedVal === undefined || formattedVal === null || formattedVal === "") return null;
           
           const strVal = String(formattedVal).trim();
-          
-          // Convert Google Drive URLs to direct image URLs
-          if (isUrl(strVal)) {
-            return convertGoogleDriveUrl(strVal);
-          }
-          
           return strVal;
         };
 
@@ -467,12 +570,33 @@ serve(async (req: Request): Promise<Response> => {
           product_type: getValue(productTypeIdx),
         };
         
-        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title || '(empty)'}", category="${product.category || '(empty)'}", image_url="${(product.image_url || '').substring(0, 80) || '(empty)'}", prompt length=${product.prompt?.length || 0}`);
+        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title || '(empty)'}", image_url="${(product.image_url || '').substring(0, 80) || '(empty)'}"`);
+        return { product, rowIndex };
+      })
+      .filter((p) => p.product.title || p.product.image_url || p.product.prompt || p.product.category);
+
+    console.log(`Found ${rawProducts.length} raw products, now processing images...`);
+
+    // Second pass: download Google Drive images to Supabase Storage
+    const products: SheetRow[] = await Promise.all(
+      rawProducts.map(async ({ product, rowIndex }) => {
+        if (product.image_url && isUrl(product.image_url)) {
+          const fileId = extractGoogleDriveFileId(product.image_url);
+          if (fileId) {
+            // It's a Google Drive URL - download and upload to Supabase
+            const storageUrl = await downloadAndUploadImage(accessToken, product.image_url, rowIndex);
+            if (storageUrl) {
+              console.log(`Image for row ${rowIndex}: ${product.image_url.substring(0, 40)}... → ${storageUrl.substring(0, 60)}...`);
+              product.image_url = storageUrl;
+            }
+          }
+          // Non-Google-Drive URLs are kept as-is
+        }
         return product;
       })
-      .filter((p) => p.title || p.image_url || p.prompt || p.category);
+    );
 
-    console.log(`Parsed ${products.length} products`);
+    console.log(`Parsed ${products.length} products with processed images`);
 
      // If user mapped an image column but we never found any URLs nor embedded image URLs,
      // it is very likely the sheet uses "Insert > Image" (image-in-cell) which does NOT
