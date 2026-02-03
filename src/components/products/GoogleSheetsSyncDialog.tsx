@@ -25,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 export interface SheetProduct {
   title: string;
   category: string;
-  description?: string;
   image_url: string;
   prompt: string;
   platform: string;
@@ -60,7 +59,6 @@ function parseSheetIdFromUrl(url: string): string | null {
 const FIELD_LABELS: Record<string, { label: string; required: boolean }> = {
   title: { label: "Title", required: true },
   category: { label: "Category", required: true },
-  description: { label: "Description", required: false },
   image_url: { label: "Image URL", required: true },
   prompt: { label: "Prompt", required: true },
   platform: { label: "Platform", required: true },
@@ -77,7 +75,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
     title: "",
     category: "",
-    description: "",
     image_url: "",
     prompt: "",
     platform: "",
