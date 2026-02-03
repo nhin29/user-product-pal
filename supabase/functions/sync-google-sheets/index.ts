@@ -276,6 +276,7 @@ serve(async (req: Request): Promise<Response> => {
     
     // Extract embedded images from grid data
     let embeddedImages: Map<string, string> = new Map();
+    let cellHyperlinks: Map<string, string> = new Map();
      const warnings: string[] = [];
     if (gridData?.sheets?.[0]?.data?.[0]?.rowData) {
       const rowData = gridData.sheets[0].data[0].rowData;
@@ -287,8 +288,9 @@ serve(async (req: Request): Promise<Response> => {
               embeddedImages.set(`${rowIdx}-${colIdx}`, cell.userEnteredValue.image.sourceUri);
               console.log(`Found embedded image at ${rowIdx}-${colIdx}: ${cell.userEnteredValue.image.sourceUri}`);
             }
-            // Check for hyperlink with image
-            if (cell?.hyperlink) {
+            // Capture hyperlinks (often used when the visible cell value is empty)
+            if (cell?.hyperlink && typeof cell.hyperlink === "string") {
+              cellHyperlinks.set(`${rowIdx}-${colIdx}`, cell.hyperlink);
               console.log(`Found hyperlink at ${rowIdx}-${colIdx}: ${cell.hyperlink}`);
             }
           });
@@ -296,6 +298,7 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
     console.log(`Found ${embeddedImages.size} embedded images in grid data`);
+    console.log(`Found ${cellHyperlinks.size} hyperlinks in grid data`);
     
     if (dataRows.length === 0) {
       return new Response(
@@ -357,12 +360,21 @@ serve(async (req: Request): Promise<Response> => {
             }
           }
           
-          // Check for embedded image in grid data
           // Row index in grid data = headerRowIndex + 1 + rowIndex
           const gridRowIdx = headerRowIndex + 1 + rowIndex;
+
+          // Prefer embedded image sourceUri when present
           const embeddedImageKey = `${gridRowIdx}-${idx}`;
           if (embeddedImages.has(embeddedImageKey)) {
             return embeddedImages.get(embeddedImageKey)!;
+          }
+
+          // If the cell is a hyperlink (common for Drive links) and formatted value is empty,
+          // use the hyperlink as the actual value.
+          const hyperlinkKey = `${gridRowIdx}-${idx}`;
+          const hyperlink = cellHyperlinks.get(hyperlinkKey);
+          if (hyperlink && (!formattedVal || String(formattedVal).trim() === "")) {
+            return convertGoogleDriveUrl(hyperlink);
           }
           
           // Return formatted value if it exists
