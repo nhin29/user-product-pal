@@ -335,21 +335,40 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
                   {fetchedProducts.map((product, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-2 rounded-md bg-muted/50"
+                      className="flex items-center gap-3 p-3 rounded-md bg-muted/50 border"
                     >
-                      <img
-                        src={product.image_url}
-                        alt={product.title}
-                        className="h-10 w-10 rounded object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{product.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {product.category} • {product.platform}
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.title || "Product"}
+                          className="h-12 w-12 rounded object-cover flex-shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs text-muted-foreground">No img</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p className="text-sm font-medium truncate">
+                          {product.title || <span className="text-muted-foreground italic">No title</span>}
                         </p>
+                        <div className="flex flex-wrap gap-1 text-xs">
+                          {product.category && (
+                            <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                          )}
+                          <Badge variant="outline" className="text-xs">{product.platform}</Badge>
+                          {product.product_type && (
+                            <Badge variant="outline" className="text-xs">{product.product_type}</Badge>
+                          )}
+                        </div>
+                        {product.prompt && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            Prompt: {product.prompt.substring(0, 60)}...
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}

@@ -222,24 +222,40 @@ serve(async (req: Request): Promise<Response> => {
     console.log(`Column indices - title: ${titleIdx}, category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}`);
     console.log(`Processing ${dataRows.length} data rows`);
 
+    // Log first row's raw data for debugging
+    if (dataRows.length > 0) {
+      const firstRow = dataRows[0];
+      console.log(`First data row has ${firstRow.length} cells`);
+      console.log(`First row raw data: ${JSON.stringify(firstRow.slice(0, 10))}`); // Log first 10 cells
+    }
+
     const products: SheetRow[] = dataRows
       .filter((row) => row && row.length > 0)
       .map((row, rowIndex) => {
-        const product = {
-          title: titleIdx >= 0 && row[titleIdx] ? String(row[titleIdx]).trim() : null,
-          category: categoryIdx >= 0 && row[categoryIdx] ? String(row[categoryIdx]).trim() : null,
-          image_url: imageUrlIdx >= 0 && row[imageUrlIdx] ? String(row[imageUrlIdx]).trim() : null,
-          prompt: promptIdx >= 0 && row[promptIdx] ? String(row[promptIdx]).trim() : null,
-          platform: platformIdx >= 0 && row[platformIdx] ? String(row[platformIdx]).trim().toLowerCase() : "other",
-          product_type: productTypeIdx >= 0 && row[productTypeIdx] ? String(row[productTypeIdx]).trim() : null,
+        // Safely get value from row, handling sparse arrays
+        const getValue = (idx: number): string | null => {
+          if (idx < 0 || idx >= row.length) return null;
+          const val = row[idx];
+          if (val === undefined || val === null || val === "") return null;
+          return String(val).trim();
         };
-        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title}", image_url="${product.image_url?.substring(0, 50)}...", prompt length=${product.prompt?.length || 0}`);
+
+        const product = {
+          title: getValue(titleIdx),
+          category: getValue(categoryIdx),
+          image_url: getValue(imageUrlIdx),
+          prompt: getValue(promptIdx),
+          platform: getValue(platformIdx) || "other",
+          product_type: getValue(productTypeIdx),
+        };
+        
+        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title || '(empty)'}", category="${product.category || '(empty)'}", image_url="${(product.image_url || '').substring(0, 50) || '(empty)'}...", prompt length=${product.prompt?.length || 0}`);
         return product;
       })
-      // Only filter out completely empty rows, not rows with some empty fields
-      .filter((p) => p.title || p.image_url || p.prompt);
+      // Only filter out completely empty rows
+      .filter((p) => p.title || p.image_url || p.prompt || p.category);
 
-    console.log(`Parsed ${products.length} products (including those with some empty fields)`);
+    console.log(`Parsed ${products.length} products`);
 
     return new Response(
       JSON.stringify({ 
