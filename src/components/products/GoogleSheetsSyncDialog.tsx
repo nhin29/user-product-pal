@@ -137,10 +137,23 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
        }
     } catch (error: any) {
       console.error("Fetch headers error:", error);
+      
+      // Parse user-friendly error messages from the edge function
+      let title = "Failed to load columns";
+      let description = error.message || "Could not fetch sheet headers";
+      
+      // Check for specific error types
+      if (description.includes("SHEET_NOT_FOUND:")) {
+        title = "Tab not found";
+        description = description.replace("SHEET_NOT_FOUND:", "");
+      } else if (description.includes("non-2xx status code")) {
+        description = "Could not connect to Google Sheets. Please check your URL and tab name.";
+      }
+      
       toast({
         variant: "destructive",
-        title: "Failed to load columns",
-        description: error.message || "Could not fetch sheet headers",
+        title,
+        description,
       });
     } finally {
       setIsFetchingHeaders(false);
