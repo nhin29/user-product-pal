@@ -64,11 +64,13 @@ export function useUsers() {
       displayName,
       email,
       productIds,
+      role,
     }: {
       userId: string;
       displayName: string;
       email?: string;
       productIds?: string[];
+      role?: string;
     }) => {
       // Build update object
       const updateData: { display_name: string; product_ids?: string[] } = {
@@ -94,6 +96,17 @@ export function useUsers() {
         );
         if (emailError) throw emailError;
         if (data?.error) throw new Error(data.error);
+      }
+
+      // If role changed, upsert in user_roles table
+      if (role) {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .upsert(
+            { user_id: userId, role: role as "admin" | "editor" | "viewer" },
+            { onConflict: "user_id" }
+          );
+        if (roleError) throw roleError;
       }
     },
     onSuccess: () => {
