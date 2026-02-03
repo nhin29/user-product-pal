@@ -31,6 +31,7 @@ interface Review {
   comment: string | null;
   created_at: string;
   user_id: string;
+  display_name?: string | null;
 }
 
 function useProductReviews(productId: string | undefined) {
@@ -38,13 +39,29 @@ function useProductReviews(productId: string | undefined) {
     queryKey: ["product-reviews", productId],
     queryFn: async () => {
       if (!productId) return [];
-      const { data, error } = await supabase
+      
+      // Fetch reviews
+      const { data: reviews, error: reviewsError } = await supabase
         .from("reviews")
         .select("*")
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Review[];
+      if (reviewsError) throw reviewsError;
+      if (!reviews || reviews.length === 0) return [];
+
+      // Fetch profiles for review authors
+      const userIds = [...new Set(reviews.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+
+      // Merge profile data into reviews
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) ?? []);
+      return reviews.map(review => ({
+        ...review,
+        display_name: profileMap.get(review.user_id) || null,
+      })) as Review[];
     },
     enabled: !!productId,
   });
@@ -202,6 +219,9 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {review.display_name || "Anonymous"}
+                          </span>
                           <span className="text-xs text-muted-foreground">
                             {new Date(review.created_at).toLocaleDateString()}
                           </span>
