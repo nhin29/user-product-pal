@@ -169,14 +169,6 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             </div>
           </div>
 
-          {/* Description */}
-          {product.description && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
-              <p className="text-sm text-foreground">{product.description}</p>
-            </div>
-          )}
-
           {/* Prompt with scroll */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">Image Prompt</h3>

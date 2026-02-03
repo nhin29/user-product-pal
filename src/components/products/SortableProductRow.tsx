@@ -96,19 +96,12 @@ export function SortableProductRow({
               </div>
             )}
           </div>
-          <div className="flex flex-col">
-            <span
-              className="font-medium text-foreground line-clamp-1 cursor-pointer hover:text-primary transition-colors"
-              onClick={() => onPreview(product)}
-            >
-              {product.title}
-            </span>
-            {product.description && (
-              <span className="text-xs text-muted-foreground line-clamp-1">
-                {product.description}
-              </span>
-            )}
-          </div>
+          <span
+            className="font-medium text-foreground line-clamp-1 cursor-pointer hover:text-primary transition-colors"
+            onClick={() => onPreview(product)}
+          >
+            {product.title}
+          </span>
         </div>
       </TableCell>
       <TableCell>
