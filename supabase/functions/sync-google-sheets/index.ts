@@ -7,13 +7,12 @@ const corsHeaders = {
 };
 
 interface SheetRow {
-  title: string;
-  category: string;
-  description?: string;
-  image_url: string;
-  prompt: string;
+  title: string | null;
+  category: string | null;
+  image_url: string | null;
+  prompt: string | null;
   platform: string;
-  product_type?: string;
+  product_type: string | null;
 }
 
 interface SyncRequest {
@@ -22,13 +21,12 @@ interface SyncRequest {
   headerRow?: number; // 1-indexed row number for headers (default: 1)
   mode?: "headers" | "data";
   columnMapping?: {
-    title: string;
-    category: string;
-    description?: string;
-    image_url: string;
-    prompt: string;
-    platform: string;
-    product_type?: string;
+    title: number;
+    category: number;
+    image_url: number;
+    prompt: number;
+    platform: number;
+    product_type?: number;
   };
 }
 
@@ -216,26 +214,32 @@ serve(async (req: Request): Promise<Response> => {
 
     const titleIdx = getColumnIndex(columnMapping.title);
     const categoryIdx = getColumnIndex(columnMapping.category);
-    const descriptionIdx = columnMapping.description ? getColumnIndex(columnMapping.description) : -1;
     const imageUrlIdx = getColumnIndex(columnMapping.image_url);
     const promptIdx = getColumnIndex(columnMapping.prompt);
     const platformIdx = getColumnIndex(columnMapping.platform);
-    const productTypeIdx = columnMapping.product_type ? getColumnIndex(columnMapping.product_type) : -1;
+    const productTypeIdx = columnMapping.product_type !== undefined ? getColumnIndex(columnMapping.product_type) : -1;
+
+    console.log(`Column indices - title: ${titleIdx}, category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}`);
+    console.log(`Processing ${dataRows.length} data rows`);
 
     const products: SheetRow[] = dataRows
       .filter((row) => row && row.length > 0)
-      .map((row) => ({
-        title: titleIdx >= 0 ? row[titleIdx] || "" : "",
-        category: categoryIdx >= 0 ? row[categoryIdx] || "" : "",
-        description: descriptionIdx >= 0 ? row[descriptionIdx] || "" : "",
-        image_url: imageUrlIdx >= 0 ? row[imageUrlIdx] || "" : "",
-        prompt: promptIdx >= 0 ? row[promptIdx] || "" : "",
-        platform: platformIdx >= 0 ? row[platformIdx] || "other" : "other",
-        product_type: productTypeIdx >= 0 ? row[productTypeIdx] || "" : "",
-      }))
-      .filter((p) => p.title && p.image_url && p.prompt);
+      .map((row, rowIndex) => {
+        const product = {
+          title: titleIdx >= 0 && row[titleIdx] ? String(row[titleIdx]).trim() : null,
+          category: categoryIdx >= 0 && row[categoryIdx] ? String(row[categoryIdx]).trim() : null,
+          image_url: imageUrlIdx >= 0 && row[imageUrlIdx] ? String(row[imageUrlIdx]).trim() : null,
+          prompt: promptIdx >= 0 && row[promptIdx] ? String(row[promptIdx]).trim() : null,
+          platform: platformIdx >= 0 && row[platformIdx] ? String(row[platformIdx]).trim().toLowerCase() : "other",
+          product_type: productTypeIdx >= 0 && row[productTypeIdx] ? String(row[productTypeIdx]).trim() : null,
+        };
+        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title}", image_url="${product.image_url?.substring(0, 50)}...", prompt length=${product.prompt?.length || 0}`);
+        return product;
+      })
+      // Only filter out completely empty rows, not rows with some empty fields
+      .filter((p) => p.title || p.image_url || p.prompt);
 
-    console.log(`Parsed ${products.length} valid products`);
+    console.log(`Parsed ${products.length} products (including those with some empty fields)`);
 
     return new Response(
       JSON.stringify({ 
