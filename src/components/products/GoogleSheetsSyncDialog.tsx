@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,12 +6,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, FileSpreadsheet } from "lucide-react";
+import { Loader2, RefreshCw, FileSpreadsheet, Check } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
@@ -23,6 +30,11 @@ export interface SheetProduct {
   prompt: string;
   platform: string;
   product_type?: string;
+}
+
+interface SheetColumn {
+  name: string;
+  index: number;
 }
 
 interface GoogleSheetsSyncDialogProps {
@@ -45,42 +57,125 @@ function parseSheetIdFromUrl(url: string): string | null {
   return null;
 }
 
+const FIELD_LABELS: Record<string, { label: string; required: boolean }> = {
+  title: { label: "Title", required: true },
+  category: { label: "Category", required: true },
+  description: { label: "Description", required: false },
+  image_url: { label: "Image URL", required: true },
+  prompt: { label: "Prompt", required: true },
+  platform: { label: "Platform", required: true },
+  product_type: { label: "Product Type", required: false },
+};
+
 export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }: GoogleSheetsSyncDialogProps) {
   const { toast } = useToast();
 
   const [sheetUrl, setSheetUrl] = useState("");
   const [sheetName, setSheetName] = useState("Sheet1");
-  const [columnMapping, setColumnMapping] = useState({
-    title: "A",
-    category: "B",
-    description: "C",
-    image_url: "D",
-    prompt: "E",
-    platform: "F",
-    product_type: "G",
+  const [columns, setColumns] = useState<SheetColumn[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
+    title: "",
+    category: "",
+    description: "",
+    image_url: "",
+    prompt: "",
+    platform: "",
+    product_type: "",
   });
 
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetchingHeaders, setIsFetchingHeaders] = useState(false);
+  const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [fetchedProducts, setFetchedProducts] = useState<SheetProduct[]>([]);
 
-  const handleFetch = async () => {
-    if (!sheetUrl.trim()) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter a Google Sheet URL" });
-      return;
+  // Auto-fetch headers when URL changes
+  useEffect(() => {
+    const sheetId = parseSheetIdFromUrl(sheetUrl);
+    if (sheetId && sheetName) {
+      const timeoutId = setTimeout(() => {
+        fetchHeaders(sheetId);
+      }, 500);
+      return () => clearTimeout(timeoutId);
     }
+  }, [sheetUrl, sheetName]);
 
+  const fetchHeaders = async (sheetId: string) => {
+    setIsFetchingHeaders(true);
+    setColumns([]);
+    setFetchedProducts([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-google-sheets", {
+        body: { sheetId, sheetName: sheetName.trim(), mode: "headers" },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      const headers = data.headers || [];
+      setColumns(headers);
+
+      // Try to auto-map columns by matching names
+      const newMapping: Record<string, string> = {};
+      Object.keys(FIELD_LABELS).forEach((field) => {
+        const matchingCol = headers.find((col: SheetColumn) =>
+          col.name.toLowerCase().includes(field.replace("_", " ").toLowerCase()) ||
+          col.name.toLowerCase().includes(field.replace("_", "").toLowerCase())
+        );
+        newMapping[field] = matchingCol ? String(matchingCol.index) : "";
+      });
+      setColumnMapping(newMapping);
+
+      toast({
+        title: "Columns loaded",
+        description: `Found ${headers.length} columns in the sheet`,
+      });
+    } catch (error: any) {
+      console.error("Fetch headers error:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load columns",
+        description: error.message || "Could not fetch sheet headers",
+      });
+    } finally {
+      setIsFetchingHeaders(false);
+    }
+  };
+
+  const handleFetchProducts = async () => {
     const sheetId = parseSheetIdFromUrl(sheetUrl.trim());
     if (!sheetId) {
       toast({ variant: "destructive", title: "Error", description: "Invalid Google Sheet URL" });
       return;
     }
 
-    setIsFetching(true);
+    // Validate required fields
+    const requiredFields = Object.entries(FIELD_LABELS)
+      .filter(([, config]) => config.required)
+      .map(([key]) => key);
+
+    const missingFields = requiredFields.filter((field) => !columnMapping[field]);
+    if (missingFields.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing mappings",
+        description: `Please map: ${missingFields.map((f) => FIELD_LABELS[f].label).join(", ")}`,
+      });
+      return;
+    }
+
+    setIsFetchingProducts(true);
     setFetchedProducts([]);
 
     try {
+      // Convert index strings to numbers for the API
+      const mappingForApi = Object.fromEntries(
+        Object.entries(columnMapping)
+          .filter(([, value]) => value !== "")
+          .map(([key, value]) => [key, parseInt(value, 10)])
+      );
+
       const { data, error } = await supabase.functions.invoke("sync-google-sheets", {
-        body: { sheetId, sheetName: sheetName.trim(), columnMapping },
+        body: { sheetId, sheetName: sheetName.trim(), mode: "data", columnMapping: mappingForApi },
       });
 
       if (error) throw error;
@@ -88,41 +183,47 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
       const products = data.products || [];
       setFetchedProducts(products);
-      
-      // Pass products to parent
       onProductsFetched?.(products);
       
       toast({
-        title: "Fetched successfully",
-        description: `Found ${products.length} products from Google Sheets`,
+        title: "Products fetched",
+        description: `Found ${products.length} products`,
       });
     } catch (error: any) {
-      console.error("Fetch error:", error);
+      console.error("Fetch products error:", error);
       toast({
         variant: "destructive",
         title: "Fetch failed",
-        description: error.message || "Failed to fetch from Google Sheets",
+        description: error.message || "Failed to fetch products",
       });
     } finally {
-      setIsFetching(false);
+      setIsFetchingProducts(false);
     }
   };
 
+  const handleMappingChange = (field: string, value: string) => {
+    setColumnMapping((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const hasRequiredMappings = Object.entries(FIELD_LABELS)
+    .filter(([, config]) => config.required)
+    .every(([key]) => columnMapping[key] !== "");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
             Sync from Google Sheets
           </DialogTitle>
           <DialogDescription>
-            Fetch products from your Google Sheet. Make sure the sheet is shared with your service account.
+            Paste your Google Sheet URL to load columns automatically, then map them to product fields.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Sheet URL & Tab Name */}
+          {/* Sheet URL */}
           <div className="space-y-2">
             <Label htmlFor="sheetUrl">Google Sheet URL</Label>
             <Input
@@ -133,54 +234,92 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
             />
           </div>
           
+          {/* Tab Name */}
           <div className="space-y-2">
             <Label htmlFor="sheetName">Tab Name</Label>
-            <Input
-              id="sheetName"
-              placeholder="Sheet1"
-              value={sheetName}
-              onChange={(e) => setSheetName(e.target.value)}
-            />
-          </div>
-
-          {/* Column Mapping */}
-          <div className="space-y-2">
-            <Label>Column Mapping</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {Object.entries(columnMapping).map(([key, value]) => (
-                <div key={key} className="space-y-1">
-                  <Label className="text-xs capitalize">{key.replace("_", " ")}</Label>
-                  <Input
-                    className="h-8 text-center uppercase"
-                    maxLength={2}
-                    value={value}
-                    onChange={(e) =>
-                      setColumnMapping((prev) => ({ ...prev, [key]: e.target.value.toUpperCase() }))
-                    }
-                  />
+            <div className="flex gap-2">
+              <Input
+                id="sheetName"
+                placeholder="Sheet1"
+                value={sheetName}
+                onChange={(e) => setSheetName(e.target.value)}
+                className="flex-1"
+              />
+              {isFetchingHeaders && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading...
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
+          {/* Column Mapping */}
+          {columns.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Column Mapping</Label>
+                <Badge variant="outline" className="text-xs">
+                  {columns.length} columns found
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(FIELD_LABELS).map(([field, config]) => (
+                  <div key={field} className="space-y-1">
+                    <Label className="text-xs">
+                      {config.label}
+                      {config.required && <span className="text-destructive ml-1">*</span>}
+                    </Label>
+                    <Select
+                      value={columnMapping[field] || "none"}
+                      onValueChange={(value) => handleMappingChange(field, value === "none" ? "" : value)}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select column" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">-- Not mapped --</SelectItem>
+                        {columns.map((col) => (
+                          <SelectItem key={col.index} value={String(col.index)}>
+                            {col.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Fetch Button */}
-          <Button onClick={handleFetch} disabled={isFetching} className="w-full">
-            {isFetching ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Fetch Products
-          </Button>
+          {columns.length > 0 && (
+            <Button
+              onClick={handleFetchProducts}
+              disabled={isFetchingProducts || !hasRequiredMappings}
+              className="w-full"
+            >
+              {isFetchingProducts ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Fetch Products
+            </Button>
+          )}
 
           {/* Preview */}
           {fetchedProducts.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Fetched Products</Label>
+                <Label className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  Fetched Products
+                </Label>
                 <Badge variant="secondary">{fetchedProducts.length} products</Badge>
               </div>
-              <ScrollArea className="h-[250px] rounded-md border p-2">
+              <ScrollArea className="h-[200px] rounded-md border p-2">
                 <div className="space-y-2">
                   {fetchedProducts.map((product, idx) => (
                     <div
@@ -190,7 +329,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
                       <img
                         src={product.image_url}
                         alt={product.title}
-                        className="h-12 w-12 rounded object-cover"
+                        className="h-10 w-10 rounded object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "/placeholder.svg";
                         }}
@@ -200,11 +339,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
                         <p className="text-xs text-muted-foreground">
                           {product.category} • {product.platform}
                         </p>
-                        {product.prompt && (
-                          <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            {product.prompt}
-                          </p>
-                        )}
                       </div>
                     </div>
                   ))}
