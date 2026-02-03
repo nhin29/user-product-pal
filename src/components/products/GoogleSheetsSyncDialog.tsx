@@ -69,7 +69,8 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   const { toast } = useToast();
 
   const [sheetUrl, setSheetUrl] = useState("");
-  const [sheetName, setSheetName] = useState("Sheet1");
+  const [availableSheets, setAvailableSheets] = useState<{ title: string; index: number }[]>([]);
+  const [sheetName, setSheetName] = useState("");
   const [headerRow, setHeaderRow] = useState(1);
   const [columns, setColumns] = useState<SheetColumn[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
@@ -81,20 +82,74 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
     product_type: "",
   });
 
+  const [isFetchingSheets, setIsFetchingSheets] = useState(false);
   const [isFetchingHeaders, setIsFetchingHeaders] = useState(false);
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [fetchedProducts, setFetchedProducts] = useState<SheetProduct[]>([]);
 
-  // Fetch headers when URL or header row changes
+  // Fetch available sheets when URL changes
+  useEffect(() => {
+    const sheetId = parseSheetIdFromUrl(sheetUrl);
+    if (sheetId) {
+      const timeoutId = setTimeout(() => {
+        fetchSheets(sheetId);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setAvailableSheets([]);
+      setSheetName("");
+    }
+  }, [sheetUrl]);
+
+  // Fetch headers when sheet name or header row changes
   useEffect(() => {
     const sheetId = parseSheetIdFromUrl(sheetUrl);
     if (sheetId && sheetName) {
       const timeoutId = setTimeout(() => {
         fetchHeaders(sheetId);
-      }, 500);
+      }, 300);
       return () => clearTimeout(timeoutId);
     }
-  }, [sheetUrl, sheetName, headerRow]);
+  }, [sheetName, headerRow]);
+
+  const fetchSheets = async (sheetId: string) => {
+    setIsFetchingSheets(true);
+    setAvailableSheets([]);
+    setSheetName("");
+    setColumns([]);
+    setFetchedProducts([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-google-sheets", {
+        body: { sheetId, mode: "sheets" },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      const sheets = data.sheets || [];
+      setAvailableSheets(sheets);
+
+      // Auto-select first sheet
+      if (sheets.length > 0) {
+        setSheetName(sheets[0].title);
+      }
+
+      toast({
+        title: "Spreadsheet loaded",
+        description: `Found ${sheets.length} tab${sheets.length !== 1 ? "s" : ""}`,
+      });
+    } catch (error: any) {
+      console.error("Fetch sheets error:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load spreadsheet",
+        description: error.message || "Could not fetch sheet tabs",
+      });
+    } finally {
+      setIsFetchingSheets(false);
+    }
+  };
 
   const fetchHeaders = async (sheetId: string) => {
     setIsFetchingHeaders(true);
@@ -261,16 +316,31 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
             />
           </div>
           
-          {/* Tab Name & Header Row */}
+          {/* Tab Selection & Header Row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="sheetName">Tab Name</Label>
-              <Input
-                id="sheetName"
-                placeholder="Sheet1"
-                value={sheetName}
-                onChange={(e) => setSheetName(e.target.value)}
-              />
+              <Label>Tab Name</Label>
+              <div className="flex gap-2 items-center">
+                <Select
+                  value={sheetName}
+                  onValueChange={setSheetName}
+                  disabled={availableSheets.length === 0 || isFetchingSheets}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={isFetchingSheets ? "Loading tabs..." : "Select a tab"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSheets.map((sheet) => (
+                      <SelectItem key={sheet.index} value={sheet.title}>
+                        {sheet.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {isFetchingSheets && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground flex-shrink-0" />
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="headerRow">Header Row</Label>
