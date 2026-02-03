@@ -19,6 +19,7 @@ interface SyncResponse {
   success: boolean;
   error?: string;
   message?: string;
+  sheets?: { title: string; index: number }[];
   headers?: { name: string; index: number }[];
   products?: SheetRow[];
   warnings?: string[];
@@ -26,9 +27,9 @@ interface SyncResponse {
 
 interface SyncRequest {
   sheetId: string;
-  sheetName: string;
+  sheetName?: string;
   headerRow?: number;
-  mode?: "headers" | "data";
+  mode?: "sheets" | "headers" | "data";
   columnMapping?: {
     title: number;
     category: number;
@@ -37,6 +38,32 @@ interface SyncRequest {
     platform: number;
     product_type?: number;
   };
+}
+
+// Fetch spreadsheet metadata to get all sheet names
+async function fetchSpreadsheetMetadata(
+  accessToken: string,
+  sheetId: string
+): Promise<{ title: string; index: number }[]> {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`;
+  
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error("Sheets API metadata error:", error);
+    throw new Error(`Failed to fetch spreadsheet: ${error.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  const sheets = data.sheets || [];
+  
+  return sheets.map((sheet: any) => ({
+    title: sheet.properties?.title || "Untitled",
+    index: sheet.properties?.index ?? 0,
+  })).sort((a: any, b: any) => a.index - b.index);
 }
 
 // Get Google Access Token using Service Account
@@ -226,15 +253,32 @@ serve(async (req: Request): Promise<Response> => {
     const serviceAccount = JSON.parse(serviceAccountJson);
     const { sheetId, sheetName, headerRow = 1, mode = "data", columnMapping }: SyncRequest = await req.json();
 
-    if (!sheetId || !sheetName) {
-      throw new Error("Missing sheetId or sheetName");
+    if (!sheetId) {
+      throw new Error("Missing sheetId");
+    }
+
+    const accessToken = await getAccessToken(serviceAccount);
+    console.log("Got access token");
+
+    // MODE: sheets - return list of all sheet/tab names
+    if (mode === "sheets") {
+      console.log(`Fetching sheet list for spreadsheet: ${sheetId}`);
+      const sheets = await fetchSpreadsheetMetadata(accessToken, sheetId);
+      console.log(`Found ${sheets.length} sheets:`, sheets.map(s => s.title).join(", "));
+      
+      return new Response(
+        JSON.stringify({ success: true, sheets, warnings: [] } satisfies SyncResponse),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // For headers and data modes, sheetName is required
+    if (!sheetName) {
+      throw new Error("Missing sheetName for headers/data mode");
     }
 
     const headerRowIndex = Math.max(0, headerRow - 1);
     console.log(`Mode: ${mode}, Sheet: ${sheetId}, Tab: ${sheetName}, Header Row: ${headerRow}`);
-
-    const accessToken = await getAccessToken(serviceAccount);
-    console.log("Got access token");
 
     // Fetch both formatted values and formulas
     const [formattedRows, formulaRows, gridData] = await Promise.all([
