@@ -169,8 +169,43 @@ export function useReorderProducts() {
       const results = await Promise.all(promises);
       const error = results.find((r) => r.error)?.error;
       if (error) throw error;
+      return updates;
     },
-    onSuccess: () => {
+    onMutate: async (updates) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["products"] });
+
+      // Snapshot current queries
+      const previousQueries = queryClient.getQueriesData({ queryKey: ["products"] });
+
+      // Optimistically update all matching queries
+      queryClient.setQueriesData({ queryKey: ["products"] }, (old: any) => {
+        if (!old?.data) return old;
+        
+        const orderMap = new Map(updates.map(u => [u.id, u.display_order]));
+        const updatedData = old.data.map((product: any) => ({
+          ...product,
+          display_order: orderMap.get(product.id) ?? product.display_order,
+        }));
+        
+        // Sort by new display_order
+        updatedData.sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
+        
+        return { ...old, data: updatedData };
+      });
+
+      return { previousQueries };
+    },
+    onError: (_err, _updates, context) => {
+      // Rollback on error
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });

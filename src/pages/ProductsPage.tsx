@@ -40,12 +40,10 @@ import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
 import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog";
 import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
 import { SortableProductRow } from "@/components/products/SortableProductRow";
-import { useToast } from "@/hooks/use-toast";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export default function ProductsPage() {
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -168,7 +166,7 @@ export default function ProductsPage() {
     setSelectedIds([]);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -191,19 +189,8 @@ export default function ProductsPage() {
         display_order: baseOrder + index + 1,
       }));
 
-      try {
-        await reorderProducts.mutateAsync(updates);
-        toast({
-          title: "Order updated",
-          description: "Product order has been saved.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error updating order",
-          description: "Failed to save the new order.",
-          variant: "destructive",
-        });
-      }
+      // Fire and forget - optimistic update handles UI immediately
+      reorderProducts.mutate(updates);
     }
   };
 
