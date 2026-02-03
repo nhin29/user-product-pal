@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Trash2, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical } from "lucide-react";
+import { Search, Plus, Trash2, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -40,6 +40,7 @@ import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
 import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog";
 import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
 import { SortableProductRow } from "@/components/products/SortableProductRow";
+import { GoogleSheetsSyncDialog } from "@/components/products/GoogleSheetsSyncDialog";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -56,6 +57,7 @@ export default function ProductsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -215,6 +217,10 @@ export default function ProductsPage() {
                 Delete ({selectedIds.length})
               </Button>
             )}
+            <Button variant="outline" onClick={() => setSyncDialogOpen(true)}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Sync from Sheets
+            </Button>
             <Button onClick={() => setAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
@@ -450,6 +456,10 @@ export default function ProductsPage() {
           onOpenChange={setBulkDeleteDialogOpen}
           productIds={selectedIds}
           onSuccess={handleBulkDeleteSuccess}
+        />
+        <GoogleSheetsSyncDialog
+          open={syncDialogOpen}
+          onOpenChange={setSyncDialogOpen}
         />
       </div>
     </AdminLayout>
