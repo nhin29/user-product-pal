@@ -11,7 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UserProfile } from "@/hooks/useUsers";
+
+const ROLE_OPTIONS = [
+  { value: "admin", label: "Admin" },
+  { value: "editor", label: "Editor" },
+  { value: "viewer", label: "Viewer" },
+] as const;
 
 const PRODUCT_OPTIONS = [
   { id: "prod_TreWrcz8uVHqIT", label: "Home & Electronics" },
@@ -24,7 +37,7 @@ interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, displayName: string, email?: string, productIds?: string[]) => Promise<void>;
+  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -32,12 +45,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>("viewer");
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.display_name || "");
       setEmail(user.email || "");
       setSelectedProductIds(user.product_ids || []);
+      setSelectedRole(user.role || "viewer");
     }
   }, [user]);
 
@@ -55,12 +70,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
 
     const newEmail = email !== user.email ? email : undefined;
     const productIdsChanged = JSON.stringify(selectedProductIds.sort()) !== JSON.stringify((user.product_ids || []).sort());
+    const roleChanged = selectedRole !== (user.role || "viewer");
     
     await onSave(
       user.user_id, 
       displayName, 
       newEmail, 
-      productIdsChanged ? selectedProductIds : undefined
+      productIdsChanged ? selectedProductIds : undefined,
+      roleChanged ? selectedRole : undefined
     );
     onOpenChange(false);
   };
@@ -94,6 +111,21 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter display name"
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label>Product Access</Label>
