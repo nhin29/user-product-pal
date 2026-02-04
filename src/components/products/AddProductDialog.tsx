@@ -37,9 +37,11 @@ const productSchema = z.object({
   category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
- prompt: z.string().min(1, "Prompt is required"),
+  prompt: z.string().min(1, "Prompt is required"),
   platform: z.enum(["amazon", "shopify", "meta", "other"]),
   product_type_id: z.string().optional(),
+  made_by: z.string().max(200, "Made by is too long").optional(),
+  note: z.string().max(1000, "Note is too long").optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -70,6 +72,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       prompt: "",
       platform: "amazon",
       product_type_id: undefined,
+      made_by: "",
+      note: "",
     },
   });
 
@@ -146,6 +150,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         platform: data.platform,
         product_type_id: data.product_type_id || null,
         description: data.description || null,
+        made_by: data.made_by || null,
+        note: data.note || null,
       });
 
       toast({
@@ -357,6 +363,36 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="made_by"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Made By</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Creator name..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="note"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Note</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Additional notes..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex justify-end gap-3 pt-4">
               <Button

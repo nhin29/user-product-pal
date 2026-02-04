@@ -192,6 +192,8 @@ export type Database = {
           display_order: number | null
           id: string
           image_url: string
+          made_by: string | null
+          note: string | null
           platform: string
           product_type_id: string | null
           prompt: string
@@ -204,6 +206,8 @@ export type Database = {
           display_order?: number | null
           id?: string
           image_url: string
+          made_by?: string | null
+          note?: string | null
           platform?: string
           product_type_id?: string | null
           prompt: string
@@ -216,6 +220,8 @@ export type Database = {
           display_order?: number | null
           id?: string
           image_url?: string
+          made_by?: string | null
+          note?: string | null
           platform?: string
           product_type_id?: string | null
           prompt?: string

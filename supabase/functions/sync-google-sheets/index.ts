@@ -143,6 +143,8 @@ interface SheetRow {
   prompt: string | null;
   platform: string;
   product_type: string | null;
+  made_by: string | null;
+  note: string | null;
 }
 
 interface SyncResponse {
@@ -166,6 +168,8 @@ interface SyncRequest {
     prompt: number;
     platform: number;
     product_type?: number;
+    made_by?: number;
+    note?: number;
   };
 }
 
@@ -523,8 +527,10 @@ serve(async (req: Request): Promise<Response> => {
     const promptIdx = getColumnIndex(columnMapping.prompt);
     const platformIdx = getColumnIndex(columnMapping.platform);
     const productTypeIdx = columnMapping.product_type !== undefined ? getColumnIndex(columnMapping.product_type) : -1;
+    const madeByIdx = columnMapping.made_by !== undefined ? getColumnIndex(columnMapping.made_by) : -1;
+    const noteIdx = columnMapping.note !== undefined ? getColumnIndex(columnMapping.note) : -1;
 
-    console.log(`Column indices - category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}`);
+    console.log(`Column indices - category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}, made_by: ${madeByIdx}, note: ${noteIdx}`);
     console.log(`Processing ${dataRows.length} data rows`);
 
     // Log first row's raw data
@@ -587,6 +593,8 @@ serve(async (req: Request): Promise<Response> => {
           prompt: getValue(promptIdx),
           platform: getValue(platformIdx)?.toLowerCase() || "other",
           product_type: getValue(productTypeIdx),
+          made_by: getValue(madeByIdx),
+          note: getValue(noteIdx),
         };
         
         console.log(`Row ${rowIndex + headerRow + 1}: image_url="${(product.image_url || '').substring(0, 80) || '(empty)'}"`);
