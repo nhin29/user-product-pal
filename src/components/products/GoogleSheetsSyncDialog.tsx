@@ -300,28 +300,70 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   };
 
   const checkExistingProducts = async (products: SheetProduct[]) => {
-    // Get all image_urls and prompts from fetched products
-    const imageUrls = products.map(p => p.image_url).filter(Boolean);
-    
-    if (imageUrls.length === 0) {
+    if (products.length === 0) {
+      setNewProducts([]);
+      setExistingProducts([]);
+      return;
+    }
+
+    // Fetch all existing products from database with all relevant fields
+    const { data: existingInDb } = await supabase
+      .from("products")
+      .select(`
+        image_url, 
+        prompt, 
+        platform, 
+        made_by, 
+        note,
+        category_id,
+        product_type_id,
+        categories(name),
+        product_types(name)
+      `);
+
+    if (!existingInDb || existingInDb.length === 0) {
       setNewProducts(products);
       setExistingProducts([]);
       return;
     }
 
-    // Check database for existing products with matching image_url
-    const { data: existingInDb } = await supabase
-      .from("products")
-      .select("image_url, prompt")
-      .in("image_url", imageUrls as string[]);
+    // Helper to normalize for comparison
+    const normalize = (val: string | null | undefined): string => 
+      (val || "").toLowerCase().trim();
 
-    const existingImageUrls = new Set(existingInDb?.map(p => p.image_url) || []);
+    // Create a signature for each existing product to compare against
+    const existingSignatures = new Set(
+      existingInDb.map(p => {
+        const categoryName = (p.categories as any)?.name || "";
+        const productTypeName = (p.product_types as any)?.name || "";
+        return [
+          normalize(p.image_url),
+          normalize(p.prompt),
+          normalize(p.platform),
+          normalize(categoryName),
+          normalize(productTypeName),
+          normalize(p.made_by),
+          normalize(p.note),
+        ].join("|");
+      })
+    );
 
     const newOnes: SheetProduct[] = [];
     const existingOnes: SheetProduct[] = [];
 
     products.forEach(product => {
-      if (product.image_url && existingImageUrls.has(product.image_url)) {
+      // Create signature for fetched product
+      const signature = [
+        normalize(product.image_url),
+        normalize(product.prompt),
+        normalize(product.platform),
+        normalize(product.category),
+        normalize(product.product_type),
+        normalize(product.made_by),
+        normalize(product.note),
+      ].join("|");
+
+      if (existingSignatures.has(signature)) {
         existingOnes.push(product);
       } else {
         newOnes.push(product);
