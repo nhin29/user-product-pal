@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, FileSpreadsheet, Check, Database, AlertCircle } from "lucide-react";
+import { Loader2, RefreshCw, FileSpreadsheet, Check, Database } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useCategories, useProductTypes } from "@/hooks/useProducts";
@@ -95,8 +95,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [isAddingToDatabase, setIsAddingToDatabase] = useState(false);
   const [fetchedProducts, setFetchedProducts] = useState<SheetProduct[]>([]);
-  const [newProducts, setNewProducts] = useState<SheetProduct[]>([]);
-  const [existingProducts, setExistingProducts] = useState<SheetProduct[]>([]);
 
   // Fetch available sheets when URL changes
   useEffect(() => {
@@ -250,8 +248,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
     setIsFetchingProducts(true);
     setFetchedProducts([]);
-    setNewProducts([]);
-    setExistingProducts([]);
 
     try {
       // Convert index strings to numbers for the API
@@ -271,9 +267,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
       const products = data.products || [];
       setFetchedProducts(products);
       onProductsFetched?.(products);
-
-      // Check for existing products in database
-      await checkExistingProducts(products);
       
       toast({
         title: "Products fetched",
@@ -297,81 +290,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
     } finally {
       setIsFetchingProducts(false);
     }
-  };
-
-  const checkExistingProducts = async (products: SheetProduct[]) => {
-    if (products.length === 0) {
-      setNewProducts([]);
-      setExistingProducts([]);
-      return;
-    }
-
-    // Fetch all existing products from database with all relevant fields
-    const { data: existingInDb } = await supabase
-      .from("products")
-      .select(`
-        image_url, 
-        prompt, 
-        platform, 
-        made_by, 
-        note,
-        category_id,
-        product_type_id,
-        categories(name),
-        product_types(name)
-      `);
-
-    if (!existingInDb || existingInDb.length === 0) {
-      setNewProducts(products);
-      setExistingProducts([]);
-      return;
-    }
-
-    // Helper to normalize for comparison
-    const normalize = (val: string | null | undefined): string => 
-      (val || "").toLowerCase().trim();
-
-    // Create a signature for each existing product to compare against
-    const existingSignatures = new Set(
-      existingInDb.map(p => {
-        const categoryName = (p.categories as any)?.name || "";
-        const productTypeName = (p.product_types as any)?.name || "";
-        return [
-          normalize(p.image_url),
-          normalize(p.prompt),
-          normalize(p.platform),
-          normalize(categoryName),
-          normalize(productTypeName),
-          normalize(p.made_by),
-          normalize(p.note),
-        ].join("|");
-      })
-    );
-
-    const newOnes: SheetProduct[] = [];
-    const existingOnes: SheetProduct[] = [];
-
-    products.forEach(product => {
-      // Create signature for fetched product
-      const signature = [
-        normalize(product.image_url),
-        normalize(product.prompt),
-        normalize(product.platform),
-        normalize(product.category),
-        normalize(product.product_type),
-        normalize(product.made_by),
-        normalize(product.note),
-      ].join("|");
-
-      if (existingSignatures.has(signature)) {
-        existingOnes.push(product);
-      } else {
-        newOnes.push(product);
-      }
-    });
-
-    setNewProducts(newOnes);
-    setExistingProducts(existingOnes);
   };
 
   // Helper function to normalize strings for matching
@@ -418,11 +336,11 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   };
 
   const handleAddToDatabase = async () => {
-    if (newProducts.length === 0) {
+    if (fetchedProducts.length === 0) {
       toast({
         variant: "destructive",
-        title: "No new products",
-        description: "All fetched products already exist in the database",
+        title: "No products",
+        description: "Please fetch products first",
       });
       return;
     }
@@ -444,7 +362,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
       const unmatchedCategories: string[] = [];
 
       // Prepare products for insertion
-      const productsToInsert = newProducts
+      const productsToInsert = fetchedProducts
         .filter(p => p.image_url && p.prompt && p.category)
         .map(product => {
           const categoryId = findCategoryId(product.category);
@@ -498,8 +416,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
       // Clear fetched products after successful insert
       setFetchedProducts([]);
-      setNewProducts([]);
-      setExistingProducts([]);
 
     } catch (error: any) {
       console.error("Add to database error:", error);
@@ -649,22 +565,22 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
             </Button>
           )}
 
-          {/* Preview - New Products */}
-          {newProducts.length > 0 && (
+          {/* Preview - Fetched Products */}
+          {fetchedProducts.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  New Products (will be added)
+                  <Check className="h-4 w-4 text-primary" />
+                  Fetched Products
                 </Label>
-                <Badge variant="default" className="bg-green-600">{newProducts.length} new</Badge>
+                <Badge variant="secondary">{fetchedProducts.length} products</Badge>
               </div>
-              <ScrollArea className="h-[150px] rounded-md border border-green-200 p-2 bg-green-50/50">
+              <ScrollArea className="h-[200px] rounded-md border p-2">
                 <div className="space-y-2">
-                  {newProducts.map((product, idx) => (
+                  {fetchedProducts.map((product, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-3 rounded-md bg-background border"
+                      className="flex items-center gap-3 p-3 rounded-md bg-muted/50 border"
                     >
                       {product.image_url ? (
                         <img
@@ -703,77 +619,20 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
             </div>
           )}
 
-          {/* Preview - Existing Products */}
-          {existingProducts.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  Already in Database (will be skipped)
-                </Label>
-                <Badge variant="outline" className="border-amber-500 text-amber-600">{existingProducts.length} existing</Badge>
-              </div>
-              <ScrollArea className="h-[100px] rounded-md border border-amber-200 p-2 bg-amber-50/50">
-                <div className="space-y-2">
-                  {existingProducts.map((product, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 p-2 rounded-md bg-background border opacity-60"
-                    >
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt="Product"
-                          className="h-10 w-10 rounded object-cover flex-shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.svg";
-                          }}
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs text-muted-foreground">No img</span>
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap gap-1 text-xs">
-                          {product.category && (
-                            <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                          )}
-                          <Badge variant="outline" className="text-xs">{product.platform}</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-          )}
-
           {/* Add to Database Button */}
           {fetchedProducts.length > 0 && (
-            <div className="space-y-2">
-              <Button
-                onClick={handleAddToDatabase}
-                disabled={isAddingToDatabase || newProducts.length === 0}
-                className="w-full"
-                variant={newProducts.length === 0 ? "secondary" : "default"}
-              >
-                {isAddingToDatabase ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Database className="mr-2 h-4 w-4" />
-                )}
-                {newProducts.length === 0 
-                  ? "All products already exist" 
-                  : `Add ${newProducts.length} New Products to Database`
-                }
-              </Button>
-              {newProducts.length > 0 && existingProducts.length > 0 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  {existingProducts.length} existing products will be skipped
-                </p>
+            <Button
+              onClick={handleAddToDatabase}
+              disabled={isAddingToDatabase}
+              className="w-full"
+            >
+              {isAddingToDatabase ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Database className="mr-2 h-4 w-4" />
               )}
-            </div>
+              Add {fetchedProducts.length} Products to Database
+            </Button>
           )}
         </div>
       </DialogContent>
