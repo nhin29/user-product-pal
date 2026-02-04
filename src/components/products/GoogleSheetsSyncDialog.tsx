@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, RefreshCw, FileSpreadsheet, Check, Database } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCategories, useProductTypes } from "@/hooks/useProducts";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -95,6 +96,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [isAddingToDatabase, setIsAddingToDatabase] = useState(false);
   const [fetchedProducts, setFetchedProducts] = useState<SheetProduct[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
 
   // Fetch available sheets when URL changes
   useEffect(() => {
@@ -266,6 +268,8 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
       const products = data.products || [];
       setFetchedProducts(products);
+      // Select all products by default
+      setSelectedIndices(new Set(products.map((_: SheetProduct, i: number) => i)));
       onProductsFetched?.(products);
       
       toast({
@@ -336,14 +340,16 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   };
 
   const handleAddToDatabase = async () => {
-    if (fetchedProducts.length === 0) {
+    if (selectedIndices.size === 0) {
       toast({
         variant: "destructive",
-        title: "No products",
-        description: "Please fetch products first",
+        title: "No products selected",
+        description: "Please select at least one product to add",
       });
       return;
     }
+
+    const selectedProducts = fetchedProducts.filter((_, idx) => selectedIndices.has(idx));
 
     setIsAddingToDatabase(true);
 
@@ -361,8 +367,8 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
       // Track unmatched categories for error reporting
       const unmatchedCategories: string[] = [];
 
-      // Prepare products for insertion
-      const productsToInsert = fetchedProducts
+      // Prepare products for insertion (use selectedProducts instead of fetchedProducts)
+      const productsToInsert = selectedProducts
         .filter(p => p.image_url && p.prompt && p.category)
         .map(product => {
           const categoryId = findCategoryId(product.category);
@@ -416,6 +422,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
       // Clear fetched products after successful insert
       setFetchedProducts([]);
+      setSelectedIndices(new Set());
 
     } catch (error: any) {
       console.error("Add to database error:", error);
@@ -569,19 +576,62 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
           {fetchedProducts.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  Fetched Products
-                </Label>
-                <Badge variant="secondary">{fetchedProducts.length} products</Badge>
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedIndices.size === fetchedProducts.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedIndices(new Set(fetchedProducts.map((_, i) => i)));
+                      } else {
+                        setSelectedIndices(new Set());
+                      }
+                    }}
+                  />
+                  <Label htmlFor="select-all" className="flex items-center gap-2 cursor-pointer">
+                    <Check className="h-4 w-4 text-primary" />
+                    Select All
+                  </Label>
+                </div>
+                <Badge variant="secondary">
+                  {selectedIndices.size} / {fetchedProducts.length} selected
+                </Badge>
               </div>
               <ScrollArea className="h-[200px] rounded-md border p-2">
                 <div className="space-y-2">
                   {fetchedProducts.map((product, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 p-3 rounded-md bg-muted/50 border"
+                      className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                        selectedIndices.has(idx) ? "bg-primary/5 border-primary/30" : "bg-muted/50"
+                      }`}
+                      onClick={() => {
+                        setSelectedIndices(prev => {
+                          const next = new Set(prev);
+                          if (next.has(idx)) {
+                            next.delete(idx);
+                          } else {
+                            next.add(idx);
+                          }
+                          return next;
+                        });
+                      }}
                     >
+                      <Checkbox
+                        checked={selectedIndices.has(idx)}
+                        onCheckedChange={(checked) => {
+                          setSelectedIndices(prev => {
+                            const next = new Set(prev);
+                            if (checked) {
+                              next.add(idx);
+                            } else {
+                              next.delete(idx);
+                            }
+                            return next;
+                          });
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
                       {product.image_url ? (
                         <img
                           src={product.image_url}
@@ -623,7 +673,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
           {fetchedProducts.length > 0 && (
             <Button
               onClick={handleAddToDatabase}
-              disabled={isAddingToDatabase}
+              disabled={isAddingToDatabase || selectedIndices.size === 0}
               className="w-full"
             >
               {isAddingToDatabase ? (
@@ -631,7 +681,10 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
               ) : (
                 <Database className="mr-2 h-4 w-4" />
               )}
-              Add {fetchedProducts.length} Products to Database
+              {selectedIndices.size === 0 
+                ? "Select products to add" 
+                : `Add ${selectedIndices.size} Selected Products to Database`
+              }
             </Button>
           )}
         </div>
