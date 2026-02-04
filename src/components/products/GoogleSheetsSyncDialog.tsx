@@ -28,6 +28,8 @@ export interface SheetProduct {
   prompt: string | null;
   platform: string;
   product_type: string | null;
+  made_by: string | null;
+  note: string | null;
 }
 
 interface SheetColumn {
@@ -61,6 +63,8 @@ const FIELD_LABELS: Record<string, { label: string; required: boolean }> = {
   prompt: { label: "Prompt", required: true },
   platform: { label: "Platform", required: true },
   product_type: { label: "Product Type", required: false },
+  made_by: { label: "Made By", required: false },
+  note: { label: "Note", required: false },
 };
 
 export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }: GoogleSheetsSyncDialogProps) {
@@ -77,6 +81,8 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
     prompt: "",
     platform: "",
     product_type: "",
+    made_by: "",
+    note: "",
   });
 
   const [isFetchingSheets, setIsFetchingSheets] = useState(false);
