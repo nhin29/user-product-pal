@@ -16,14 +16,12 @@ export function ChatConversation({ user }: ChatConversationProps) {
   const { answerChat, autoReplyChat } = useSupportChats();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when conversation changes
+  // Scroll to bottom when user changes or new messages arrive
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [user.chats]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [user.user_id, user.chats]);
 
   const handleSendAnswer = async () => {
     if (!replyingTo || !answer.trim()) return;
@@ -60,7 +58,7 @@ export function ChatConversation({ user }: ChatConversationProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {user.chats.map((chat) => (
             <ChatMessage
@@ -73,6 +71,7 @@ export function ChatConversation({ user }: ChatConversationProps) {
               isAutoReplying={autoReplyChat.isPending}
             />
           ))}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
