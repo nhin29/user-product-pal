@@ -126,10 +126,66 @@ export function useSupportChats() {
     },
   });
 
+  const autoReplyChat = useMutation({
+    mutationFn: async ({
+      chatId,
+      question,
+      userName,
+    }: {
+      chatId: string;
+      question: string;
+      userName: string;
+    }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error("Not authenticated");
+
+      // Call AI to generate response
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "auto-reply-support",
+        { body: { question, userName } }
+      );
+
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.error);
+
+      const aiAnswer = data.answer;
+
+      // Save the answer
+      const { error } = await supabase
+        .from("support_chats")
+        .update({
+          answer: aiAnswer,
+          answered_at: new Date().toISOString(),
+          answered_by: session.session.user.id,
+          status: "answered",
+        })
+        .eq("id", chatId);
+
+      if (error) throw error;
+
+      return aiAnswer;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+      toast({
+        title: "AI reply sent",
+        description: "The AI has automatically responded to the user.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error with AI reply",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     usersWithChats,
     isLoading,
     error,
     answerChat,
+    autoReplyChat,
   };
 }
