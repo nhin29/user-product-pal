@@ -23,7 +23,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
 export interface SheetProduct {
-  title: string | null;
   category: string | null;
   image_url: string | null;
   prompt: string | null;
@@ -57,7 +56,6 @@ function parseSheetIdFromUrl(url: string): string | null {
 }
 
 const FIELD_LABELS: Record<string, { label: string; required: boolean }> = {
-  title: { label: "Title", required: true },
   category: { label: "Category", required: true },
   image_url: { label: "Image URL", required: true },
   prompt: { label: "Prompt", required: true },
@@ -74,7 +72,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
   const [headerRow, setHeaderRow] = useState(1);
   const [columns, setColumns] = useState<SheetColumn[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({
-    title: "",
     category: "",
     image_url: "",
     prompt: "",
@@ -439,7 +436,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
                       {product.image_url ? (
                         <img
                           src={product.image_url}
-                          alt={product.title || "Product"}
+                          alt="Product"
                           className="h-12 w-12 rounded object-cover flex-shrink-0"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = "/placeholder.svg";
@@ -451,9 +448,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
                         </div>
                       )}
                       <div className="flex-1 min-w-0 space-y-1">
-                        <p className="text-sm font-medium truncate">
-                          {product.title || <span className="text-muted-foreground italic">No title</span>}
-                        </p>
                         <div className="flex flex-wrap gap-1 text-xs">
                           {product.category && (
                             <Badge variant="secondary" className="text-xs">{product.category}</Badge>

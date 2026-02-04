@@ -229,13 +229,10 @@ export default function UserAnalyticsPage() {
                     >
                       <img
                         src={product.image_url}
-                        alt={product.title}
+                        alt="Product"
                         className="h-12 w-12 rounded-lg object-cover"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">
-                          {product.title}
-                        </p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <MousePointer className="h-3 w-3" />

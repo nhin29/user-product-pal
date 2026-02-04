@@ -34,7 +34,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, Link, X, ImageIcon } from "lucide-react";
 
 const productSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title too long"),
   category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
   image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -66,7 +65,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      title: "",
       category_id: "",
       description: "",
       image_url: "",
@@ -80,7 +78,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   useEffect(() => {
     if (product) {
       form.reset({
-        title: product.title,
         category_id: product.category_id,
         description: product.description || "",
         image_url: product.image_url,
@@ -163,7 +160,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
       await updateProduct.mutateAsync({
         id: product.id,
         updates: {
-          title: data.title,
           category_id: data.category_id,
           image_url: finalImageUrl,
           prompt: data.prompt,
@@ -212,20 +208,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Product title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

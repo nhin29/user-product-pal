@@ -138,7 +138,6 @@ async function downloadAndUploadImage(
 }
 
 interface SheetRow {
-  title: string | null;
   category: string | null;
   image_url: string | null;
   prompt: string | null;
@@ -162,7 +161,6 @@ interface SyncRequest {
   headerRow?: number;
   mode?: "sheets" | "headers" | "data";
   columnMapping?: {
-    title: number;
     category: number;
     image_url: number;
     prompt: number;
@@ -520,14 +518,13 @@ serve(async (req: Request): Promise<Response> => {
       return idx >= 0 ? idx : -1;
     };
 
-    const titleIdx = getColumnIndex(columnMapping.title);
     const categoryIdx = getColumnIndex(columnMapping.category);
     const imageUrlIdx = getColumnIndex(columnMapping.image_url);
     const promptIdx = getColumnIndex(columnMapping.prompt);
     const platformIdx = getColumnIndex(columnMapping.platform);
     const productTypeIdx = columnMapping.product_type !== undefined ? getColumnIndex(columnMapping.product_type) : -1;
 
-    console.log(`Column indices - title: ${titleIdx}, category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}`);
+    console.log(`Column indices - category: ${categoryIdx}, image_url: ${imageUrlIdx}, prompt: ${promptIdx}, platform: ${platformIdx}, product_type: ${productTypeIdx}`);
     console.log(`Processing ${dataRows.length} data rows`);
 
     // Log first row's raw data
@@ -585,7 +582,6 @@ serve(async (req: Request): Promise<Response> => {
         };
 
         const product = {
-          title: getValue(titleIdx),
           category: getValue(categoryIdx),
           image_url: getValue(imageUrlIdx),
           prompt: getValue(promptIdx),
@@ -593,10 +589,10 @@ serve(async (req: Request): Promise<Response> => {
           product_type: getValue(productTypeIdx),
         };
         
-        console.log(`Row ${rowIndex + headerRow + 1}: title="${product.title || '(empty)'}", image_url="${(product.image_url || '').substring(0, 80) || '(empty)'}"`);
+        console.log(`Row ${rowIndex + headerRow + 1}: image_url="${(product.image_url || '').substring(0, 80) || '(empty)'}"`);
         return { product, rowIndex };
       })
-      .filter((p) => p.product.title || p.product.image_url || p.product.prompt || p.product.category);
+      .filter((p) => p.product.image_url || p.product.prompt || p.product.category);
 
     console.log(`Found ${rawProducts.length} raw products, now processing images...`);
 

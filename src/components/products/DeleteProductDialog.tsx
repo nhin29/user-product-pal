@@ -49,7 +49,7 @@ export function DeleteProductDialog({ open, onOpenChange, product }: DeleteProdu
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Product</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete "{product.title}"? This action cannot be undone.
+            Are you sure you want to delete this product? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

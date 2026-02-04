@@ -107,7 +107,7 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
           <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
             <img
               src={product.image_url}
-              alt={product.title}
+              alt="Product"
               className="h-full w-full object-cover"
             />
             <Button
@@ -121,9 +121,8 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             </Button>
           </div>
 
-          {/* Title and Badges */}
+          {/* Category and Platform */}
           <div className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">{product.title}</h2>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">{categoryName}</Badge>
               <Badge
