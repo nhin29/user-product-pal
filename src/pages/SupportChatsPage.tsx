@@ -8,7 +8,10 @@ import { ChatConversation } from "@/components/support/ChatConversation";
 
 export default function SupportChatsPage() {
   const { usersWithChats, isLoading } = useSupportChats();
-  const [selectedUser, setSelectedUser] = useState<UserWithChats | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  // Derive selected user from query data so it stays in sync with real-time updates
+  const selectedUser = usersWithChats.find((u) => u.user_id === selectedUserId) || null;
 
   return (
     <AdminLayout>
@@ -47,8 +50,8 @@ export default function SupportChatsPage() {
               ) : (
                 <UserChatList
                   users={usersWithChats}
-                  selectedUserId={selectedUser?.user_id || null}
-                  onSelectUser={setSelectedUser}
+                  selectedUserId={selectedUserId}
+                  onSelectUser={(user) => setSelectedUserId(user.user_id)}
                 />
               )}
             </div>
