@@ -173,6 +173,9 @@ export default function ProductsPage() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // Don't allow reordering when filters are active
+    if (hasActiveFilters) return;
+
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
