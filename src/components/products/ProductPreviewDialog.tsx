@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Product } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, Calendar, Tag, Monitor, Layers, Star, User } from "lucide-react";
+import { ExternalLink, Calendar, Tag, Monitor, Layers, Star, User, StickyNote, UserCircle } from "lucide-react";
 
 interface ProductPreviewDialogProps {
   open: boolean;
@@ -158,6 +158,13 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <UserCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-xs text-muted-foreground">Made By</p>
+                <p className="text-sm font-medium">{product.made_by || "—"}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-xs text-muted-foreground">Created</p>
@@ -167,6 +174,19 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
               </div>
             </div>
           </div>
+
+          {/* Note Section */}
+          {product.note && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <StickyNote className="h-4 w-4" />
+                Note
+              </h3>
+              <div className="p-3 rounded-lg bg-muted/50 border">
+                <p className="text-sm text-foreground whitespace-pre-wrap">{product.note}</p>
+              </div>
+            </div>
+          )}
 
           {/* Prompt with scroll */}
           <div className="space-y-2">

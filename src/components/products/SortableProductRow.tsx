@@ -115,6 +115,11 @@ export function SortableProductRow({
         </span>
       </TableCell>
       <TableCell>
+        <span className="text-sm">
+          {product.made_by || "—"}
+        </span>
+      </TableCell>
+      <TableCell>
         <span className="text-muted-foreground text-sm">
           {new Date(product.created_at).toLocaleDateString()}
         </span>
