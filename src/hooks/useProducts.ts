@@ -93,9 +93,19 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (product: ProductInsert) => {
+      // Get the maximum display_order to set the new product at the end
+      const { data: maxOrderData } = await supabase
+        .from("products")
+        .select("display_order")
+        .order("display_order", { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle();
+
+      const nextOrder = (maxOrderData?.display_order ?? 0) + 1;
+
       const { data, error } = await supabase
         .from("products")
-        .insert(product)
+        .insert({ ...product, display_order: nextOrder })
         .select()
         .single();
 
