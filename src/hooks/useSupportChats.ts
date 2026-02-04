@@ -11,8 +11,16 @@ export interface SupportChat {
   answered_by: string | null;
   status: string;
   created_at: string;
-  user_email?: string;
-  user_name?: string;
+}
+
+export interface UserWithChats {
+  user_id: string;
+  user_email: string;
+  user_name: string;
+  avatar_url: string | null;
+  chats: SupportChat[];
+  pending_count: number;
+  last_message_at: string;
 }
 
 export function useSupportChats() {
@@ -20,7 +28,7 @@ export function useSupportChats() {
   const queryClient = useQueryClient();
 
   const {
-    data: chats = [],
+    data: usersWithChats = [],
     isLoading,
     error,
   } = useQuery({
@@ -29,28 +37,53 @@ export function useSupportChats() {
       const { data, error } = await supabase
         .from("support_chats")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
 
-      // Fetch user info for each chat
+      // Fetch user info
       const userIds = [...new Set(data.map((chat) => chat.user_id))];
-      const { data: profiles } = await supabase
-        .rpc("get_profiles_with_email")
-        .in("user_id", userIds);
+      const { data: profiles } = await supabase.rpc("get_profiles_with_email");
 
       const profileMap = new Map(
         (profiles || []).map((p) => [p.user_id, p])
       );
 
-      return data.map((chat) => {
+      // Group chats by user
+      const userChatsMap = new Map<string, UserWithChats>();
+
+      data.forEach((chat) => {
         const profile = profileMap.get(chat.user_id);
-        return {
-          ...chat,
-          user_email: profile?.email || "Unknown",
-          user_name: profile?.display_name || "Unknown User",
-        };
-      }) as SupportChat[];
+        
+        if (!userChatsMap.has(chat.user_id)) {
+          userChatsMap.set(chat.user_id, {
+            user_id: chat.user_id,
+            user_email: profile?.email || "Unknown",
+            user_name: profile?.display_name || "Unknown User",
+            avatar_url: profile?.avatar_url || null,
+            chats: [],
+            pending_count: 0,
+            last_message_at: chat.created_at,
+          });
+        }
+
+        const userChats = userChatsMap.get(chat.user_id)!;
+        userChats.chats.push(chat);
+        
+        if (chat.status === "pending") {
+          userChats.pending_count++;
+        }
+        
+        // Update last message time
+        if (new Date(chat.created_at) > new Date(userChats.last_message_at)) {
+          userChats.last_message_at = chat.created_at;
+        }
+      });
+
+      // Sort by last message (most recent first)
+      return Array.from(userChatsMap.values()).sort(
+        (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
+      );
     },
   });
 
@@ -94,7 +127,7 @@ export function useSupportChats() {
   });
 
   return {
-    chats,
+    usersWithChats,
     isLoading,
     error,
     answerChat,
