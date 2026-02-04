@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.sync-google-sheets]
 verify_jwt = false
+
+[functions.auto-reply-support]
+verify_jwt = false
+
+[functions.auto-reply-greeting-trigger]
+verify_jwt = false
