@@ -332,6 +332,49 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
     setExistingProducts(existingOnes);
   };
 
+  // Helper function to normalize strings for matching
+  const normalizeString = (str: string | null | undefined): string => {
+    return (str || "").toLowerCase().trim().replace(/\s+/g, " ");
+  };
+
+  // Helper function to find best matching category
+  const findCategoryId = (categoryName: string | null): string | null => {
+    if (!categoryName || !categories) return null;
+    const normalized = normalizeString(categoryName);
+    
+    // Exact match first
+    const exact = categories.find(c => normalizeString(c.name) === normalized);
+    if (exact) return exact.id;
+    
+    // Partial match (category name contains or is contained in the input)
+    const partial = categories.find(c => 
+      normalizeString(c.name).includes(normalized) || 
+      normalized.includes(normalizeString(c.name))
+    );
+    if (partial) return partial.id;
+    
+    return null;
+  };
+
+  // Helper function to find best matching product type (niche)
+  const findProductTypeId = (typeName: string | null): string | null => {
+    if (!typeName || !productTypes) return null;
+    const normalized = normalizeString(typeName);
+    
+    // Exact match first
+    const exact = productTypes.find(pt => normalizeString(pt.name) === normalized);
+    if (exact) return exact.id;
+    
+    // Partial match
+    const partial = productTypes.find(pt => 
+      normalizeString(pt.name).includes(normalized) || 
+      normalized.includes(normalizeString(pt.name))
+    );
+    if (partial) return partial.id;
+    
+    return null;
+  };
+
   const handleAddToDatabase = async () => {
     if (newProducts.length === 0) {
       toast({
@@ -345,10 +388,6 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
     setIsAddingToDatabase(true);
 
     try {
-      // Get category and product type mappings
-      const categoryMap = new Map(categories?.map(c => [c.name.toLowerCase(), c.id]) || []);
-      const productTypeMap = new Map(productTypes?.map(pt => [pt.name.toLowerCase(), pt.id]) || []);
-
       // Get the maximum display_order
       const { data: maxOrderData } = await supabase
         .from("products")
@@ -359,17 +398,21 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
 
       let nextOrder = (maxOrderData?.display_order ?? 0) + 1;
 
+      // Track unmatched categories for error reporting
+      const unmatchedCategories: string[] = [];
+
       // Prepare products for insertion
       const productsToInsert = newProducts
         .filter(p => p.image_url && p.prompt && p.category)
         .map(product => {
-          const categoryId = categoryMap.get(product.category?.toLowerCase() || "");
-          const productTypeId = product.product_type 
-            ? productTypeMap.get(product.product_type.toLowerCase())
-            : null;
+          const categoryId = findCategoryId(product.category);
+          const productTypeId = findProductTypeId(product.product_type);
 
           if (!categoryId) {
             console.warn(`Category not found: ${product.category}`);
+            if (product.category && !unmatchedCategories.includes(product.category)) {
+              unmatchedCategories.push(product.category);
+            }
             return null;
           }
 
@@ -377,21 +420,23 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
             image_url: product.image_url!,
             prompt: product.prompt!,
             category_id: categoryId,
-            product_type_id: productTypeId || null,
-            platform: product.platform || "amazon",
-            made_by: product.made_by || null,
-            note: product.note || null,
+            product_type_id: productTypeId,
+            platform: (product.platform || "amazon").toLowerCase().trim(),
+            made_by: product.made_by?.trim() || null,
+            note: product.note?.trim() || null,
             display_order: nextOrder++,
           };
         })
         .filter(Boolean);
 
       if (productsToInsert.length === 0) {
+        const categoryList = categories?.map(c => c.name).join(", ") || "none";
         toast({
           variant: "destructive",
           title: "No valid products",
-          description: "Could not find matching categories for the products. Make sure category names match exactly.",
+          description: `Categories not found: ${unmatchedCategories.join(", ")}. Available: ${categoryList}`,
         });
+        setIsAddingToDatabase(false);
         return;
       }
 
