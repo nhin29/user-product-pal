@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -86,6 +87,24 @@ export function useSupportChats() {
       );
     },
   });
+
+  // Real-time subscription for auto-replies
+  useEffect(() => {
+    const channel = supabase
+      .channel("support-chats-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "support_chats" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const answerChat = useMutation({
     mutationFn: async ({
