@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const navigation = [
@@ -8,6 +8,7 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Categories", href: "/categories", icon: FolderOpen },
   { name: "Niche", href: "/product-types", icon: Layers },
+  { name: "Support", href: "/support", icon: MessageCircle },
 ];
 
 export function Sidebar() {
