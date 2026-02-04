@@ -173,9 +173,6 @@ export default function ProductsPage() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    // Don't allow reordering when filters are active
-    if (hasActiveFilters) return;
-
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -298,7 +295,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Drag hint */}
-        {!hasActiveFilters && products.length > 1 && (
+        {products.length > 1 && (
           <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
             <GripVertical className="h-4 w-4" />
             <span>Drag rows to reorder products</span>
@@ -361,7 +358,6 @@ export default function ProductsPage() {
                             onPreview={handlePreview}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
-                            isDragDisabled={!!hasActiveFilters}
                           />
                         ))}
                       </SortableContext>

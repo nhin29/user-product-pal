@@ -27,7 +27,6 @@ interface SortableProductRowProps {
   onPreview: (product: Product) => void;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
-  isDragDisabled?: boolean;
 }
 
 export function SortableProductRow({
@@ -37,7 +36,6 @@ export function SortableProductRow({
   onPreview,
   onEdit,
   onDelete,
-  isDragDisabled = false,
 }: SortableProductRowProps) {
   const {
     attributes,
@@ -46,7 +44,7 @@ export function SortableProductRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: product.id, disabled: isDragDisabled });
+  } = useSortable({ id: product.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -57,19 +55,17 @@ export function SortableProductRow({
   return (
     <TableRow
       ref={setNodeRef}
-      style={isDragDisabled ? undefined : style}
+      style={style}
       className={`${isSelected ? "bg-muted/50" : ""} ${isDragging ? "z-50 shadow-lg" : ""}`}
     >
       <TableCell className="w-10">
-        {!isDragDisabled && (
-          <button
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded touch-none"
-          >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
-          </button>
-        )}
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded touch-none"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
       </TableCell>
       <TableCell className="w-12">
         <Checkbox
