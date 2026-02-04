@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProducts, useCategories, useProductTypes, Product, useReorderProducts } from "@/hooks/useProducts";
+import { useProductsRealtime } from "@/hooks/useProductsRealtime";
 import { AddProductDialog } from "@/components/products/AddProductDialog";
 import { EditProductDialog } from "@/components/products/EditProductDialog";
 import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
@@ -65,6 +66,9 @@ export default function ProductsPage() {
   const { data: categories } = useCategories();
   const { data: productTypes } = useProductTypes();
   const reorderProducts = useReorderProducts();
+
+  // Enable realtime updates for products
+  useProductsRealtime();
 
   const products = data?.data || [];
   const totalCount = data?.count || 0;
