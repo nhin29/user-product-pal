@@ -121,18 +121,6 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             </Button>
           </div>
 
-          {/* Category and Platform */}
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">{categoryName}</Badge>
-              <Badge
-                variant="outline"
-                className={platformColors[product.platform] || platformColors.other}
-              >
-                {product.platform}
-              </Badge>
-            </div>
-          </div>
 
           {/* Details Grid */}
           <div className="grid grid-cols-2 gap-4">
