@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, User } from "lucide-react";
+import { Send, Sparkles, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ interface ChatConversationProps {
 }
 
 export function ChatConversation({ user }: ChatConversationProps) {
-  const { answerChat } = useSupportChats();
+  const { answerChat, autoReplyChat } = useSupportChats();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,6 +31,14 @@ export function ChatConversation({ user }: ChatConversationProps) {
     await answerChat.mutateAsync({ chatId: replyingTo, answer: answer.trim() });
     setAnswer("");
     setReplyingTo(null);
+  };
+
+  const handleAutoReply = async (chat: SupportChat) => {
+    await autoReplyChat.mutateAsync({
+      chatId: chat.id,
+      question: chat.question,
+      userName: user.user_name,
+    });
   };
 
   const pendingChats = user.chats.filter((c) => c.status === "pending");
@@ -58,8 +66,11 @@ export function ChatConversation({ user }: ChatConversationProps) {
             <ChatMessage
               key={chat.id}
               chat={chat}
+              userName={user.user_name}
               isReplying={replyingTo === chat.id}
               onReply={() => setReplyingTo(chat.id)}
+              onAutoReply={() => handleAutoReply(chat)}
+              isAutoReplying={autoReplyChat.isPending}
             />
           ))}
         </div>
@@ -101,13 +112,26 @@ export function ChatConversation({ user }: ChatConversationProps) {
 
       {/* Quick action for pending */}
       {!replyingTo && pendingChats.length > 0 && (
-        <div className="p-3 border-t">
+        <div className="p-3 border-t flex gap-2">
           <Button
-            className="w-full"
+            variant="outline"
+            className="flex-1"
             onClick={() => setReplyingTo(pendingChats[0].id)}
           >
             <Send className="h-4 w-4 mr-2" />
-            Reply to oldest pending question
+            Reply manually
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => handleAutoReply(pendingChats[0])}
+            disabled={autoReplyChat.isPending}
+          >
+            {autoReplyChat.isPending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-2" />
+            )}
+            AI Auto Reply
           </Button>
         </div>
       )}
@@ -117,11 +141,14 @@ export function ChatConversation({ user }: ChatConversationProps) {
 
 interface ChatMessageProps {
   chat: SupportChat;
+  userName: string;
   isReplying: boolean;
   onReply: () => void;
+  onAutoReply: () => void;
+  isAutoReplying: boolean;
 }
 
-function ChatMessage({ chat, isReplying, onReply }: ChatMessageProps) {
+function ChatMessage({ chat, userName, isReplying, onReply, onAutoReply, isAutoReplying }: ChatMessageProps) {
   const isPending = chat.status === "pending";
 
   return (
@@ -135,14 +162,29 @@ function ChatMessage({ chat, isReplying, onReply }: ChatMessageProps) {
           )}
         >
           <p className="whitespace-pre-wrap">{chat.question}</p>
-          <div className="flex items-center justify-between mt-2 gap-4">
+          <div className="flex items-center justify-between mt-2 gap-2">
             <span className="text-xs text-muted-foreground">
               {format(new Date(chat.created_at), "MMM d, h:mm a")}
             </span>
             {isPending && !isReplying && (
-              <Button size="sm" variant="ghost" onClick={onReply}>
-                Reply
-              </Button>
+              <div className="flex gap-1">
+                <Button size="sm" variant="ghost" onClick={onReply}>
+                  Reply
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={onAutoReply}
+                  disabled={isAutoReplying}
+                  className="text-primary"
+                >
+                  {isAutoReplying ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </div>
