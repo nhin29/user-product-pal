@@ -48,7 +48,8 @@ export function useProducts(
       }
 
       const { data, error, count } = await query
-        .order("display_order", { ascending: true })
+        .order("display_order", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true })
         .range(from, to);
 
       if (error) throw error;
