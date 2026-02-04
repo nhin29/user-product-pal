@@ -11,7 +11,6 @@ interface UserAnalytics {
 
 interface ProductInteraction {
   id: string;
-  title: string;
   image_url: string;
   clicks: number;
   copies: number;
@@ -119,7 +118,7 @@ export function useUserAnalytics(userId: string) {
       // Get product details
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, title, image_url")
+        .select("id, image_url")
         .in("id", productIds);
 
       if (productsError) throw productsError;
@@ -127,7 +126,6 @@ export function useUserAnalytics(userId: string) {
       return (products || [])
         .map((p) => ({
           id: p.id,
-          title: p.title,
           image_url: p.image_url,
           clicks: productCounts[p.id]?.clicks || 0,
           copies: productCounts[p.id]?.copies || 0,

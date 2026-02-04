@@ -195,7 +195,6 @@ export type Database = {
           platform: string
           product_type_id: string | null
           prompt: string
-          title: string
           updated_at: string
         }
         Insert: {
@@ -208,7 +207,6 @@ export type Database = {
           platform?: string
           product_type_id?: string | null
           prompt: string
-          title: string
           updated_at?: string
         }
         Update: {
@@ -221,7 +219,6 @@ export type Database = {
           platform?: string
           product_type_id?: string | null
           prompt?: string
-          title?: string
           updated_at?: string
         }
         Relationships: [

@@ -75,33 +75,25 @@ export function SortableProductRow({
         <Checkbox
           checked={isSelected}
           onCheckedChange={(checked) => onSelect(product.id, !!checked)}
-          aria-label={`Select ${product.title}`}
+          aria-label="Select product"
         />
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-3">
-          <div
-            className="h-10 w-10 overflow-hidden rounded-lg bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
-            onClick={() => onPreview(product)}
-          >
-            {product.image_url ? (
-              <img
-                src={product.image_url}
-                alt={product.title}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                IMG
-              </div>
-            )}
-          </div>
-          <span
-            className="font-medium text-foreground line-clamp-1 cursor-pointer hover:text-primary transition-colors"
-            onClick={() => onPreview(product)}
-          >
-            {product.title}
-          </span>
+        <div
+          className="h-10 w-10 overflow-hidden rounded-lg bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+          onClick={() => onPreview(product)}
+        >
+          {product.image_url ? (
+            <img
+              src={product.image_url}
+              alt="Product"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+              IMG
+            </div>
+          )}
         </div>
       </TableCell>
       <TableCell>

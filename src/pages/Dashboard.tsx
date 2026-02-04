@@ -53,7 +53,7 @@ export default function Dashboard() {
     isLoading, 
     emptyMessage 
   }: { 
-    products?: { id: string; title: string; image_url: string; count: number }[];
+    products?: { id: string; image_url: string; count: number }[];
     isLoading: boolean;
     emptyMessage: string;
   }) => {
@@ -94,14 +94,10 @@ export default function Dashboard() {
             </div>
             <img
               src={product.image_url}
-              alt={product.title}
+              alt="Product"
               className="h-12 w-12 rounded-lg object-cover"
             />
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground truncate">
-                {product.title}
-              </p>
-            </div>
+            <div className="flex-1 min-w-0" />
             <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1">
               <span className="text-sm font-semibold text-primary">
                 {product.count}

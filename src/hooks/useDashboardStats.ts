@@ -13,7 +13,6 @@ interface DashboardStats {
 
 interface TopProduct {
   id: string;
-  title: string;
   image_url: string;
   count: number;
 }
@@ -77,7 +76,7 @@ export function useTopClickedProducts() {
 
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, title, image_url")
+        .select("id, image_url")
         .in("id", productIds);
 
       if (productsError) throw productsError;
@@ -86,7 +85,6 @@ export function useTopClickedProducts() {
       return (products || [])
         .map((p) => ({
           id: p.id,
-          title: p.title,
           image_url: p.image_url,
           count: clickCounts[p.id] || 0,
         }))
@@ -120,7 +118,7 @@ export function useTopCopiedProducts() {
 
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, title, image_url")
+        .select("id, image_url")
         .in("id", productIds);
 
       if (productsError) throw productsError;
@@ -129,7 +127,6 @@ export function useTopCopiedProducts() {
       return (products || [])
         .map((p) => ({
           id: p.id,
-          title: p.title,
           image_url: p.image_url,
           count: copyCounts[p.id] || 0,
         }))
@@ -163,7 +160,7 @@ export function useTopSavedProducts() {
 
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, title, image_url")
+        .select("id, image_url")
         .in("id", productIds);
 
       if (productsError) throw productsError;
@@ -172,7 +169,6 @@ export function useTopSavedProducts() {
       return (products || [])
         .map((p) => ({
           id: p.id,
-          title: p.title,
           image_url: p.image_url,
           count: saveCounts[p.id] || 0,
         }))
