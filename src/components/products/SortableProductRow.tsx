@@ -57,7 +57,7 @@ export function SortableProductRow({
   return (
     <TableRow
       ref={setNodeRef}
-      style={style}
+      style={isDragDisabled ? undefined : style}
       className={`${isSelected ? "bg-muted/50" : ""} ${isDragging ? "z-50 shadow-lg" : ""}`}
     >
       <TableCell className="w-10">
