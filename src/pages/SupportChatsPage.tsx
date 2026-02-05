@@ -60,7 +60,10 @@ export default function SupportChatsPage() {
           {/* Conversation */}
           <div className="lg:col-span-2 border rounded-lg overflow-hidden flex flex-col">
             {selectedUser ? (
-              <ChatConversation user={selectedUser} />
+              <ChatConversation 
+                user={selectedUser} 
+                onChatDeleted={() => setSelectedUserId(null)}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-4">
                 <MessageCircle className="h-16 w-16 text-muted-foreground mb-3" />

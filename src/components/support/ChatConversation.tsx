@@ -4,18 +4,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { Send, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 
 interface ChatConversationProps {
   user: UserWithChats;
+  onChatDeleted?: () => void;
 }
 
-export function ChatConversation({ user }: ChatConversationProps) {
-  const { answerChat, autoReplyChat } = useSupportChats();
+export function ChatConversation({ user, onChatDeleted }: ChatConversationProps) {
+  const { answerChat, autoReplyChat, deleteChatHistory } = useSupportChats();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when user changes or new messages arrive
@@ -39,6 +42,12 @@ export function ChatConversation({ user }: ChatConversationProps) {
     });
   };
 
+  const handleDeleteChatHistory = async () => {
+    await deleteChatHistory.mutateAsync(user.user_id);
+    setShowDeleteDialog(false);
+    onChatDeleted?.();
+  };
+
   const pendingChats = user.chats.filter((c) => c.status === "pending");
 
   return (
@@ -51,11 +60,27 @@ export function ChatConversation({ user }: ChatConversationProps) {
             {user.user_name.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <div>
+        <div className="flex-1">
           <p className="font-semibold">{user.user_name}</p>
           <p className="text-sm text-muted-foreground">{user.user_email}</p>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={() => setShowDeleteDialog(true)}
+        >
+          <Trash2 className="h-5 w-5" />
+        </Button>
       </div>
+
+      <DeleteChatHistoryDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        userName={user.user_name}
+        onConfirm={handleDeleteChatHistory}
+        isDeleting={deleteChatHistory.isPending}
+      />
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
