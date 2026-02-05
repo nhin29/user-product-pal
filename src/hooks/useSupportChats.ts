@@ -200,11 +200,37 @@ export function useSupportChats() {
     },
   });
 
+  const deleteChatHistory = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("support_chats")
+        .delete()
+        .eq("user_id", userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+      toast({
+        title: "Chat history deleted",
+        description: "All messages have been removed.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting chat history",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     usersWithChats,
     isLoading,
     error,
     answerChat,
     autoReplyChat,
+    deleteChatHistory,
   };
 }
