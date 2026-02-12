@@ -25,11 +25,16 @@ const ROLE_OPTIONS = [
   { value: "viewer", label: "Viewer" },
 ] as const;
 
-const PRODUCT_OPTIONS = [
+const AMAZON_PRODUCT_OPTIONS = [
   { id: "prod_TreWrcz8uVHqIT", label: "Home & Electronics" },
   { id: "prod_TreWtW6ekESits", label: "Pets" },
   { id: "prod_TreV0wplqggLBW", label: "Health & Beauty" },
   { id: "prod_TmW6D8HwME3dsX", label: "Bundle (All)" },
+];
+
+const SHOPIFY_PRODUCT_OPTIONS = [
+  { id: "prod_TxMHw09aCtGsOM", label: "30 Prompts" },
+  { id: "prod_TxzgveYwNQur3j", label: "100 Prompts" },
 ];
 
 interface EditUserDialogProps {
@@ -127,9 +132,31 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Product Access</Label>
+              <Label>Amazon Product Access</Label>
               <div className="space-y-2 rounded-md border p-3">
-                {PRODUCT_OPTIONS.map((product) => (
+                {AMAZON_PRODUCT_OPTIONS.map((product) => (
+                  <div key={product.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={product.id}
+                      checked={selectedProductIds.includes(product.id)}
+                      onCheckedChange={(checked) => 
+                        handleProductToggle(product.id, checked as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor={product.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {product.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Shopify Product Access</Label>
+              <div className="space-y-2 rounded-md border p-3">
+                {SHOPIFY_PRODUCT_OPTIONS.map((product) => (
                   <div key={product.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={product.id}
