@@ -247,10 +247,10 @@ export default function ProductsPage() {
           <Select value={categoryFilter || "all"} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-[180px]">
               <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder="Image Style" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">All Image Styles</SelectItem>
               {categories?.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -332,7 +332,7 @@ export default function ProductsPage() {
                         />
                       </TableHead>
                       <TableHead>Product</TableHead>
-                      <TableHead>Category</TableHead>
+                      <TableHead>Image Style</TableHead>
                       <TableHead>Platform</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Made By</TableHead>

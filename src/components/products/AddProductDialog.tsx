@@ -203,11 +203,11 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 name="category_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Image Style</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder="Select image style" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
