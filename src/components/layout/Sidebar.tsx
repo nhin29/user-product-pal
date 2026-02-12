@@ -6,7 +6,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Users", href: "/users", icon: Users },
   { name: "Products", href: "/products", icon: Package },
-  { name: "Categories", href: "/categories", icon: FolderOpen },
+  { name: "Image Styles", href: "/categories", icon: FolderOpen },
   { name: "Niche", href: "/product-types", icon: Layers },
   { name: "Support", href: "/support", icon: MessageCircle },
 ];

@@ -53,14 +53,14 @@ export default function CategoriesPage() {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Categories</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Image Styles</h1>
             <p className="mt-1 text-muted-foreground">
-              Manage product categories and organization.
+              Manage product image styles and organization.
             </p>
           </div>
           <Button onClick={() => setAddDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Category
+            Add Image Style
           </Button>
         </div>
 
@@ -69,7 +69,7 @@ export default function CategoriesPage() {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search categories..."
+              placeholder="Search image styles..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -91,7 +91,7 @@ export default function CategoriesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Image Style</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Created</TableHead>
@@ -102,7 +102,7 @@ export default function CategoriesPage() {
                 {filteredCategories?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No categories found
+                      No image styles found
                     </TableCell>
                   </TableRow>
                 ) : (

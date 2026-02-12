@@ -141,8 +141,8 @@ export function EditCategoryDialog({ open, onOpenChange, category }: EditCategor
       });
 
       toast({
-        title: "Category updated",
-        description: "The category has been updated successfully.",
+        title: "Image style updated",
+        description: "The image style has been updated successfully.",
       });
 
       onOpenChange(false);
@@ -150,7 +150,7 @@ export function EditCategoryDialog({ open, onOpenChange, category }: EditCategor
       console.error("Error updating category:", error);
       toast({
         title: "Error",
-        description: "Failed to update category. Please try again.",
+        description: "Failed to update image style. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -164,7 +164,7 @@ export function EditCategoryDialog({ open, onOpenChange, category }: EditCategor
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Category</DialogTitle>
+          <DialogTitle>Edit Image Style</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -227,7 +227,7 @@ export function EditCategoryDialog({ open, onOpenChange, category }: EditCategor
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter category name" {...field} />
+                    <Input placeholder="Enter image style name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

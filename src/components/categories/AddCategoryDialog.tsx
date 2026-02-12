@@ -127,8 +127,8 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
       });
 
       toast({
-        title: "Category created",
-        description: "The category has been created successfully.",
+        title: "Image style created",
+        description: "The image style has been created successfully.",
       });
 
       form.reset();
@@ -138,7 +138,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
       console.error("Error creating category:", error);
       toast({
         title: "Error",
-        description: "Failed to create category. Please try again.",
+        description: "Failed to create image style. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -160,7 +160,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Category</DialogTitle>
+          <DialogTitle>Add Image Style</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -224,7 +224,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter category name"
+                      placeholder="Enter image style name"
                       {...field}
                       onChange={(e) => {
                         field.onChange(e);
@@ -261,7 +261,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter category description"
+                      placeholder="Enter image style description"
                       className="resize-none"
                       {...field}
                     />
@@ -283,7 +283,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
                 {isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Category
+                Create Image Style
               </Button>
             </div>
           </form>
