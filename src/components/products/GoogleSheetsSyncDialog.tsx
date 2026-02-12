@@ -636,6 +636,8 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
                         <img
                           src={product.image_url}
                           alt="Product"
+                          loading="lazy"
+                          decoding="async"
                           className="h-12 w-12 rounded object-cover flex-shrink-0"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = "/placeholder.svg";

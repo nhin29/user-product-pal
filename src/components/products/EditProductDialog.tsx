@@ -313,6 +313,8 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                         <img
                           src={uploadPreview}
                           alt="Preview"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-40 object-cover rounded-lg border"
                         />
                         <Button
@@ -363,6 +365,8 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                             <img
                               src={field.value}
                               alt="Current"
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-32 object-cover rounded-lg border"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = "none";

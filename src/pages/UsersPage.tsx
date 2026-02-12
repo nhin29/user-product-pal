@@ -122,6 +122,8 @@ export default function UsersPage() {
                           <img
                             src={user.avatar_url}
                             alt={user.display_name || "User"}
+                            loading="lazy"
+                            decoding="async"
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (

@@ -114,6 +114,8 @@ export default function CategoriesPage() {
                             <img
                               src={category.icon}
                               alt={category.name}
+                              loading="lazy"
+                              decoding="async"
                               className="h-10 w-10 rounded-lg object-cover"
                             />
                           ) : (

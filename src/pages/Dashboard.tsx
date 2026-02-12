@@ -95,6 +95,8 @@ export default function Dashboard() {
             <img
               src={product.image_url}
               alt="Product"
+              loading="lazy"
+              decoding="async"
               className="h-12 w-12 rounded-lg object-cover"
             />
             <div className="flex-1 min-w-0" />
