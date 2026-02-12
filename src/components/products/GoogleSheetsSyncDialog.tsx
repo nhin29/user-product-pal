@@ -61,7 +61,7 @@ function parseSheetIdFromUrl(url: string): string | null {
 }
 
 const FIELD_LABELS: Record<string, { label: string; required: boolean }> = {
-  category: { label: "Category", required: true },
+  category: { label: "Image Style", required: true },
   image_url: { label: "Image URL", required: true },
   prompt: { label: "Prompt", required: true },
   platform: { label: "Platform", required: true },
