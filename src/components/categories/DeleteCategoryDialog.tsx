@@ -29,8 +29,8 @@ export function DeleteCategoryDialog({ open, onOpenChange, category }: DeleteCat
       await deleteCategory.mutateAsync(category.id);
 
       toast({
-        title: "Category deleted",
-        description: "The category has been deleted successfully.",
+        title: "Image style deleted",
+        description: "The image style has been deleted successfully.",
       });
 
       onOpenChange(false);
@@ -38,8 +38,8 @@ export function DeleteCategoryDialog({ open, onOpenChange, category }: DeleteCat
       toast({
         title: "Error",
         description: error?.message?.includes("violates foreign key") 
-          ? "Cannot delete category. It is being used by products."
-          : "Failed to delete category. Please try again.",
+          ? "Cannot delete image style. It is being used by products."
+          : "Failed to delete image style. Please try again.",
         variant: "destructive",
       });
     }
@@ -49,7 +49,7 @@ export function DeleteCategoryDialog({ open, onOpenChange, category }: DeleteCat
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Category</AlertDialogTitle>
+          <AlertDialogTitle>Delete Image Style</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete "{category?.name}"? This action cannot be undone.
           </AlertDialogDescription>
