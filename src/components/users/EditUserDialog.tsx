@@ -33,12 +33,8 @@ const AMAZON_PRODUCT_OPTIONS = [
 ];
 
 const SHOPIFY_PRODUCT_OPTIONS = [
-  { id: "prod_TxzgveYwNQur3j", label: "100 Prompts" },
   { id: "prod_TxMHw09aCtGsOM", label: "30 Prompts" },
-  { id: "prod_shopify_home_electronics", label: "Home & Electronics" },
-  { id: "prod_shopify_pets", label: "Pets" },
-  { id: "prod_shopify_health_beauty", label: "Health & Beauty" },
-  { id: "prod_shopify_bundle", label: "Bundle (All)" },
+  { id: "prod_TxzgveYwNQur3j", label: "100 Prompts" },
 ];
 
 interface EditUserDialogProps {
