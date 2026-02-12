@@ -294,6 +294,8 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                         <img
                           src={uploadPreview}
                           alt="Preview"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-40 object-cover rounded-lg border"
                         />
                         <Button

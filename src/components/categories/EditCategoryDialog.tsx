@@ -178,6 +178,8 @@ export function EditCategoryDialog({ open, onOpenChange, category }: EditCategor
                     <img
                       src={iconPreview}
                       alt="Icon preview"
+                      loading="lazy"
+                      decoding="async"
                       className="h-16 w-16 rounded-lg object-cover border"
                     />
                     <Button

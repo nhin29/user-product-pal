@@ -119,6 +119,8 @@ export default function UserAnalyticsPage() {
               <img
                 src={user.avatar_url}
                 alt={user.display_name || "User"}
+                loading="lazy"
+                decoding="async"
                 className="h-16 w-16 rounded-full object-cover ring-2 ring-border"
               />
             ) : (
@@ -230,6 +232,8 @@ export default function UserAnalyticsPage() {
                       <img
                         src={product.image_url}
                         alt="Product"
+                        loading="lazy"
+                        decoding="async"
                         className="h-12 w-12 rounded-lg object-cover"
                       />
                       <div className="flex-1 min-w-0">

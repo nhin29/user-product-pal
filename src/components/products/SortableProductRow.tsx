@@ -83,6 +83,8 @@ export function SortableProductRow({
             <img
               src={product.image_url}
               alt="Product"
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (
