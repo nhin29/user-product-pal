@@ -4,6 +4,7 @@ import { GripVertical, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Product } from "@/hooks/useProducts";
+import { Product, useUpdateProduct } from "@/hooks/useProducts";
 
 const platformColors: Record<string, string> = {
   amazon: "bg-orange-500/10 text-orange-500 border-orange-500/20",
@@ -37,6 +38,7 @@ export function SortableProductRow({
   onEdit,
   onDelete,
 }: SortableProductRowProps) {
+  const updateProduct = useUpdateProduct();
   const {
     attributes,
     listeners,
@@ -116,6 +118,14 @@ export function SortableProductRow({
         <span className="text-sm">
           {product.made_by || "—"}
         </span>
+      </TableCell>
+      <TableCell>
+        <Switch
+          checked={(product as any).is_admin ?? false}
+          onCheckedChange={(checked) => {
+            updateProduct.mutate({ id: product.id, updates: { is_admin: checked } as any });
+          }}
+        />
       </TableCell>
       <TableCell>
         <span className="text-muted-foreground text-sm">

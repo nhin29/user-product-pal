@@ -336,6 +336,7 @@ export default function ProductsPage() {
                       <TableHead>Platform</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Made By</TableHead>
+                      <TableHead>Admin</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -343,7 +344,7 @@ export default function ProductsPage() {
                   <TableBody>
                     {products.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                           No products found
                         </TableCell>
                       </TableRow>

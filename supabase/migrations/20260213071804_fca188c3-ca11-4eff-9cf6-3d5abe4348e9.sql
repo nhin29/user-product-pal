@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN is_admin boolean NOT NULL DEFAULT false;
