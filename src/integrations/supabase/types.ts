@@ -192,6 +192,7 @@ export type Database = {
           display_order: number | null
           id: string
           image_url: string
+          is_admin: boolean
           made_by: string | null
           note: string | null
           platform: string
@@ -206,6 +207,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           image_url: string
+          is_admin?: boolean
           made_by?: string | null
           note?: string | null
           platform?: string
@@ -220,6 +222,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           image_url?: string
+          is_admin?: boolean
           made_by?: string | null
           note?: string | null
           platform?: string
