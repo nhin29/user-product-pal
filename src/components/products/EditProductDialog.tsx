@@ -31,12 +31,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUpdateProduct, useProductTypes, useCategories, Product } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload, Link, X, ImageIcon } from "lucide-react";
+import { Loader2, Upload, Link, X, ImageIcon, Plus } from "lucide-react";
 
 const productSchema = z.object({
   category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
-  image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   prompt: z.string().min(1, "Prompt is required"),
   platform: z.enum(["amazon", "shopify", "meta", "other"]),
   product_type_id: z.string().optional(),
@@ -60,8 +59,10 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [imageTab, setImageTab] = useState<"upload" | "url">("url");
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadPreviews, setUploadPreviews] = useState<string[]>([]);
+  const [existingUrls, setExistingUrls] = useState<string[]>([]);
+  const [urlInput, setUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ProductFormData>({
@@ -69,7 +70,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     defaultValues: {
       category_id: "",
       description: "",
-      image_url: "",
       prompt: "",
       platform: "amazon",
       product_type_id: undefined,
@@ -78,65 +78,79 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     },
   });
 
-  // Update form when product changes
   useEffect(() => {
     if (product) {
       form.reset({
         category_id: product.category_id,
         description: product.description || "",
-        image_url: product.image_url,
         prompt: product.prompt,
         platform: product.platform as "amazon" | "shopify" | "meta" | "other",
         product_type_id: product.product_type_id || undefined,
         made_by: product.made_by || "",
         note: product.note || "",
       });
+      setExistingUrls(product.image_urls || []);
       setImageTab("url");
+      setUploadedFiles([]);
+      setUploadPreviews([]);
     }
   }, [product, form]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        toast({
-          variant: "destructive",
-          title: "Invalid file",
-          description: "Please select an image file",
-        });
-        return;
-      }
-      setUploadedFile(file);
-      const preview = URL.createObjectURL(file);
-      setUploadPreview(preview);
+    const files = Array.from(e.target.files || []);
+    const imageFiles = files.filter(f => f.type.startsWith("image/"));
+    
+    if (imageFiles.length !== files.length) {
+      toast({ variant: "destructive", title: "Invalid files", description: "Some files were not images and were skipped" });
+    }
+
+    const newPreviews = imageFiles.map(f => URL.createObjectURL(f));
+    setUploadedFiles(prev => [...prev, ...imageFiles]);
+    setUploadPreviews(prev => [...prev, ...newPreviews]);
+    
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeUploadedFile = (index: number) => {
+    URL.revokeObjectURL(uploadPreviews[index]);
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingUrl = (index: number) => {
+    setExistingUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addUrl = () => {
+    const trimmed = urlInput.trim();
+    if (trimmed && (trimmed.startsWith("http://") || trimmed.startsWith("https://"))) {
+      setExistingUrls(prev => [...prev, trimmed]);
+      setUrlInput("");
+    } else if (trimmed) {
+      toast({ variant: "destructive", title: "Invalid URL", description: "Please enter a valid URL" });
     }
   };
 
-  const clearUploadedFile = () => {
-    setUploadedFile(null);
-    if (uploadPreview) {
-      URL.revokeObjectURL(uploadPreview);
-      setUploadPreview(null);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const clearUploads = () => {
+    uploadPreviews.forEach(p => URL.revokeObjectURL(p));
+    setUploadedFiles([]);
+    setUploadPreviews([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(filePath, file);
+      .upload(fileName, file);
 
     if (uploadError) throw uploadError;
 
     const { data } = supabase.storage
       .from("product-images")
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
 
     return data.publicUrl;
   };
@@ -146,19 +160,17 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     
     try {
       setIsUploading(true);
-      let finalImageUrl = data.image_url || product.image_url;
-
-      // If upload tab is selected and file exists, upload it
-      if (imageTab === "upload" && uploadedFile) {
-        finalImageUrl = await uploadImage(uploadedFile);
+      
+      // Upload new files
+      let newUploadedUrls: string[] = [];
+      if (uploadedFiles.length > 0) {
+        newUploadedUrls = await Promise.all(uploadedFiles.map(f => uploadImage(f)));
       }
 
-      if (!finalImageUrl) {
-        toast({
-          variant: "destructive",
-          title: "Image required",
-          description: "Please upload an image or enter an image URL",
-        });
+      const finalImageUrls = [...existingUrls, ...newUploadedUrls];
+
+      if (finalImageUrls.length === 0) {
+        toast({ variant: "destructive", title: "Image required", description: "Please add at least one image" });
         setIsUploading(false);
         return;
       }
@@ -167,7 +179,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         id: product.id,
         updates: {
           category_id: data.category_id,
-          image_url: finalImageUrl,
+          image_urls: finalImageUrls,
           prompt: data.prompt,
           platform: data.platform,
           product_type_id: data.product_type_id || null,
@@ -182,7 +194,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         description: "The product has been updated successfully.",
       });
       
-      clearUploadedFile();
+      clearUploads();
       onOpenChange(false);
     } catch (error: any) {
       toast({
@@ -197,7 +209,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
 
   const handleDialogClose = (open: boolean) => {
     if (!open) {
-      clearUploadedFile();
+      clearUploads();
       setImageTab("url");
     }
     onOpenChange(open);
@@ -292,9 +304,63 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
               )}
             />
 
-            {/* Image Upload/URL Section */}
+            {/* Multi Image Section */}
             <div className="space-y-2">
-              <FormLabel>Product Image</FormLabel>
+              <FormLabel>Product Images</FormLabel>
+              
+              {/* Existing images */}
+              {existingUrls.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {existingUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={url}
+                        alt={`Image ${index + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-24 object-cover rounded-lg border"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeExistingUrl(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* New uploads preview */}
+              {uploadPreviews.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {uploadPreviews.map((preview, index) => (
+                    <div key={`new-${index}`} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`New ${index + 1}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-24 object-cover rounded-lg border border-primary/30"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeUploadedFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <Tabs value={imageTab} onValueChange={(v) => setImageTab(v as "upload" | "url")}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="upload" className="gap-2">
@@ -303,80 +369,39 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   </TabsTrigger>
                   <TabsTrigger value="url" className="gap-2">
                     <Link className="h-4 w-4" />
-                    URL
+                    Add URL
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="upload" className="mt-3">
-                  <div className="space-y-3">
-                    {uploadPreview ? (
-                      <div className="relative">
-                        <img
-                          src={uploadPreview}
-                          alt="Preview"
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-40 object-cover rounded-lg border"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-7 w-7"
-                          onClick={clearUploadedFile}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          Click to upload new image
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          PNG, JPG, WEBP (no size limit)
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
+                  <div
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
+                    <p className="text-sm text-muted-foreground">Click to upload images</p>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP — select multiple</p>
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
                 </TabsContent>
                 <TabsContent value="url" className="mt-3">
-                  <FormField
-                    control={form.control}
-                    name="image_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input placeholder="https://example.com/image.jpg" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        {field.value && (
-                          <div className="mt-2">
-                            <img
-                              src={field.value}
-                              alt="Current"
-                              loading="lazy"
-                              decoding="async"
-                              className="w-full h-32 object-cover rounded-lg border"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
-                              }}
-                            />
-                          </div>
-                        )}
-                      </FormItem>
-                    )}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://example.com/image.jpg"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addUrl(); } }}
+                    />
+                    <Button type="button" variant="outline" size="icon" onClick={addUrl}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>

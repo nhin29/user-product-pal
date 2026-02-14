@@ -17,6 +17,7 @@ interface ProductInteraction {
   saves: number;
 }
 
+
 interface ActivityEvent {
   id: string;
   event_type: string;
@@ -118,7 +119,7 @@ export function useUserAnalytics(userId: string) {
       // Get product details
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, image_url")
+        .select("id, image_urls")
         .in("id", productIds);
 
       if (productsError) throw productsError;
@@ -126,7 +127,7 @@ export function useUserAnalytics(userId: string) {
       return (products || [])
         .map((p) => ({
           id: p.id,
-          image_url: p.image_url,
+          image_url: p.image_urls?.[0] || "",
           clicks: productCounts[p.id]?.clicks || 0,
           copies: productCounts[p.id]?.copies || 0,
           saves: productCounts[p.id]?.saves || 0,

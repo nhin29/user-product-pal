@@ -103,24 +103,33 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Image */}
-          <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-            <img
-              src={product.image_url}
-              alt="Product"
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              className="absolute bottom-3 right-3 gap-2"
-              onClick={() => window.open(product.image_url, "_blank")}
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open Full Size
-            </Button>
+          {/* Images */}
+          <div className="space-y-3">
+            {(product.image_urls || []).map((url, index) => (
+              <div key={index} className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                <img
+                  src={url}
+                  alt={`Product image ${index + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="absolute bottom-3 right-3 gap-2"
+                  onClick={() => window.open(url, "_blank")}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open Full Size
+                </Button>
+              </div>
+            ))}
+            {(!product.image_urls || product.image_urls.length === 0) && (
+              <div className="flex items-center justify-center aspect-video w-full rounded-lg border bg-muted text-muted-foreground">
+                No images
+              </div>
+            )}
           </div>
 
 

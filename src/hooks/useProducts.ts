@@ -105,7 +105,7 @@ export function useCreateProduct() {
 
       const { data, error } = await supabase
         .from("products")
-        .insert({ ...product, display_order: nextOrder })
+        .insert({ ...product, display_order: nextOrder } as any)
         .select()
         .single();
 

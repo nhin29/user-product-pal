@@ -56,7 +56,6 @@ export function useTopClickedProducts() {
   return useQuery({
     queryKey: ["top-clicked-products"],
     queryFn: async (): Promise<TopProduct[]> => {
-      // Get click counts per product
       const { data: interactions, error: interactionsError } = await supabase
         .from("prompt_interactions")
         .select("product_id")
@@ -64,28 +63,25 @@ export function useTopClickedProducts() {
 
       if (interactionsError) throw interactionsError;
 
-      // Count clicks per product
       const clickCounts: Record<string, number> = {};
       (interactions || []).forEach((i) => {
         clickCounts[i.product_id] = (clickCounts[i.product_id] || 0) + 1;
       });
 
-      // Get product details
       const productIds = Object.keys(clickCounts);
       if (productIds.length === 0) return [];
 
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, image_url")
+        .select("id, image_urls")
         .in("id", productIds);
 
       if (productsError) throw productsError;
 
-      // Combine and sort by count
       return (products || [])
         .map((p) => ({
           id: p.id,
-          image_url: p.image_url,
+          image_url: p.image_urls?.[0] || "",
           count: clickCounts[p.id] || 0,
         }))
         .sort((a, b) => b.count - a.count)
@@ -98,7 +94,6 @@ export function useTopCopiedProducts() {
   return useQuery({
     queryKey: ["top-copied-products"],
     queryFn: async (): Promise<TopProduct[]> => {
-      // Get copy counts per product
       const { data: interactions, error: interactionsError } = await supabase
         .from("prompt_interactions")
         .select("product_id")
@@ -106,28 +101,25 @@ export function useTopCopiedProducts() {
 
       if (interactionsError) throw interactionsError;
 
-      // Count copies per product
       const copyCounts: Record<string, number> = {};
       (interactions || []).forEach((i) => {
         copyCounts[i.product_id] = (copyCounts[i.product_id] || 0) + 1;
       });
 
-      // Get product details
       const productIds = Object.keys(copyCounts);
       if (productIds.length === 0) return [];
 
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, image_url")
+        .select("id, image_urls")
         .in("id", productIds);
 
       if (productsError) throw productsError;
 
-      // Combine and sort by count
       return (products || [])
         .map((p) => ({
           id: p.id,
-          image_url: p.image_url,
+          image_url: p.image_urls?.[0] || "",
           count: copyCounts[p.id] || 0,
         }))
         .sort((a, b) => b.count - a.count)
@@ -140,7 +132,6 @@ export function useTopSavedProducts() {
   return useQuery({
     queryKey: ["top-saved-products"],
     queryFn: async (): Promise<TopProduct[]> => {
-      // Get save counts per product
       const { data: interactions, error: interactionsError } = await supabase
         .from("prompt_interactions")
         .select("product_id")
@@ -148,28 +139,25 @@ export function useTopSavedProducts() {
 
       if (interactionsError) throw interactionsError;
 
-      // Count saves per product
       const saveCounts: Record<string, number> = {};
       (interactions || []).forEach((i) => {
         saveCounts[i.product_id] = (saveCounts[i.product_id] || 0) + 1;
       });
 
-      // Get product details
       const productIds = Object.keys(saveCounts);
       if (productIds.length === 0) return [];
 
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, image_url")
+        .select("id, image_urls")
         .in("id", productIds);
 
       if (productsError) throw productsError;
 
-      // Combine and sort by count
       return (products || [])
         .map((p) => ({
           id: p.id,
-          image_url: p.image_url,
+          image_url: p.image_urls?.[0] || "",
           count: saveCounts[p.id] || 0,
         }))
         .sort((a, b) => b.count - a.count)

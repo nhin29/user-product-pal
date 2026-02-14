@@ -81,9 +81,9 @@ export function SortableProductRow({
           className="h-10 w-10 overflow-hidden rounded-lg bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
           onClick={() => onPreview(product)}
         >
-          {product.image_url ? (
+        {product.image_urls?.[0] ? (
             <img
-              src={product.image_url}
+              src={product.image_urls[0]}
               alt="Product"
               loading="lazy"
               decoding="async"
