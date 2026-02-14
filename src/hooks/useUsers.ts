@@ -109,23 +109,27 @@ export function useUsers() {
         if (roleError) throw roleError;
       }
 
-      // If product access granted to a non-purchased user, add to stripe_subscribers
-      if (productIds && productIds.length > 0) {
-        // Find the user to check purchase status and email
+      if (productIds !== undefined) {
         const currentUser = queryClient.getQueryData<UserProfile[]>(["users"])
           ?.find((u) => u.user_id === userId);
 
         if (currentUser && !currentUser.is_purchase) {
           const userEmail = email || currentUser.email;
           if (userEmail) {
-            // Upsert to avoid duplicates (use email as unique identifier)
-            const { error: subError } = await supabase
-              .from("stripe_subscribers")
-              .upsert(
-                { email: userEmail },
-                { onConflict: "email" }
-              );
-            if (subError) throw subError;
+            if (productIds.length > 0) {
+              // Grant access: upsert into stripe_subscribers
+              const { error: subError } = await supabase
+                .from("stripe_subscribers")
+                .upsert({ email: userEmail }, { onConflict: "email" });
+              if (subError) throw subError;
+            } else {
+              // Revoke all access: remove from stripe_subscribers
+              const { error: subError } = await supabase
+                .from("stripe_subscribers")
+                .delete()
+                .eq("email", userEmail);
+              if (subError) throw subError;
+            }
           }
         }
       }
