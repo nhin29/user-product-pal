@@ -146,11 +146,37 @@ export function useUsers() {
     },
   });
 
+  const createUser = useMutation({
+    mutationFn: async ({ email, password, displayName }: { email: string; password: string; displayName: string }) => {
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: { email, password, displayName },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast({
+        title: "User created",
+        description: "New user has been created successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating user",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     users,
     isLoading,
     error,
     deleteUser,
     updateUserProfile,
+    createUser,
   };
 }

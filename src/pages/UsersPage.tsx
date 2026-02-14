@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 import { useUsers, UserProfile } from "@/hooks/useUsers";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
+import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { format } from "date-fns";
 
 const getInitials = (name: string | null) => {
@@ -31,7 +32,8 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
   const [deleteUserData, setDeleteUserData] = useState<UserProfile | null>(null);
-  const { users, isLoading, error, deleteUser, updateUserProfile } = useUsers();
+  const [showAddUser, setShowAddUser] = useState(false);
+  const { users, isLoading, error, deleteUser, updateUserProfile, createUser } = useUsers();
 
   const filteredUsers = users.filter(
     (user) =>
@@ -47,6 +49,10 @@ export default function UsersPage() {
     await deleteUser.mutateAsync(userId);
   };
 
+  const handleAddUser = async (email: string, password: string, displayName: string) => {
+    await createUser.mutateAsync({ email, password, displayName });
+  };
+
   return (
     <AdminLayout>
       <div className="animate-fade-in">
@@ -58,6 +64,10 @@ export default function UsersPage() {
               Manage your team members and their profiles.
             </p>
           </div>
+          <Button onClick={() => setShowAddUser(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
         </div>
 
         {/* Search */}
@@ -220,6 +230,12 @@ export default function UsersPage() {
         )}
 
         {/* Dialogs */}
+        <AddUserDialog
+          open={showAddUser}
+          onOpenChange={setShowAddUser}
+          onAdd={handleAddUser}
+          isLoading={createUser.isPending}
+        />
         <EditUserDialog
           user={editUser}
           open={!!editUser}
