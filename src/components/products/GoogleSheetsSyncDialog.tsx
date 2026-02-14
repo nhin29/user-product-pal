@@ -383,7 +383,7 @@ export function GoogleSheetsSyncDialog({ open, onOpenChange, onProductsFetched }
           }
 
           return {
-            image_url: product.image_url!,
+            image_urls: [product.image_url!],
             prompt: product.prompt!,
             category_id: categoryId,
             product_type_id: productTypeId,

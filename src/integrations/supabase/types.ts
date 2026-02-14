@@ -109,6 +109,41 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          product_id: string
+          prompt_snapshot: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          product_id: string
+          prompt_snapshot?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          product_id?: string
+          prompt_snapshot?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_responses: {
         Row: {
           completed_at: string | null
@@ -191,7 +226,7 @@ export type Database = {
           description: string | null
           display_order: number | null
           id: string
-          image_url: string
+          image_urls: string[]
           is_admin: boolean
           made_by: string | null
           note: string | null
@@ -206,7 +241,7 @@ export type Database = {
           description?: string | null
           display_order?: number | null
           id?: string
-          image_url: string
+          image_urls?: string[]
           is_admin?: boolean
           made_by?: string | null
           note?: string | null
@@ -221,7 +256,7 @@ export type Database = {
           description?: string | null
           display_order?: number | null
           id?: string
-          image_url?: string
+          image_urls?: string[]
           is_admin?: boolean
           made_by?: string | null
           note?: string | null
