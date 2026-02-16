@@ -17,6 +17,7 @@ export type Database = {
       analytics_events: {
         Row: {
           created_at: string
+          device_type: string | null
           element_id: string | null
           element_text: string | null
           event_data: Json | null
@@ -29,6 +30,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          device_type?: string | null
           element_id?: string | null
           element_text?: string | null
           event_data?: Json | null
@@ -41,6 +43,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          device_type?: string | null
           element_id?: string | null
           element_text?: string | null
           event_data?: Json | null

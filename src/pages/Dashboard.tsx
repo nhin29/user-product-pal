@@ -1,14 +1,19 @@
+import { useState } from "react";
 import { Users, Package, FolderOpen, Layers, MousePointerClick, Copy, Bookmark } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useDashboardStats, useTopClickedProducts, useTopCopiedProducts, useTopSavedProducts } from "@/hooks/useDashboardStats";
+import { useDashboardChart } from "@/hooks/useDashboardChart";
+import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
+  const [chartPeriod, setChartPeriod] = useState("7d");
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: topClicked, isLoading: clickedLoading } = useTopClickedProducts();
   const { data: topCopied, isLoading: copiedLoading } = useTopCopiedProducts();
   const { data: topSaved, isLoading: savedLoading } = useTopSavedProducts();
+  const { data: chartData, isLoading: chartLoading } = useDashboardChart(chartPeriod);
 
   const statCards = [
     {
@@ -137,6 +142,16 @@ export default function Dashboard() {
             : statCards.map((stat, index) => (
                 <StatCard key={index} {...stat} />
               ))}
+        </div>
+
+        {/* Activity Chart */}
+        <div className="mb-8">
+          <ActivityChart
+            data={chartData || []}
+            isLoading={chartLoading}
+            period={chartPeriod}
+            onPeriodChange={setChartPeriod}
+          />
         </div>
 
         {/* Top Products Grid */}
