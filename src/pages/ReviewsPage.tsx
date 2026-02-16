@@ -1,11 +1,24 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useProjectReviews, type ProjectReview } from "@/hooks/useProjectReviews";
+import { useProjectReviews, useDeleteProjectReviews, type ProjectReview } from "@/hooks/useProjectReviews";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Star, Trash2, Loader2 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -26,7 +39,12 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function ReviewsPage() {
   const { data: reviews = [], isLoading } = useProjectReviews();
+  const deleteReviews = useDeleteProjectReviews();
+  const { toast } = useToast();
   const [selectedReview, setSelectedReview] = useState<ProjectReview | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
+
   const averageRating =
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -36,6 +54,41 @@ export default function ReviewsPage() {
     star,
     count: reviews.filter((r) => r.rating === star).length,
   }));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === reviews.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(reviews.map((r) => r.id)));
+    }
+  };
+
+  const handleDelete = async (ids: string[]) => {
+    try {
+      await deleteReviews.mutateAsync(ids);
+      toast({ title: "Deleted", description: `${ids.length} review(s) deleted.` });
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+      if (selectedReview && ids.includes(selectedReview.id)) {
+        setSelectedReview(null);
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete reviews." });
+    }
+    setConfirmDeleteIds([]);
+  };
 
   return (
     <AdminLayout>
@@ -55,14 +108,9 @@ export default function ReviewsPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Reviews</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-3xl font-bold">{reviews.length}</div>
-              )}
+              {isLoading ? <Skeleton className="h-8 w-16" /> : <div className="text-3xl font-bold">{reviews.length}</div>}
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Average Rating</CardTitle>
@@ -78,7 +126,6 @@ export default function ReviewsPage() {
               )}
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Rating Distribution</CardTitle>
@@ -86,9 +133,7 @@ export default function ReviewsPage() {
             <CardContent>
               {isLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-3 w-full" />
-                  ))}
+                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-3 w-full" />)}
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -99,10 +144,7 @@ export default function ReviewsPage() {
                         <span className="w-3 text-muted-foreground">{star}</span>
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-yellow-400 transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
+                          <div className="h-full rounded-full bg-yellow-400 transition-all" style={{ width: `${pct}%` }} />
                         </div>
                         <span className="w-6 text-right text-muted-foreground">{count}</span>
                       </div>
@@ -117,8 +159,22 @@ export default function ReviewsPage() {
         {/* Reviews List */}
         <Card>
           <CardHeader>
-            <CardTitle>All Reviews</CardTitle>
-            <CardDescription>User reviews sorted by most recent</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>All Reviews</CardTitle>
+                <CardDescription>User reviews sorted by most recent</CardDescription>
+              </div>
+              {selectedIds.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setConfirmDeleteIds(Array.from(selectedIds))}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete ({selectedIds.size})
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -140,51 +196,72 @@ export default function ReviewsPage() {
                 <p className="text-sm mt-1">Reviews will appear here when users submit feedback.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-              {reviews.map((review) => {
-                  return (
+              <>
+                {/* Select all */}
+                <div className="flex items-center gap-3 mb-3 pb-3 border-b">
+                  <Checkbox
+                    checked={selectedIds.size === reviews.length && reviews.length > 0}
+                    onCheckedChange={toggleAll}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {selectedIds.size > 0
+                      ? `${selectedIds.size} of ${reviews.length} selected`
+                      : "Select all"}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {reviews.map((review) => (
                     <div
                       key={review.id}
-                      className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                      onClick={() => setSelectedReview(review)}
+                      className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                     >
-                      {review.avatar_url ? (
-                        <img
-                          src={review.avatar_url}
-                          alt={review.display_name || "User"}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-10 w-10 rounded-full object-cover ring-1 ring-border"
+                      <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(review.id)}
+                          onCheckedChange={() => toggleSelect(review.id)}
                         />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 ring-1 ring-border">
-                          <span className="text-sm font-semibold text-primary">
-                            {review.display_name?.[0]?.toUpperCase() || "?"}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">
-                              {review.display_name || "Anonymous"}
+                      </div>
+                      <div
+                        className="flex items-start gap-4 flex-1 min-w-0 cursor-pointer"
+                        onClick={() => setSelectedReview(review)}
+                      >
+                        {review.avatar_url ? (
+                          <img
+                            src={review.avatar_url}
+                            alt={review.display_name || "User"}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-10 w-10 rounded-full object-cover ring-1 ring-border"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 ring-1 ring-border shrink-0">
+                            <span className="text-sm font-semibold text-primary">
+                              {review.display_name?.[0]?.toUpperCase() || "?"}
                             </span>
-                            <StarRating rating={review.rating} />
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-foreground">
+                                {review.display_name || "Anonymous"}
+                              </span>
+                              <StarRating rating={review.rating} />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
                             </span>
                           </div>
+                          {review.comment && (
+                            <p className="mt-1.5 text-sm text-foreground/80 truncate">{review.comment}</p>
+                          )}
                         </div>
-                        {review.comment && (
-                          <p className="mt-1.5 text-sm text-foreground/80 truncate">{review.comment}</p>
-                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -237,10 +314,52 @@ export default function ReviewsPage() {
                 ) : (
                   <p className="text-sm text-muted-foreground italic">No comment provided.</p>
                 )}
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setConfirmDeleteIds([selectedReview.id]);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Review
+                  </Button>
+                </div>
               </div>
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={confirmDeleteIds.length > 0} onOpenChange={(open) => !open && setConfirmDeleteIds([])}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {confirmDeleteIds.length === 1 ? "Review" : "Reviews"}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {confirmDeleteIds.length === 1 ? "this review" : `${confirmDeleteIds.length} reviews`}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteReviews.isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleDelete(confirmDeleteIds)}
+                disabled={deleteReviews.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteReviews.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

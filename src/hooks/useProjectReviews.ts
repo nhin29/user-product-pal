@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ProjectReview {
@@ -46,6 +46,22 @@ export function useProjectReviews() {
         display_name: r.user_id ? profileMap.get(r.user_id)?.display_name ?? null : null,
         avatar_url: r.user_id ? profileMap.get(r.user_id)?.avatar_url ?? null : null,
       }));
+    },
+  });
+}
+
+export function useDeleteProjectReviews() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase
+        .from("project_reviews")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project-reviews"] });
     },
   });
 }
