@@ -53,9 +53,14 @@ export default function ReviewsPage() {
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [ratingFilter, setRatingFilter] = useState<string>("all");
 
-  const totalPages = Math.max(1, Math.ceil(reviews.length / pageSize));
-  const paginatedReviews = reviews.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const filteredReviews = ratingFilter === "all"
+    ? reviews
+    : reviews.filter((r) => r.rating === Number(ratingFilter));
+
+  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / pageSize));
+  const paginatedReviews = filteredReviews.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const averageRating =
     reviews.length > 0
@@ -181,18 +186,44 @@ export default function ReviewsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>All Reviews</CardTitle>
-                <CardDescription>User reviews sorted by most recent</CardDescription>
+                <CardDescription>
+                  {ratingFilter === "all"
+                    ? "User reviews sorted by most recent"
+                    : `Showing ${filteredReviews.length} review(s) with ${ratingFilter} star${Number(ratingFilter) !== 1 ? "s" : ""}`}
+                </CardDescription>
               </div>
-              {selectedIds.size > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setConfirmDeleteIds(Array.from(selectedIds))}
+              <div className="flex items-center gap-2">
+                <Select
+                  value={ratingFilter}
+                  onValueChange={(v) => {
+                    setRatingFilter(v);
+                    setCurrentPage(1);
+                    setSelectedIds(new Set());
+                  }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete ({selectedIds.size})
-                </Button>
-              )}
+                  <SelectTrigger className="h-9 w-[140px]">
+                    <SelectValue placeholder="Filter rating" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="all">All Ratings</SelectItem>
+                    <SelectItem value="5">⭐ 5 Stars</SelectItem>
+                    <SelectItem value="4">⭐ 4 Stars</SelectItem>
+                    <SelectItem value="3">⭐ 3 Stars</SelectItem>
+                    <SelectItem value="2">⭐ 2 Stars</SelectItem>
+                    <SelectItem value="1">⭐ 1 Star</SelectItem>
+                  </SelectContent>
+                </Select>
+                {selectedIds.size > 0 && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setConfirmDeleteIds(Array.from(selectedIds))}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete ({selectedIds.size})
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
