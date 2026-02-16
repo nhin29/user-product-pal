@@ -81,15 +81,15 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const imageFiles = files.filter(f => f.type.startsWith("image/"));
-    
-    if (imageFiles.length !== files.length) {
-      toast({
-        variant: "destructive",
-        title: "Invalid files",
-        description: "Some files were not images and were skipped",
-      });
-    }
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const imageFiles = files.filter(f => {
+      if (!f.type.startsWith("image/")) return false;
+      if (f.size > maxSize) {
+        toast({ variant: "destructive", title: "File too large", description: `${f.name} exceeds 5MB limit` });
+        return false;
+      }
+      return true;
+    });
 
     const newPreviews = imageFiles.map(f => URL.createObjectURL(f));
     setUploadedFiles(prev => [...prev, ...imageFiles]);

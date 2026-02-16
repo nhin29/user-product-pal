@@ -31,12 +31,22 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Get max display_order for correct ordering
+  const { data: maxOrderData } = await supabase
+    .from("products")
+    .select("display_order")
+    .order("display_order", { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextOrder = (maxOrderData?.display_order ?? 0) + 1;
+
   // Remove id and timestamps
-  const { id, created_at, updated_at, ...productData } = source;
+  const { id, created_at, updated_at, display_order, ...productData } = source;
 
   const { data, error } = await supabase
     .from("products")
-    .insert({ ...productData, ...overrides })
+    .insert({ ...productData, ...overrides, display_order: nextOrder })
     .select()
     .single();
 
