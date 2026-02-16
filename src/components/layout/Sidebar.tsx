@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, Package, FolderOpen, Layers, LogOut, MessageCircle, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const navigation = [
@@ -8,6 +8,7 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Image Styles", href: "/categories", icon: FolderOpen },
   { name: "Niche", href: "/product-types", icon: Layers },
+  { name: "Reviews", href: "/reviews", icon: Star },
   { name: "Support", href: "/support", icon: MessageCircle },
 ];
 
