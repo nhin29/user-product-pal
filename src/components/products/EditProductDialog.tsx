@@ -1,7 +1,23 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +47,62 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUpdateProduct, useProductTypes, useCategories, Product } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload, Link, X, ImageIcon, Plus } from "lucide-react";
+import { Loader2, Upload, Link, X, ImageIcon, Plus, GripVertical } from "lucide-react";
+
+function SortableImage({
+  id,
+  url,
+  index,
+  onRemove,
+}: {
+  id: string;
+  url: string;
+  index: number;
+  onRemove: (index: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.7 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <img
+        src={url}
+        alt={`Image ${index + 1}`}
+        loading="lazy"
+        decoding="async"
+        className="w-full h-24 object-cover rounded-lg border"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+      />
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-1 left-1 h-6 w-6 flex items-center justify-center rounded bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="h-3 w-3 text-muted-foreground" />
+      </div>
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={() => onRemove(index)}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+      {index === 0 && (
+        <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-medium">
+          Cover
+        </span>
+      )}
+    </div>
+  );
+}
 
 const productSchema = z.object({
   category_id: z.string().min(1, "Category is required"),
@@ -64,6 +135,25 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   const [existingUrls, setExistingUrls] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const imageIds = useMemo(
+    () => existingUrls.map((url, i) => `img-${i}-${url.slice(-20)}`),
+    [existingUrls]
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = imageIds.indexOf(active.id as string);
+      const newIndex = imageIds.indexOf(over.id as string);
+      setExistingUrls((prev) => arrayMove(prev, oldIndex, newIndex));
+    }
+  };
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -307,32 +397,29 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
             {/* Multi Image Section */}
             <div className="space-y-2">
               <FormLabel>Product Images</FormLabel>
+              <p className="text-xs text-muted-foreground">Drag to reorder. First image is the cover.</p>
               
-              {/* Existing images */}
+              {/* Existing images with drag-and-drop */}
               {existingUrls.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {existingUrls.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Image ${index + 1}`}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-24 object-cover rounded-lg border"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removeExistingUrl(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={imageIds} strategy={rectSortingStrategy}>
+                    <div className="grid grid-cols-3 gap-2">
+                      {existingUrls.map((url, index) => (
+                        <SortableImage
+                          key={imageIds[index]}
+                          id={imageIds[index]}
+                          url={url}
+                          index={index}
+                          onRemove={removeExistingUrl}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
 
               {/* New uploads preview */}
