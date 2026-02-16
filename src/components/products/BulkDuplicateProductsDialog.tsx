@@ -54,15 +54,16 @@ export function BulkDuplicateProductsDialog({
     let successCount = 0;
     let errorCount = 0;
 
+    // Run sequentially to ensure correct display_order assignment
     for (const sourceId of productIds) {
-      const { error } = await supabase.functions.invoke("duplicate-product", {
-        body: { source_id: sourceId, overrides: { platform } },
-      });
-
-      if (error) {
-        errorCount++;
-      } else {
+      try {
+        const { error } = await supabase.functions.invoke("duplicate-product", {
+          body: { source_id: sourceId, overrides: { platform } },
+        });
+        if (error) throw error;
         successCount++;
+      } catch {
+        errorCount++;
       }
     }
 
