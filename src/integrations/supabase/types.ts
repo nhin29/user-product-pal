@@ -321,6 +321,33 @@ export type Database = {
         }
         Relationships: []
       }
+      project_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          rating: number
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          rating: number
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          rating?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       prompt_interactions: {
         Row: {
           created_at: string
