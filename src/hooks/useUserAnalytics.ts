@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserAnalytics {
   totalClicks: number;
@@ -40,6 +41,9 @@ export interface OnboardingResponse {
 }
 
 export function useUserAnalytics(userId: string) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const statsQuery = useQuery({
     queryKey: ["user-analytics-stats", userId],
     queryFn: async (): Promise<UserAnalytics> => {
@@ -168,6 +172,27 @@ export function useUserAnalytics(userId: string) {
     enabled: !!userId,
   });
 
+  const clearAnalytics = useMutation({
+    mutationFn: async () => {
+      const [{ error: eventsError }, { error: interactionsError }] = await Promise.all([
+        supabase.from("analytics_events").delete().eq("user_id", userId),
+        supabase.from("prompt_interactions").delete().eq("user_id", userId),
+      ]);
+      if (eventsError) throw eventsError;
+      if (interactionsError) throw interactionsError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-analytics-stats", userId] });
+      queryClient.invalidateQueries({ queryKey: ["user-product-interactions", userId] });
+      queryClient.invalidateQueries({ queryKey: ["user-recent-activity", userId] });
+      queryClient.invalidateQueries({ queryKey: ["user-analytics-chart", userId] });
+      toast({ title: "Analytics cleared", description: "All analytics data for this user has been deleted." });
+    },
+    onError: (error) => {
+      toast({ title: "Error clearing analytics", description: error.message, variant: "destructive" });
+    },
+  });
+
   return {
     stats: statsQuery.data,
     isLoadingStats: statsQuery.isLoading,
@@ -177,5 +202,6 @@ export function useUserAnalytics(userId: string) {
     isLoadingActivity: recentActivityQuery.isLoading,
     onboardingResponse: onboardingQuery.data,
     isLoadingOnboarding: onboardingQuery.isLoading,
+    clearAnalytics,
   };
 }
