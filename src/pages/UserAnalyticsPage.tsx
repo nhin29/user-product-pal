@@ -12,8 +12,6 @@ import { formatDistanceToNow } from "date-fns";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
 import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
-import { DeviceChart } from "@/components/user-analytics/DeviceChart";
-import { useDeviceAnalytics } from "@/hooks/useDeviceAnalytics";
 const StatCard = ({
   title,
   value,
@@ -92,7 +90,7 @@ export default function UserAnalyticsPage() {
     clearAnalytics,
   } = useUserAnalytics(userId || "");
   const { data: chartData, isLoading: isLoadingChart } = useUserAnalyticsChart(userId || "", chartPeriod);
-  const { data: deviceData, isLoading: deviceLoading } = useDeviceAnalytics(userId);
+  
   const user = users.find((u) => u.user_id === userId);
 
   const getInitials = (name: string | null) => {
@@ -218,15 +216,6 @@ export default function UserAnalyticsPage() {
             isLoading={isLoadingChart}
             period={chartPeriod}
             onPeriodChange={setChartPeriod}
-          />
-        </div>
-
-        {/* Device Analytics */}
-        <div className="mb-8">
-          <DeviceChart
-            data={deviceData || []}
-            isLoading={deviceLoading}
-            description="Events from this user by device type"
           />
         </div>
 
