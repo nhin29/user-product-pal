@@ -493,36 +493,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_sessions: {
-        Row: {
-          created_at: string
-          device_type: string
-          id: string
-          screen_width: number | null
-          session_id: string
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          device_type: string
-          id?: string
-          screen_width?: number | null
-          session_id: string
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          device_type?: string
-          id?: string
-          screen_width?: number | null
-          session_id?: string
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
