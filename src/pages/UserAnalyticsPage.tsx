@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MousePointer, Copy, Eye, Activity, Bookmark } from "lucide-react";
+import { ArrowLeft, MousePointer, Copy, Eye, Activity, Bookmark, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { useUsers } from "@/hooks/useUsers";
 import { formatDistanceToNow } from "date-fns";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
+import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
 const StatCard = ({
   title,
   value,
@@ -75,6 +76,7 @@ export default function UserAnalyticsPage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [chartPeriod, setChartPeriod] = useState("7d");
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const { users } = useUsers();
   const {
     stats,
@@ -85,6 +87,7 @@ export default function UserAnalyticsPage() {
     isLoadingActivity,
     onboardingResponse,
     isLoadingOnboarding,
+    clearAnalytics,
   } = useUserAnalytics(userId || "");
   const { data: chartData, isLoading: isLoadingChart } = useUserAnalyticsChart(userId || "", chartPeriod);
   const user = users.find((u) => u.user_id === userId);
@@ -114,29 +117,48 @@ export default function UserAnalyticsPage() {
             Back to Users
           </Button>
 
-          <div className="flex items-center gap-4">
-            {user?.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.display_name || "User"}
-                loading="lazy"
-                decoding="async"
-                className="h-16 w-16 rounded-full object-cover ring-2 ring-border"
-              />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 ring-2 ring-border">
-                <span className="text-xl font-semibold text-primary">
-                  {getInitials(user?.display_name || null)}
-                </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.display_name || "User"}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-16 w-16 rounded-full object-cover ring-2 ring-border"
+                />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 ring-2 ring-border">
+                  <span className="text-xl font-semibold text-primary">
+                    {getInitials(user?.display_name || null)}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground">
+                  {user?.display_name || "Unknown User"}
+                </h1>
+                <p className="text-muted-foreground">User Analytics & Activity</p>
               </div>
-            )}
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">
-                {user?.display_name || "Unknown User"}
-              </h1>
-              <p className="text-muted-foreground">User Analytics & Activity</p>
             </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setClearDialogOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Clear Analytics
+            </Button>
           </div>
+
+          <ClearAnalyticsDialog
+            userName={user?.display_name || "this user"}
+            open={clearDialogOpen}
+            onOpenChange={setClearDialogOpen}
+            onConfirm={async () => {
+              await clearAnalytics.mutateAsync();
+            }}
+          />
         </div>
 
         {/* Stats Grid */}
