@@ -23,6 +23,7 @@ const platformColors: Record<string, string> = {
 
 interface SortableProductRowProps {
   product: Product;
+  index: number;
   isSelected: boolean;
   onSelect: (id: string, checked: boolean) => void;
   onPreview: (product: Product) => void;
@@ -32,6 +33,7 @@ interface SortableProductRowProps {
 
 export function SortableProductRow({
   product,
+  index,
   isSelected,
   onSelect,
   onPreview,
@@ -75,6 +77,9 @@ export function SortableProductRow({
           onCheckedChange={(checked) => onSelect(product.id, !!checked)}
           aria-label="Select product"
         />
+      </TableCell>
+      <TableCell className="w-10">
+        <span className="text-sm font-medium text-muted-foreground">{index}</span>
       </TableCell>
       <TableCell>
         <div
