@@ -342,6 +342,7 @@ export default function ProductsPage() {
                           className={someSelected && !allSelected ? "data-[state=checked]:bg-primary/50" : ""}
                         />
                       </TableHead>
+                      <TableHead className="w-10">#</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Image Style</TableHead>
                       <TableHead>Platform</TableHead>
@@ -355,16 +356,17 @@ export default function ProductsPage() {
                   <TableBody>
                     {products.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                           No products found
                         </TableCell>
                       </TableRow>
                     ) : (
                       <SortableContext items={productIds} strategy={verticalListSortingStrategy}>
-                        {products.map((product) => (
+                        {products.map((product, idx) => (
                           <SortableProductRow
                             key={product.id}
                             product={product}
+                            index={(currentPage - 1) * pageSize + idx + 1}
                             isSelected={selectedIds.includes(product.id)}
                             onSelect={handleSelectOne}
                             onPreview={handlePreview}
