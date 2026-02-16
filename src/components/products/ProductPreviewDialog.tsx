@@ -103,29 +103,35 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Images */}
-          <div className="space-y-3">
-            {(product.image_urls || []).map((url, index) => (
-              <div key={index} className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-                <img
-                  src={url}
-                  alt={`Product image ${index + 1}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute bottom-3 right-3 gap-2"
-                  onClick={() => window.open(url, "_blank")}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open Full Size
-                </Button>
+          {/* Images Grid */}
+          <div>
+            {(product.image_urls || []).length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {(product.image_urls || []).map((url, index) => (
+                  <div
+                    key={index}
+                    className="relative group aspect-square overflow-hidden rounded-lg border bg-muted cursor-pointer"
+                    onClick={() => window.open(url, "_blank")}
+                  >
+                    <img
+                      src={url}
+                      alt={`Product image ${index + 1}`}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute bottom-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
-            {(!product.image_urls || product.image_urls.length === 0) && (
+            ) : (
               <div className="flex items-center justify-center aspect-video w-full rounded-lg border bg-muted text-muted-foreground">
                 No images
               </div>
