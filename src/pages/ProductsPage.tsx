@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Trash2, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet } from "lucide-react";
+import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -42,6 +42,7 @@ import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog
 import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
 import { SortableProductRow } from "@/components/products/SortableProductRow";
 import { GoogleSheetsSyncDialog } from "@/components/products/GoogleSheetsSyncDialog";
+import { BulkDuplicateProductsDialog } from "@/components/products/BulkDuplicateProductsDialog";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -59,6 +60,7 @@ export default function ProductsPage() {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -213,13 +215,22 @@ export default function ProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             {selectedIds.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete ({selectedIds.length})
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setDuplicateDialogOpen(true)}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate ({selectedIds.length})
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete ({selectedIds.length})
+                </Button>
+              </>
             )}
             <Button variant="outline" onClick={() => setSyncDialogOpen(true)}>
               <FileSpreadsheet className="mr-2 h-4 w-4" />
@@ -465,6 +476,12 @@ export default function ProductsPage() {
         <GoogleSheetsSyncDialog
           open={syncDialogOpen}
           onOpenChange={setSyncDialogOpen}
+        />
+        <BulkDuplicateProductsDialog
+          open={duplicateDialogOpen}
+          onOpenChange={setDuplicateDialogOpen}
+          productIds={selectedIds}
+          onSuccess={() => setSelectedIds([])}
         />
       </div>
     </AdminLayout>
