@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useProjectReviews } from "@/hooks/useProjectReviews";
+import { useProjectReviews, type ProjectReview } from "@/hooks/useProjectReviews";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -24,7 +26,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function ReviewsPage() {
   const { data: reviews = [], isLoading } = useProjectReviews();
-
+  const [selectedReview, setSelectedReview] = useState<ProjectReview | null>(null);
   const averageRating =
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -143,7 +145,8 @@ export default function ReviewsPage() {
                   return (
                     <div
                       key={review.id}
-                      className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                      onClick={() => setSelectedReview(review)}
                     >
                       {review.avatar_url ? (
                         <img
@@ -175,7 +178,7 @@ export default function ReviewsPage() {
                           </div>
                         </div>
                         {review.comment && (
-                          <p className="mt-1.5 text-sm text-foreground/80">{review.comment}</p>
+                          <p className="mt-1.5 text-sm text-foreground/80 truncate">{review.comment}</p>
                         )}
                       </div>
                     </div>
@@ -185,6 +188,59 @@ export default function ReviewsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Review Detail Modal */}
+        <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Review Details</DialogTitle>
+            </DialogHeader>
+            {selectedReview && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  {selectedReview.avatar_url ? (
+                    <img
+                      src={selectedReview.avatar_url}
+                      alt={selectedReview.display_name || "User"}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-12 w-12 rounded-full object-cover ring-1 ring-border"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 ring-1 ring-border">
+                      <span className="text-base font-semibold text-primary">
+                        {selectedReview.display_name?.[0]?.toUpperCase() || "?"}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {selectedReview.display_name || "Anonymous"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(selectedReview.created_at), "MMM d, yyyy 'at' h:mm a")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <StarRating rating={selectedReview.rating} />
+                  <span className="text-sm text-muted-foreground">{selectedReview.rating}/5</span>
+                </div>
+
+                {selectedReview.comment ? (
+                  <div className="rounded-lg bg-muted/50 border p-4">
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                      {selectedReview.comment}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No comment provided.</p>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
