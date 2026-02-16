@@ -15,8 +15,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Star, Trash2, Loader2 } from "lucide-react";
+import { Star, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +51,11 @@ export default function ReviewsPage() {
   const [selectedReview, setSelectedReview] = useState<ProjectReview | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const totalPages = Math.max(1, Math.ceil(reviews.length / pageSize));
+  const paginatedReviews = reviews.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const averageRating =
     reviews.length > 0
@@ -64,11 +76,18 @@ export default function ReviewsPage() {
     });
   };
 
+  const pageIds = paginatedReviews.map((r) => r.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+
   const toggleAll = () => {
-    if (selectedIds.size === reviews.length) {
-      setSelectedIds(new Set());
+    if (allPageSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        pageIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSelectedIds(new Set(reviews.map((r) => r.id)));
+      setSelectedIds((prev) => new Set([...prev, ...pageIds]));
     }
   };
 
@@ -200,18 +219,18 @@ export default function ReviewsPage() {
                 {/* Select all */}
                 <div className="flex items-center gap-3 mb-3 pb-3 border-b">
                   <Checkbox
-                    checked={selectedIds.size === reviews.length && reviews.length > 0}
+                    checked={allPageSelected}
                     onCheckedChange={toggleAll}
                   />
                   <span className="text-sm text-muted-foreground">
                     {selectedIds.size > 0
                       ? `${selectedIds.size} of ${reviews.length} selected`
-                      : "Select all"}
+                      : "Select all on page"}
                   </span>
                 </div>
 
                 <div className="space-y-3">
-                  {reviews.map((review) => (
+                  {paginatedReviews.map((review) => (
                     <div
                       key={review.id}
                       className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
@@ -260,6 +279,54 @@ export default function ReviewsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between pt-4 mt-4 border-t">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Rows per page</span>
+                    <Select
+                      value={String(pageSize)}
+                      onValueChange={(v) => {
+                        setPageSize(Number(v));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[10, 20, 50].map((size) => (
+                          <SelectItem key={size} value={String(size)}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </>
             )}
