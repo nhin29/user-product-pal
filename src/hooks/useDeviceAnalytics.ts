@@ -12,22 +12,19 @@ export function useDeviceAnalytics(userId?: string) {
     queryKey: ["device-analytics", userId ?? "all"],
     queryFn: async (): Promise<DeviceData[]> => {
       let query = supabase
-        .from("analytics_events")
-        .select("event_data");
+        .from("user_sessions")
+        .select("device_type");
 
       if (userId) {
         query = query.eq("user_id", userId);
       }
-
-      // Only get events that have device_type
-      query = query.not("event_data->device_type", "is", null);
 
       const { data, error } = await query;
       if (error) throw error;
 
       const counts: Record<string, number> = {};
       (data || []).forEach((row) => {
-        const deviceType = (row.event_data as Record<string, string>)?.device_type || "unknown";
+        const deviceType = row.device_type || "unknown";
         counts[deviceType] = (counts[deviceType] || 0) + 1;
       });
 

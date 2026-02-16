@@ -17,7 +17,6 @@ export type Database = {
       analytics_events: {
         Row: {
           created_at: string
-          device_type: string | null
           element_id: string | null
           element_text: string | null
           event_data: Json | null
@@ -30,7 +29,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          device_type?: string | null
           element_id?: string | null
           element_text?: string | null
           event_data?: Json | null
@@ -43,7 +41,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          device_type?: string | null
           element_id?: string | null
           element_text?: string | null
           event_data?: Json | null
@@ -492,6 +489,36 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_type: string
+          id: string
+          screen_width: number | null
+          session_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_type: string
+          id?: string
+          screen_width?: number | null
+          session_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_type?: string
+          id?: string
+          screen_width?: number | null
+          session_id?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
