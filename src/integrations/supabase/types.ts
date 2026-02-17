@@ -109,6 +109,45 @@ export type Database = {
         }
         Relationships: []
       }
+      device_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_type: string
+          id: string
+          os: string | null
+          screen_height: number
+          screen_width: number
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_type: string
+          id?: string
+          os?: string | null
+          screen_height: number
+          screen_width: number
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string
+          id?: string
+          os?: string | null
+          screen_height?: number
+          screen_width?: number
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       generated_images: {
         Row: {
           created_at: string

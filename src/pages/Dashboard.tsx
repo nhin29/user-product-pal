@@ -4,7 +4,9 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useDashboardStats, useTopClickedProducts, useTopCopiedProducts, useTopSavedProducts } from "@/hooks/useDashboardStats";
 import { useDashboardChart } from "@/hooks/useDashboardChart";
+import { useDeviceAnalytics } from "@/hooks/useDeviceAnalytics";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
+import { DeviceAnalyticsChart } from "@/components/dashboard/DeviceAnalyticsChart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -14,7 +16,7 @@ export default function Dashboard() {
   const { data: topCopied, isLoading: copiedLoading } = useTopCopiedProducts();
   const { data: topSaved, isLoading: savedLoading } = useTopSavedProducts();
   const { data: chartData, isLoading: chartLoading } = useDashboardChart(chartPeriod);
-  
+  const { data: deviceData, isLoading: deviceLoading } = useDeviceAnalytics();
 
   const statCards = [
     {
@@ -153,6 +155,10 @@ export default function Dashboard() {
             period={chartPeriod}
             onPeriodChange={setChartPeriod}
           />
+        </div>
+        {/* Device Analytics */}
+        <div className="mb-8">
+          <DeviceAnalyticsChart data={deviceData} isLoading={deviceLoading} />
         </div>
 
         {/* Top Products Grid */}
