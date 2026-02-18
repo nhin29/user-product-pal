@@ -415,7 +415,6 @@ export type Database = {
       }
       reviews: {
         Row: {
-          comment: string | null
           created_at: string
           id: string
           product_id: string
@@ -424,7 +423,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          comment?: string | null
           created_at?: string
           id?: string
           product_id: string
@@ -433,7 +431,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          comment?: string | null
           created_at?: string
           id?: string
           product_id?: string

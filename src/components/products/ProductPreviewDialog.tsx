@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Product } from "@/hooks/useProducts";
 import { supabase } from "@/integrations/supabase/client";
-import { ExternalLink, Calendar, Tag, Monitor, Layers, Star, User, StickyNote, UserCircle } from "lucide-react";
+import { ExternalLink, Calendar, Tag, Monitor, Layers, Star, StickyNote, UserCircle } from "lucide-react";
 
 interface ProductPreviewDialogProps {
   open: boolean;
@@ -28,10 +28,8 @@ const platformColors: Record<string, string> = {
 interface Review {
   id: string;
   rating: number;
-  comment: string | null;
   created_at: string;
   user_id: string;
-  display_name?: string | null;
 }
 
 function useProductReviews(productId: string | undefined) {
@@ -39,29 +37,12 @@ function useProductReviews(productId: string | undefined) {
     queryKey: ["product-reviews", productId],
     queryFn: async () => {
       if (!productId) return [];
-      
-      // Fetch reviews
-      const { data: reviews, error: reviewsError } = await supabase
+      const { data, error } = await supabase
         .from("reviews")
-        .select("*")
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false });
-      if (reviewsError) throw reviewsError;
-      if (!reviews || reviews.length === 0) return [];
-
-      // Fetch profiles for review authors
-      const userIds = [...new Set(reviews.map(r => r.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", userIds);
-
-      // Merge profile data into reviews
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) ?? []);
-      return reviews.map(review => ({
-        ...review,
-        display_name: profileMap.get(review.user_id) || null,
-      })) as Review[];
+        .select("id, rating, created_at, user_id")
+        .eq("product_id", productId);
+      if (error) throw error;
+      return (data || []) as Review[];
     },
     enabled: !!productId,
   });
@@ -203,55 +184,23 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             </ScrollArea>
           </div>
 
-          {/* Reviews Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Reviews ({reviews.length})
-              </h3>
-              {reviews.length > 0 && (
+          {/* Average Rating */}
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+            <Star className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Average Rating</p>
+              {reviewsLoading ? (
+                <p className="text-sm font-medium">Loading...</p>
+              ) : reviews.length === 0 ? (
+                <p className="text-sm font-medium">No ratings yet</p>
+              ) : (
                 <div className="flex items-center gap-2">
                   <StarRating rating={Math.round(averageRating)} />
-                  <span className="text-sm text-muted-foreground">
-                    {averageRating.toFixed(1)}
-                  </span>
+                  <span className="text-sm font-medium">{averageRating.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground">({reviews.length})</span>
                 </div>
               )}
             </div>
-            
-            {reviewsLoading ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                Loading reviews...
-              </div>
-            ) : reviews.length === 0 ? (
-              <div className="p-4 rounded-lg bg-muted/50 border text-center text-sm text-muted-foreground">
-                No reviews yet
-              </div>
-            ) : (
-              <ScrollArea className="h-40">
-                <div className="space-y-3 pr-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="p-3 rounded-lg bg-muted/50 border space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            {review.display_name || "Anonymous"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(review.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <StarRating rating={review.rating} />
-                      </div>
-                      {review.comment && (
-                        <p className="text-sm text-foreground">{review.comment}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            )}
           </div>
         </div>
       </DialogContent>
