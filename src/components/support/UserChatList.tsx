@@ -51,7 +51,7 @@ export function UserChatList({
               </p>
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                  {lastChat?.question}
+                  {lastChat?.question || lastChat?.answer}
                 </p>
                 <span className="text-xs text-muted-foreground shrink-0">
                   {formatDistanceToNow(new Date(user.last_message_at), {
@@ -59,6 +59,11 @@ export function UserChatList({
                   })}
                 </span>
               </div>
+              {user.last_seen && (
+                <p className="text-xs text-muted-foreground/70 mt-0.5">
+                  Last seen {formatDistanceToNow(new Date(user.last_seen), { addSuffix: true })}
+                </p>
+              )}
             </div>
           </button>
         );
