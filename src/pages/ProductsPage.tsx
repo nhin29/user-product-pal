@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet } from "lucide-react";
+import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import {
   DndContext,
   closestCenter,
@@ -43,6 +44,11 @@ import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProduc
 import { SortableProductRow } from "@/components/products/SortableProductRow";
 import { GoogleSheetsSyncDialog } from "@/components/products/GoogleSheetsSyncDialog";
 import { BulkDuplicateProductsDialog } from "@/components/products/BulkDuplicateProductsDialog";
+import { useSettings, useUpdateSetting } from "@/hooks/useSettings";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -68,6 +74,21 @@ export default function ProductsPage() {
   const { data: categories } = useCategories();
   const { data: productTypes } = useProductTypes();
   const reorderProducts = useReorderProducts();
+  const { data: newProductDateSetting } = useSettings("new_product_date");
+  const updateSetting = useUpdateSetting();
+
+  const newProductDate = newProductDateSetting?.value
+    ? new Date(JSON.parse(JSON.stringify(newProductDateSetting.value)))
+    : undefined;
+
+  const handleNewProductDateChange = (date: Date | undefined) => {
+    if (date) {
+      updateSetting.mutate(
+        { key: "new_product_date", value: format(date, "yyyy-MM-dd") },
+        { onSuccess: () => toast.success("New product date updated") }
+      );
+    }
+  };
 
   // Enable realtime updates for products
   useProductsRealtime();
@@ -232,6 +253,29 @@ export default function ProductsPage() {
                 </Button>
               </>
             )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[200px] justify-start text-left font-normal",
+                    !newProductDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {newProductDate ? format(newProductDate, "PPP") : "New Product Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={newProductDate}
+                  onSelect={handleNewProductDateChange}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
             <Button variant="outline" onClick={() => setSyncDialogOpen(true)}>
               <FileSpreadsheet className="mr-2 h-4 w-4" />
               Sync from Sheets
