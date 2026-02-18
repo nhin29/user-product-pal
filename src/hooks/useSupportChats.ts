@@ -22,6 +22,7 @@ export interface UserWithChats {
   chats: SupportChat[];
   pending_count: number;
   last_message_at: string;
+  last_seen: string | null;
 }
 
 export function useSupportChats() {
@@ -50,6 +51,20 @@ export function useSupportChats() {
         (profiles || []).map((p) => [p.user_id, p])
       );
 
+      // Fetch last seen from analytics_events
+      const lastSeenMap = new Map<string, string>();
+      for (const uid of userIds) {
+        const { data: events } = await supabase
+          .from("analytics_events")
+          .select("created_at")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (events && events.length > 0) {
+          lastSeenMap.set(uid, events[0].created_at);
+        }
+      }
+
       // Group chats by user
       const userChatsMap = new Map<string, UserWithChats>();
 
@@ -65,6 +80,7 @@ export function useSupportChats() {
             chats: [],
             pending_count: 0,
             last_message_at: chat.created_at,
+            last_seen: lastSeenMap.get(chat.user_id) || null,
           });
         }
 
@@ -225,6 +241,34 @@ export function useSupportChats() {
     },
   });
 
+  const sendAdminMessage = useMutation({
+    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from("support_chats").insert({
+        user_id: userId,
+        question: "",
+        answer: message,
+        answered_at: new Date().toISOString(),
+        answered_by: session.session.user.id,
+        status: "answered",
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error sending message",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     usersWithChats,
     isLoading,
@@ -232,5 +276,6 @@ export function useSupportChats() {
     answerChat,
     autoReplyChat,
     deleteChatHistory,
+    sendAdminMessage,
   };
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Sparkles, Loader2, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 
@@ -15,23 +15,26 @@ interface ChatConversationProps {
 }
 
 export function ChatConversation({ user, onChatDeleted }: ChatConversationProps) {
-  const { answerChat, autoReplyChat, deleteChatHistory } = useSupportChats();
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const { answerChat, autoReplyChat, deleteChatHistory, sendAdminMessage } = useSupportChats();
   const [answer, setAnswer] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when user changes or new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [user.user_id, user.chats]);
 
-  const handleSendAnswer = async () => {
-    if (!replyingTo || !answer.trim()) return;
+  const pendingChats = user.chats.filter((c) => c.status === "pending");
 
-    await answerChat.mutateAsync({ chatId: replyingTo, answer: answer.trim() });
+  const handleSend = async () => {
+    if (!answer.trim()) return;
+
+    if (pendingChats.length > 0) {
+      await answerChat.mutateAsync({ chatId: pendingChats[0].id, answer: answer.trim() });
+    } else {
+      await sendAdminMessage.mutateAsync({ userId: user.user_id, message: answer.trim() });
+    }
     setAnswer("");
-    setReplyingTo(null);
   };
 
   const handleAutoReply = async (chat: SupportChat) => {
@@ -48,7 +51,7 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
     onChatDeleted?.();
   };
 
-  const pendingChats = user.chats.filter((c) => c.status === "pending");
+  const isSending = answerChat.isPending || sendAdminMessage.isPending;
 
   return (
     <>
@@ -64,6 +67,11 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
           <p className="font-semibold">{user.user_name}</p>
           <p className="text-sm text-muted-foreground">{user.user_email}</p>
         </div>
+        {user.last_seen && (
+          <span className="text-xs text-muted-foreground">
+            Last seen {formatDistanceToNow(new Date(user.last_seen), { addSuffix: true })}
+          </span>
+        )}
         <Button
           variant="ghost"
           size="icon"
@@ -89,9 +97,6 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
             <ChatMessage
               key={chat.id}
               chat={chat}
-              userName={user.user_name}
-              isReplying={replyingTo === chat.id}
-              onReply={() => setReplyingTo(chat.id)}
               onAutoReply={() => handleAutoReply(chat)}
               isAutoReplying={autoReplyChat.isPending}
             />
@@ -100,104 +105,84 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
         </div>
       </ScrollArea>
 
-      {/* Reply Input */}
-      {replyingTo && (
-        <div className="p-3 border-t bg-muted/30">
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Type your answer..."
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              rows={2}
-              className="resize-none"
-            />
-            <div className="flex flex-col gap-2">
-              <Button
-                size="sm"
-                onClick={handleSendAnswer}
-                disabled={!answer.trim() || answerChat.isPending}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setReplyingTo(null);
-                  setAnswer("");
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
+      {/* Always-visible Reply Input */}
+      <div className="p-3 border-t bg-muted/30">
+        {pendingChats.length > 0 && (
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleAutoReply(pendingChats[0])}
+              disabled={autoReplyChat.isPending}
+            >
+              {autoReplyChat.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-1" />
+              )}
+              AI Auto Reply
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {pendingChats.length} pending {pendingChats.length === 1 ? "message" : "messages"}
+            </span>
           </div>
-        </div>
-      )}
-
-      {/* Quick action for pending */}
-      {!replyingTo && pendingChats.length > 0 && (
-        <div className="p-3 border-t flex gap-2">
+        )}
+        <div className="flex gap-2">
+          <Textarea
+            placeholder={pendingChats.length > 0 ? "Reply to pending message..." : "Send a follow-up message..."}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            rows={2}
+            className="resize-none"
+          />
           <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => setReplyingTo(pendingChats[0].id)}
+            size="icon"
+            onClick={handleSend}
+            disabled={!answer.trim() || isSending}
+            className="shrink-0 self-end"
           >
-            <Send className="h-4 w-4 mr-2" />
-            Reply manually
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={() => handleAutoReply(pendingChats[0])}
-            disabled={autoReplyChat.isPending}
-          >
-            {autoReplyChat.isPending ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            {isSending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
+              <Send className="h-4 w-4" />
             )}
-            AI Auto Reply
           </Button>
         </div>
-      )}
+      </div>
     </>
   );
 }
 
 interface ChatMessageProps {
   chat: SupportChat;
-  userName: string;
-  isReplying: boolean;
-  onReply: () => void;
   onAutoReply: () => void;
   isAutoReplying: boolean;
 }
 
-function ChatMessage({ chat, userName, isReplying, onReply, onAutoReply, isAutoReplying }: ChatMessageProps) {
+function ChatMessage({ chat, onAutoReply, isAutoReplying }: ChatMessageProps) {
   const isPending = chat.status === "pending";
 
   return (
     <div className="space-y-2">
-      {/* User Question */}
-      <div className="flex justify-start">
-        <div
-          className={cn(
-            "max-w-[80%] rounded-lg p-3",
-            "bg-muted"
-          )}
-        >
-          <p className="whitespace-pre-wrap">{chat.question}</p>
-          <div className="flex items-center justify-between mt-2 gap-2">
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(chat.created_at), "MMM d, h:mm a")}
-            </span>
-            {isPending && !isReplying && (
-              <div className="flex gap-1">
-                <Button size="sm" variant="ghost" onClick={onReply}>
-                  Reply
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
+      {/* User Question (skip if empty — admin-initiated message) */}
+      {chat.question && (
+        <div className="flex justify-start">
+          <div className="max-w-[80%] rounded-lg p-3 bg-muted">
+            <p className="whitespace-pre-wrap">{chat.question}</p>
+            <div className="flex items-center justify-between mt-2 gap-2">
+              <span className="text-xs text-muted-foreground">
+                {format(new Date(chat.created_at), "MMM d, h:mm a")}
+              </span>
+              {isPending && (
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={onAutoReply}
                   disabled={isAutoReplying}
                   className="text-primary"
@@ -208,21 +193,16 @@ function ChatMessage({ chat, userName, isReplying, onReply, onAutoReply, isAutoR
                     <Sparkles className="h-3 w-3" />
                   )}
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Admin Answer */}
       {chat.answer && (
         <div className="flex justify-end">
-          <div
-            className={cn(
-              "max-w-[80%] rounded-lg p-3",
-              "bg-primary text-primary-foreground"
-            )}
-          >
+          <div className="max-w-[80%] rounded-lg p-3 bg-primary text-primary-foreground">
             <p className="whitespace-pre-wrap">{chat.answer}</p>
             <span className="text-xs opacity-70 block mt-1">
               {chat.answered_at &&
