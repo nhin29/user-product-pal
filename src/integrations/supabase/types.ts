@@ -532,6 +532,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_product_seen: {
+        Row: {
+          id: string
+          product_id: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          seen_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_product_seen_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
