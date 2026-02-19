@@ -39,7 +39,7 @@ export function OptimizedImage({
           }
         }}
         className={cn(
-          "h-full w-full object-cover transition-opacity duration-300",
+          "h-full w-full transition-opacity duration-300",
           loaded ? "opacity-100" : "opacity-0"
         )}
         {...props}
