@@ -46,6 +46,10 @@ export interface GeneratedImageWithRating {
   product_id: string;
   created_at: string;
   rating: number | null;
+  analyzed_url: string | null;
+  completed_prompt: string | null;
+  prompt_snapshot: string | null;
+  field_values: unknown | null;
 }
 
 export function useUserAnalytics(userId: string) {
@@ -185,7 +189,7 @@ export function useUserAnalytics(userId: string) {
     queryFn: async (): Promise<GeneratedImageWithRating[]> => {
       const { data: images, error } = await supabase
         .from("generated_images")
-        .select("id, image_url, product_id, created_at")
+        .select("id, image_url, product_id, created_at, analyzed_url, completed_prompt, prompt_snapshot, field_values")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
