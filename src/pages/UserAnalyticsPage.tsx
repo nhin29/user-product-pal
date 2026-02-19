@@ -12,7 +12,9 @@ import { formatDistanceToNow } from "date-fns";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
 import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
+import { GeneratedImageDetailDialog } from "@/components/user-analytics/GeneratedImageDetailDialog";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import type { GeneratedImageWithRating } from "@/hooks/useUserAnalytics";
 const StatCard = ({
   title,
   value,
@@ -78,6 +80,7 @@ export default function UserAnalyticsPage() {
   const navigate = useNavigate();
   const [chartPeriod, setChartPeriod] = useState("7d");
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<GeneratedImageWithRating | null>(null);
   const { users } = useUsers();
   const {
     stats,
@@ -368,7 +371,7 @@ export default function UserAnalyticsPage() {
                     <div key={image.id} className="group space-y-2">
                       <div
                         className="relative aspect-square overflow-hidden rounded-lg border bg-muted cursor-pointer"
-                        onClick={() => window.open(image.image_url, "_blank")}
+                        onClick={() => setSelectedImage(image)}
                       >
                         <OptimizedImage
                           src={image.image_url}
@@ -403,6 +406,12 @@ export default function UserAnalyticsPage() {
             </CardContent>
           </Card>
         </div>
+
+        <GeneratedImageDetailDialog
+          image={selectedImage}
+          open={!!selectedImage}
+          onOpenChange={(open) => !open && setSelectedImage(null)}
+        />
       </div>
     </AdminLayout>
   );
