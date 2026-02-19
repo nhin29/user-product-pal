@@ -37,10 +37,17 @@ function useProductReviews(productId: string | undefined) {
     queryKey: ["product-reviews", productId],
     queryFn: async () => {
       if (!productId) return [];
+      // Get generated_image_ids for this product, then fetch their reviews
+      const { data: images } = await supabase
+        .from("generated_images")
+        .select("id")
+        .eq("product_id", productId);
+      if (!images || images.length === 0) return [];
+      const imageIds = images.map((i) => i.id);
       const { data, error } = await supabase
         .from("reviews")
         .select("id, rating, created_at, user_id")
-        .eq("product_id", productId);
+        .in("generated_image_id", imageIds);
       if (error) throw error;
       return (data || []) as Review[];
     },
