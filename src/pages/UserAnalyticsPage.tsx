@@ -230,7 +230,7 @@ export default function UserAnalyticsPage() {
                 Products this user has interacted with
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-h-[400px] overflow-y-auto">
               {isLoadingProducts ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
