@@ -55,7 +55,6 @@ export default function RequestsPage() {
                     <TableRow>
                       <TableHead>User</TableHead>
                       <TableHead>Product</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Requested</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -90,11 +89,6 @@ export default function RequestsPage() {
                           ) : (
                             <div className="h-10 w-10 rounded-lg bg-muted" />
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={req.is_request ? "default" : "secondary"}>
-                            {req.is_request ? "Request" : "Direct"}
-                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant={req.access ? "default" : "outline"} className={req.access ? "bg-green-600" : ""}>
