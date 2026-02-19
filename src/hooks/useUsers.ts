@@ -13,6 +13,7 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   role: string | null;
+  is_access: boolean;
 }
 
 export function useUsers() {
@@ -65,17 +66,23 @@ export function useUsers() {
       email,
       productIds,
       role,
+      isAccess,
     }: {
       userId: string;
       displayName: string;
       email?: string;
       productIds?: string[];
       role?: string;
+      isAccess?: boolean;
     }) => {
       // Build update object
-      const updateData: { display_name: string; product_ids?: string[] } = {
+      const updateData: { display_name: string; product_ids?: string[]; is_access?: boolean } = {
         display_name: displayName,
       };
+      
+      if (isAccess !== undefined) {
+        updateData.is_access = isAccess;
+      }
       
       if (productIds !== undefined) {
         updateData.product_ids = productIds;
