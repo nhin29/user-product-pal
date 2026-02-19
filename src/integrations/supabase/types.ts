@@ -150,7 +150,10 @@ export type Database = {
       }
       generated_images: {
         Row: {
+          analyzed_url: string | null
+          completed_prompt: string | null
           created_at: string
+          field_values: Json | null
           id: string
           image_url: string
           product_id: string
@@ -158,7 +161,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analyzed_url?: string | null
+          completed_prompt?: string | null
           created_at?: string
+          field_values?: Json | null
           id?: string
           image_url: string
           product_id: string
@@ -166,7 +172,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analyzed_url?: string | null
+          completed_prompt?: string | null
           created_at?: string
+          field_values?: Json | null
           id?: string
           image_url?: string
           product_id?: string
@@ -327,6 +336,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_first: boolean
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[] | null
@@ -338,6 +348,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_first?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
@@ -349,6 +360,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_first?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
@@ -416,34 +428,34 @@ export type Database = {
       reviews: {
         Row: {
           created_at: string
+          generated_image_id: string | null
           id: string
-          product_id: string
           rating: number
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          generated_image_id?: string | null
           id?: string
-          product_id: string
           rating: number
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          generated_image_id?: string | null
           id?: string
-          product_id?: string
           rating?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "reviews_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "reviews_generated_image_id_fkey"
+            columns: ["generated_image_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "generated_images"
             referencedColumns: ["id"]
           },
         ]
@@ -525,6 +537,33 @@ export type Database = {
           id?: string
           question?: string
           status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          usage_date: string
+          used_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          usage_date?: string
+          used_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          usage_date?: string
+          used_count?: number
           user_id?: string
         }
         Relationships: []
@@ -611,6 +650,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_daily_credits: { Args: { p_user_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
