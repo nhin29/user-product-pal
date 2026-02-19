@@ -10,6 +10,13 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Check, X, Trash2, FileQuestion } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -18,8 +25,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type StatusFilter = "all" | "pending" | "granted";
+
 export default function RequestsPage() {
   const { requests, isLoading, updateAccess, deleteRequest } = usePromptRequests();
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const filteredRequests = requests.filter((req) => {
+    if (statusFilter === "pending") return !req.access;
+    if (statusFilter === "granted") return req.access;
+    return true;
+  });
 
   return (
     <AdminLayout>
@@ -30,11 +46,21 @@ export default function RequestsPage() {
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2">
               <FileQuestion className="h-5 w-5" />
-              Requests ({requests.length})
+              Requests ({filteredRequests.length})
             </CardTitle>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="granted">Granted</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -43,7 +69,7 @@ export default function RequestsPage() {
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
               </div>
-            ) : requests.length === 0 ? (
+            ) : filteredRequests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <FileQuestion className="mx-auto h-10 w-10 mb-3 opacity-50" />
                 <p>No prompt requests yet</p>
@@ -61,7 +87,7 @@ export default function RequestsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {requests.map((req) => (
+                    {filteredRequests.map((req) => (
                       <TableRow key={req.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
