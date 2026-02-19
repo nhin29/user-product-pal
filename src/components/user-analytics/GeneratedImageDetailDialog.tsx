@@ -102,9 +102,9 @@ export function GeneratedImageDetailDialog({ image, open, onOpenChange }: Props)
                 <FileText className="h-4 w-4" />
                 Completed Prompt
               </div>
-              <p className="text-sm bg-muted rounded-lg p-3 whitespace-pre-wrap break-words">
+              <div className="text-sm bg-muted rounded-lg p-3 whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">
                 {image.completed_prompt}
-              </p>
+              </div>
             </div>
           )}
 
@@ -112,9 +112,9 @@ export function GeneratedImageDetailDialog({ image, open, onOpenChange }: Props)
           {image.prompt_snapshot && (
             <div className="space-y-1">
               <div className="text-sm font-medium text-muted-foreground">Original Prompt Template</div>
-              <p className="text-sm bg-muted rounded-lg p-3 whitespace-pre-wrap break-words">
+              <div className="text-sm bg-muted rounded-lg p-3 whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">
                 {image.prompt_snapshot}
-              </p>
+              </div>
             </div>
           )}
 
