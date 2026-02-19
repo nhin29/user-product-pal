@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
 import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 const StatCard = ({
   title,
   value,
@@ -255,12 +256,12 @@ export default function UserAnalyticsPage() {
                       key={product.id}
                       className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                     >
-                      <img
+                      <OptimizedImage
                         src={product.image_url}
                         alt="Product"
-                        loading="lazy"
-                        decoding="async"
-                        className="h-12 w-12 rounded-lg object-cover"
+                        width={96}
+                        height={96}
+                        className="h-12 w-12 rounded-lg"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -369,12 +370,12 @@ export default function UserAnalyticsPage() {
                         className="relative aspect-square overflow-hidden rounded-lg border bg-muted cursor-pointer"
                         onClick={() => window.open(image.image_url, "_blank")}
                       >
-                        <img
+                        <OptimizedImage
                           src={image.image_url}
                           alt="Generated"
-                          loading="lazy"
-                          decoding="async"
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                          width={200}
+                          height={200}
+                          className="h-full w-full transition-transform group-hover:scale-105"
                         />
                       </div>
                       <div className="flex items-center gap-1">
