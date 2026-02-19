@@ -341,6 +341,7 @@ export type Database = {
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[] | null
+          request_date: string | null
           updated_at: string
           user_id: string
         }
@@ -354,6 +355,7 @@ export type Database = {
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
+          request_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -367,6 +369,7 @@ export type Database = {
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
+          request_date?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -658,6 +661,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_enable_access: { Args: never; Returns: undefined }
       get_profiles_with_email: {
         Args: never
         Returns: {
