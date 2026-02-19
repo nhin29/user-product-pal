@@ -41,8 +41,8 @@ export default function UsersPage() {
       user.user_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string) => {
-    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role });
+  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAccess?: boolean) => {
+    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAccess });
   };
 
   const handleDeleteUser = async (userId: string) => {
