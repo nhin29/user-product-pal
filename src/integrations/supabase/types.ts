@@ -425,6 +425,41 @@ export type Database = {
           },
         ]
       }
+      prompt_requests: {
+        Row: {
+          access: boolean
+          created_at: string
+          id: string
+          is_request: boolean
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          access?: boolean
+          created_at?: string
+          id?: string
+          is_request?: boolean
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          access?: boolean
+          created_at?: string
+          id?: string
+          is_request?: boolean
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           created_at: string
