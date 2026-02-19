@@ -40,6 +40,14 @@ export interface OnboardingResponse {
   completed_at: string | null;
 }
 
+export interface GeneratedImageWithRating {
+  id: string;
+  image_url: string;
+  product_id: string;
+  created_at: string;
+  rating: number | null;
+}
+
 export function useUserAnalytics(userId: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -172,6 +180,37 @@ export function useUserAnalytics(userId: string) {
     enabled: !!userId,
   });
 
+  const generatedImagesQuery = useQuery({
+    queryKey: ["user-generated-images", userId],
+    queryFn: async (): Promise<GeneratedImageWithRating[]> => {
+      const { data: images, error } = await supabase
+        .from("generated_images")
+        .select("id, image_url, product_id, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (!images || images.length === 0) return [];
+
+      const imageIds = images.map((i) => i.id);
+      const { data: reviews } = await supabase
+        .from("reviews")
+        .select("generated_image_id, rating")
+        .in("generated_image_id", imageIds);
+
+      const ratingMap: Record<string, number> = {};
+      (reviews || []).forEach((r) => {
+        if (r.generated_image_id) ratingMap[r.generated_image_id] = r.rating;
+      });
+
+      return images.map((img) => ({
+        ...img,
+        rating: ratingMap[img.id] ?? null,
+      }));
+    },
+    enabled: !!userId,
+  });
+
   const clearAnalytics = useMutation({
     mutationFn: async () => {
       const [{ error: eventsError }, { error: interactionsError }] = await Promise.all([
@@ -202,6 +241,8 @@ export function useUserAnalytics(userId: string) {
     isLoadingActivity: recentActivityQuery.isLoading,
     onboardingResponse: onboardingQuery.data,
     isLoadingOnboarding: onboardingQuery.isLoading,
+    generatedImages: generatedImagesQuery.data || [],
+    isLoadingGeneratedImages: generatedImagesQuery.isLoading,
     clearAnalytics,
   };
 }
