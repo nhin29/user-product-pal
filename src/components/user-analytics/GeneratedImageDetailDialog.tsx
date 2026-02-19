@@ -40,11 +40,12 @@ export function GeneratedImageDetailDialog({ image, open, onOpenChange }: Props)
 
         <div className="space-y-5">
           {/* Image preview */}
-          <div className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
-            <OptimizedImage
+          <div className="relative overflow-hidden rounded-lg border bg-muted max-h-[400px] flex items-center justify-center">
+            <img
               src={image.image_url}
               alt="Generated image"
-              className="h-full w-full"
+              loading="lazy"
+              className="w-full h-auto object-contain max-h-[400px]"
             />
           </div>
 
