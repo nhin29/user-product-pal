@@ -430,7 +430,6 @@ export type Database = {
           access: boolean
           created_at: string
           id: string
-          is_request: boolean
           product_id: string
           user_id: string
         }
@@ -438,7 +437,6 @@ export type Database = {
           access?: boolean
           created_at?: string
           id?: string
-          is_request?: boolean
           product_id: string
           user_id: string
         }
@@ -446,7 +444,6 @@ export type Database = {
           access?: boolean
           created_at?: string
           id?: string
-          is_request?: boolean
           product_id?: string
           user_id?: string
         }

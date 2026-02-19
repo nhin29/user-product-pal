@@ -6,7 +6,6 @@ export interface PromptRequest {
   id: string;
   user_id: string;
   product_id: string;
-  is_request: boolean;
   access: boolean;
   created_at: string;
   user_name?: string;
