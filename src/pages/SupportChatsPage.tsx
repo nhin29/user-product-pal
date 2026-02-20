@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useSupportChats, UserWithChats } from "@/hooks/useSupportChats";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,15 +7,38 @@ import { UserChatList } from "@/components/support/UserChatList";
 import { ChatConversation } from "@/components/support/ChatConversation";
 
 export default function SupportChatsPage() {
-  const { usersWithChats, isLoading, markAsRead } = useSupportChats();
+  const { usersWithChats, isLoading } = useSupportChats();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [readUsers, setReadUsers] = useState<Set<string>>(new Set());
 
   const handleSelectUser = (user: UserWithChats) => {
     setSelectedUserId(user.user_id);
-    if (user.pending_count > 0) {
-      markAsRead(user.user_id);
-    }
+    // Mark user as read locally
+    setReadUsers((prev) => new Set(prev).add(user.user_id));
   };
+
+  // Compute users with overridden unread_count (clear badge when admin has viewed)
+  const usersWithReadState = usersWithChats.map((user) => ({
+    ...user,
+    unread_count: readUsers.has(user.user_id) ? 0 : user.unread_count,
+  }));
+
+  // Reset read state for a user if they get a NEW message (unread_count increases)
+  const prevUnreadRef = useRef<Map<string, number>>(new Map());
+  useEffect(() => {
+    const newReadUsers = new Set(readUsers);
+    let changed = false;
+    usersWithChats.forEach((user) => {
+      const prevCount = prevUnreadRef.current.get(user.user_id) || 0;
+      if (user.unread_count > prevCount && readUsers.has(user.user_id)) {
+        // New message arrived for a user we already read — unmark as read
+        newReadUsers.delete(user.user_id);
+        changed = true;
+      }
+      prevUnreadRef.current.set(user.user_id, user.unread_count);
+    });
+    if (changed) setReadUsers(newReadUsers);
+  }, [usersWithChats]);
 
   // Derive selected user from query data so it stays in sync with real-time updates
   const selectedUser = usersWithChats.find((u) => u.user_id === selectedUserId) || null;
@@ -56,7 +79,7 @@ export default function SupportChatsPage() {
                 </div>
               ) : (
                 <UserChatList
-                  users={usersWithChats}
+                  users={usersWithReadState}
                   selectedUserId={selectedUserId}
                   onSelectUser={handleSelectUser}
                 />
