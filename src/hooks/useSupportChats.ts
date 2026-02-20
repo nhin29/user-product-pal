@@ -3,23 +3,23 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export interface SupportChat {
+export interface ChatMessage {
   id: string;
-  user_id: string;
-  question: string;
-  answer: string | null;
-  answered_at: string | null;
-  answered_by: string | null;
-  status: string;
+  conversation_id: string;
+  sender_id: string;
+  sender_role: string;
+  message: string;
   created_at: string;
 }
 
-export interface UserWithChats {
+export interface UserConversation {
+  conversation_id: string;
   user_id: string;
   user_email: string;
   user_name: string;
   avatar_url: string | null;
-  chats: SupportChat[];
+  status: string;
+  messages: ChatMessage[];
   unread_count: number;
   last_message_at: string;
   last_seen: string | null;
@@ -30,28 +30,39 @@ export function useSupportChats() {
   const queryClient = useQueryClient();
 
   const {
-    data: usersWithChats = [],
+    data: conversations = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["support-chats"],
+    queryKey: ["support-conversations"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("support_chats")
+      // Fetch all conversations
+      const { data: convos, error: convoError } = await supabase
+        .from("conversations")
         .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (convoError) throw convoError;
+      if (!convos || convos.length === 0) return [];
+
+      // Fetch all chats for these conversations
+      const convoIds = convos.map((c) => c.id);
+      const { data: allChats, error: chatsError } = await supabase
+        .from("chats")
+        .select("*")
+        .in("conversation_id", convoIds)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      if (chatsError) throw chatsError;
 
-      // Fetch user info
-      const userIds = [...new Set(data.map((chat) => chat.user_id))];
+      // Fetch user profiles
       const { data: profiles } = await supabase.rpc("get_profiles_with_email");
-
       const profileMap = new Map(
         (profiles || []).map((p) => [p.user_id, p])
       );
 
       // Fetch last seen from analytics_events
+      const userIds = [...new Set(convos.map((c) => c.user_id))];
       const lastSeenMap = new Map<string, string>();
       for (const uid of userIds) {
         const { data: events } = await supabase
@@ -65,55 +76,71 @@ export function useSupportChats() {
         }
       }
 
-      // Group chats by user
-      const userChatsMap = new Map<string, UserWithChats>();
-
-      data.forEach((chat) => {
-        const profile = profileMap.get(chat.user_id);
-        
-        if (!userChatsMap.has(chat.user_id)) {
-          userChatsMap.set(chat.user_id, {
-            user_id: chat.user_id,
-            user_email: profile?.email || "Unknown",
-            user_name: profile?.display_name || "Unknown User",
-            avatar_url: profile?.avatar_url || null,
-            chats: [],
-            unread_count: 0,
-            last_message_at: chat.created_at,
-            last_seen: lastSeenMap.get(chat.user_id) || null,
-          });
+      // Group chats by conversation
+      const chatsByConvo = new Map<string, ChatMessage[]>();
+      (allChats || []).forEach((chat) => {
+        if (!chatsByConvo.has(chat.conversation_id)) {
+          chatsByConvo.set(chat.conversation_id, []);
         }
-
-        const userChats = userChatsMap.get(chat.user_id)!;
-        userChats.chats.push(chat);
-        
-        // Count user-sent messages (with a question) that are not yet answered
-        if (chat.question && !chat.answer) {
-          userChats.unread_count++;
-        }
-        
-        // Update last message time
-        if (new Date(chat.created_at) > new Date(userChats.last_message_at)) {
-          userChats.last_message_at = chat.created_at;
-        }
+        chatsByConvo.get(chat.conversation_id)!.push(chat);
       });
 
-      // Sort by last message (most recent first)
-      return Array.from(userChatsMap.values()).sort(
+      return convos.map((convo): UserConversation => {
+        const profile = profileMap.get(convo.user_id);
+        const messages = chatsByConvo.get(convo.id) || [];
+        
+        // Count unread = user messages that have no admin reply after them
+        // Simple approach: count user messages after the last admin message
+        let unreadCount = 0;
+        let lastAdminIdx = -1;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].sender_role === "admin") {
+            lastAdminIdx = i;
+            break;
+          }
+        }
+        for (let i = lastAdminIdx + 1; i < messages.length; i++) {
+          if (messages[i].sender_role === "user") {
+            unreadCount++;
+          }
+        }
+
+        const lastMsg = messages[messages.length - 1];
+
+        return {
+          conversation_id: convo.id,
+          user_id: convo.user_id,
+          user_email: profile?.email || "Unknown",
+          user_name: profile?.display_name || "Unknown User",
+          avatar_url: profile?.avatar_url || null,
+          status: convo.status,
+          messages,
+          unread_count: unreadCount,
+          last_message_at: lastMsg?.created_at || convo.created_at,
+          last_seen: lastSeenMap.get(convo.user_id) || null,
+        };
+      }).sort(
         (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
       );
     },
   });
 
-  // Real-time subscription for auto-replies
+  // Real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel("support-chats-realtime")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "support_chats" },
+        { event: "*", schema: "public", table: "chats" },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+          queryClient.invalidateQueries({ queryKey: ["support-conversations"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversations" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["support-conversations"] });
         }
       )
       .subscribe();
@@ -123,57 +150,55 @@ export function useSupportChats() {
     };
   }, [queryClient]);
 
-  const answerChat = useMutation({
+  const sendMessage = useMutation({
     mutationFn: async ({
-      chatId,
-      answer,
+      conversationId,
+      message,
     }: {
-      chatId: string;
-      answer: string;
+      conversationId: string;
+      message: string;
     }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
-      const { error } = await supabase
-        .from("support_chats")
-        .update({
-          answer,
-          answered_at: new Date().toISOString(),
-          answered_by: session.session.user.id,
-          status: "answered",
-        })
-        .eq("id", chatId);
+      const { error } = await supabase.from("chats").insert({
+        conversation_id: conversationId,
+        sender_id: session.session.user.id,
+        sender_role: "admin",
+        message,
+      });
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
-      toast({
-        title: "Answer sent",
-        description: "Your response has been sent to the user.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["support-conversations"] });
     },
     onError: (error) => {
       toast({
-        title: "Error sending answer",
+        title: "Error sending message",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-
-  const deleteChatHistory = useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("support_chats")
+  const deleteConversation = useMutation({
+    mutationFn: async (conversationId: string) => {
+      // Delete chats first, then conversation
+      const { error: chatsError } = await supabase
+        .from("chats")
         .delete()
-        .eq("user_id", userId);
+        .eq("conversation_id", conversationId);
+      if (chatsError) throw chatsError;
 
-      if (error) throw error;
+      const { error: convoError } = await supabase
+        .from("conversations")
+        .delete()
+        .eq("id", conversationId);
+      if (convoError) throw convoError;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+      queryClient.invalidateQueries({ queryKey: ["support-conversations"] });
       toast({
         title: "Chat history deleted",
         description: "All messages have been removed.",
@@ -188,42 +213,11 @@ export function useSupportChats() {
     },
   });
 
-  // markAsRead removed — badge tracking is now handled in page-level state
-
-  const sendAdminMessage = useMutation({
-    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) throw new Error("Not authenticated");
-
-      const { error } = await supabase.from("support_chats").insert({
-        user_id: userId,
-        question: "",
-        answer: message,
-        answered_at: new Date().toISOString(),
-        answered_by: session.session.user.id,
-        status: "answered",
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error sending message",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   return {
-    usersWithChats,
+    conversations,
     isLoading,
     error,
-    answerChat,
-    deleteChatHistory,
-    sendAdminMessage,
+    sendMessage,
+    deleteConversation,
   };
 }
