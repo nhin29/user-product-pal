@@ -115,6 +115,7 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          read_at: string | null
           sender_id: string
           sender_role: string
         }
@@ -123,6 +124,7 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          read_at?: string | null
           sender_id: string
           sender_role?: string
         }
@@ -131,6 +133,7 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          read_at?: string | null
           sender_id?: string
           sender_role?: string
         }
