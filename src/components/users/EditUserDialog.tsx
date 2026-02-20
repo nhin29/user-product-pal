@@ -137,7 +137,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
               </Select>
             </div>
             <div className="flex items-center justify-between rounded-md border p-3">
-              <Label htmlFor="is-access" className="cursor-pointer">Access</Label>
+              <Label htmlFor="is-access" className="cursor-pointer">Prompt Access</Label>
               <Switch
                 id="is-access"
                 checked={isAccess}
