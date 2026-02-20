@@ -132,9 +132,18 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         }`}
       >
         <p className="whitespace-pre-wrap">{msg.message}</p>
-        <span className={`text-xs block mt-1 ${isAdmin ? "opacity-70" : "text-muted-foreground"}`}>
-          {format(new Date(msg.created_at), "MMM d, h:mm a")}
-        </span>
+        <div className={`flex items-center gap-1.5 mt-1 ${isAdmin ? "justify-end" : ""}`}>
+          <span className={`text-xs ${isAdmin ? "opacity-70" : "text-muted-foreground"}`}>
+            {format(new Date(msg.created_at), "MMM d, h:mm a")}
+          </span>
+          {isAdmin && (
+            <span className={`text-xs ${msg.read_at ? "opacity-90" : "opacity-50"}`}>
+              {msg.read_at
+                ? `✓✓ Seen ${formatDistanceToNow(new Date(msg.read_at), { addSuffix: true })}`
+                : "✓ Sent"}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
