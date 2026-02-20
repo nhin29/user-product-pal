@@ -151,6 +151,16 @@ export function useSupportChats() {
     };
   }, [queryClient]);
 
+  const markAsRead = async (conversationId: string) => {
+    const { error } = await supabase
+      .from("chats")
+      .update({ read_at: new Date().toISOString() })
+      .eq("conversation_id", conversationId)
+      .eq("sender_role", "user")
+      .is("read_at", null);
+    if (error) console.error("Failed to mark messages as read:", error.message);
+  };
+
   const sendMessage = useMutation({
     mutationFn: async ({
       conversationId,
@@ -220,5 +230,6 @@ export function useSupportChats() {
     error,
     sendMessage,
     deleteConversation,
+    markAsRead,
   };
 }

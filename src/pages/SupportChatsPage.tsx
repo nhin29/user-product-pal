@@ -7,13 +7,14 @@ import { UserChatList } from "@/components/support/UserChatList";
 import { ChatConversation } from "@/components/support/ChatConversation";
 
 export default function SupportChatsPage() {
-  const { conversations, isLoading } = useSupportChats();
+  const { conversations, isLoading, markAsRead } = useSupportChats();
   const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
   const [readConvos, setReadConvos] = useState<Set<string>>(new Set());
 
   const handleSelectConvo = (convo: UserConversation) => {
     setSelectedConvoId(convo.conversation_id);
     setReadConvos((prev) => new Set(prev).add(convo.conversation_id));
+    markAsRead(convo.conversation_id);
   };
 
   // Compute conversations with overridden unread_count
