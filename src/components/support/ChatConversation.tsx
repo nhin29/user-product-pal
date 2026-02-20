@@ -15,10 +15,18 @@ interface ChatConversationProps {
 }
 
 export function ChatConversation({ user, onChatDeleted }: ChatConversationProps) {
-  const { answerChat, autoReplyChat, deleteChatHistory, sendAdminMessage } = useSupportChats();
+  const { answerChat, autoReplyChat, deleteChatHistory, sendAdminMessage, markAsRead } = useSupportChats();
   const [answer, setAnswer] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-mark pending messages as read when viewing conversation
+  useEffect(() => {
+    const hasPending = user.chats.some((c) => c.status === "pending");
+    if (hasPending) {
+      markAsRead(user.user_id);
+    }
+  }, [user.user_id, user.chats]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -123,7 +131,7 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
               AI Auto Reply
             </Button>
             <span className="text-xs text-muted-foreground">
-              {pendingChats.length} pending {pendingChats.length === 1 ? "message" : "messages"}
+              {pendingChats.length} unanswered {pendingChats.length === 1 ? "message" : "messages"}
             </span>
           </div>
         )}
