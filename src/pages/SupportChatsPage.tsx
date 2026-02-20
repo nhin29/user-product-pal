@@ -7,8 +7,15 @@ import { UserChatList } from "@/components/support/UserChatList";
 import { ChatConversation } from "@/components/support/ChatConversation";
 
 export default function SupportChatsPage() {
-  const { usersWithChats, isLoading } = useSupportChats();
+  const { usersWithChats, isLoading, markAsRead } = useSupportChats();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  const handleSelectUser = (user: UserWithChats) => {
+    setSelectedUserId(user.user_id);
+    if (user.pending_count > 0) {
+      markAsRead(user.user_id);
+    }
+  };
 
   // Derive selected user from query data so it stays in sync with real-time updates
   const selectedUser = usersWithChats.find((u) => u.user_id === selectedUserId) || null;
@@ -51,7 +58,7 @@ export default function SupportChatsPage() {
                 <UserChatList
                   users={usersWithChats}
                   selectedUserId={selectedUserId}
-                  onSelectUser={(user) => setSelectedUserId(user.user_id)}
+                  onSelectUser={handleSelectUser}
                 />
               )}
             </div>

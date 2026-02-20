@@ -24,7 +24,7 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [user.user_id, user.chats]);
 
-  const pendingChats = user.chats.filter((c) => c.status === "pending");
+  const pendingChats = user.chats.filter((c) => c.status === "pending" || c.status === "read");
 
   const handleSend = async () => {
     if (!answer.trim()) return;
@@ -166,7 +166,7 @@ interface ChatMessageProps {
 }
 
 function ChatMessage({ chat, onAutoReply, isAutoReplying }: ChatMessageProps) {
-  const isPending = chat.status === "pending";
+  const isPending = chat.status === "pending" || chat.status === "read";
 
   return (
     <div className="space-y-2">
