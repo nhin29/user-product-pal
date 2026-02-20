@@ -4,9 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Sparkles, Loader2, Trash2 } from "lucide-react";
+import { Send, Loader2, Trash2 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
 import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 
 interface ChatConversationProps {
@@ -15,7 +14,7 @@ interface ChatConversationProps {
 }
 
 export function ChatConversation({ user, onChatDeleted }: ChatConversationProps) {
-  const { answerChat, autoReplyChat, deleteChatHistory, sendAdminMessage } = useSupportChats();
+  const { answerChat, deleteChatHistory, sendAdminMessage } = useSupportChats();
   const [answer, setAnswer] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,14 +34,6 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
       await sendAdminMessage.mutateAsync({ userId: user.user_id, message: answer.trim() });
     }
     setAnswer("");
-  };
-
-  const handleAutoReply = async (chat: SupportChat) => {
-    await autoReplyChat.mutateAsync({
-      chatId: chat.id,
-      question: chat.question,
-      userName: user.user_name,
-    });
   };
 
   const handleDeleteChatHistory = async () => {
@@ -94,38 +85,18 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {user.chats.map((chat) => (
-            <ChatMessage
-              key={chat.id}
-              chat={chat}
-              onAutoReply={() => handleAutoReply(chat)}
-              isAutoReplying={autoReplyChat.isPending}
-            />
+            <ChatMessage key={chat.id} chat={chat} />
           ))}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
-      {/* Always-visible Reply Input */}
+      {/* Reply Input */}
       <div className="p-3 border-t bg-muted/30">
         {unansweredChats.length > 0 && (
-          <div className="flex items-center gap-2 mb-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleAutoReply(unansweredChats[0])}
-              disabled={autoReplyChat.isPending}
-            >
-              {autoReplyChat.isPending ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 mr-1" />
-              )}
-              AI Auto Reply
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              {unansweredChats.length} unanswered {unansweredChats.length === 1 ? "message" : "messages"}
-            </span>
-          </div>
+          <span className="text-xs text-muted-foreground mb-2 block">
+            {unansweredChats.length} unanswered {unansweredChats.length === 1 ? "message" : "messages"}
+          </span>
         )}
         <div className="flex gap-2">
           <Textarea
@@ -159,47 +130,20 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
   );
 }
 
-interface ChatMessageProps {
-  chat: SupportChat;
-  onAutoReply: () => void;
-  isAutoReplying: boolean;
-}
-
-function ChatMessage({ chat, onAutoReply, isAutoReplying }: ChatMessageProps) {
-  const isUnanswered = chat.question && !chat.answer;
-
+function ChatMessage({ chat }: { chat: SupportChat }) {
   return (
     <div className="space-y-2">
-      {/* User Question (skip if empty — admin-initiated message) */}
       {chat.question && (
         <div className="flex justify-start">
           <div className="max-w-[80%] rounded-lg p-3 bg-muted">
             <p className="whitespace-pre-wrap">{chat.question}</p>
-            <div className="flex items-center justify-between mt-2 gap-2">
-              <span className="text-xs text-muted-foreground">
-                {format(new Date(chat.created_at), "MMM d, h:mm a")}
-              </span>
-              {isUnanswered && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={onAutoReply}
-                  disabled={isAutoReplying}
-                  className="text-primary"
-                >
-                  {isAutoReplying ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-3 w-3" />
-                  )}
-                </Button>
-              )}
-            </div>
+            <span className="text-xs text-muted-foreground block mt-1">
+              {format(new Date(chat.created_at), "MMM d, h:mm a")}
+            </span>
           </div>
         </div>
       )}
 
-      {/* Admin Answer */}
       {chat.answer && (
         <div className="flex justify-end">
           <div className="max-w-[80%] rounded-lg p-3 bg-primary text-primary-foreground">
