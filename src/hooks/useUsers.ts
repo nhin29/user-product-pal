@@ -76,12 +76,15 @@ export function useUsers() {
       isAccess?: boolean;
     }) => {
       // Build update object
-      const updateData: { display_name: string; product_ids?: string[]; is_access?: boolean } = {
+      const updateData: { display_name: string; product_ids?: string[]; is_access?: boolean; request_date?: null } = {
         display_name: displayName,
       };
       
       if (isAccess !== undefined) {
         updateData.is_access = isAccess;
+        if (!isAccess) {
+          updateData.request_date = null;
+        }
       }
       
       if (productIds !== undefined) {
