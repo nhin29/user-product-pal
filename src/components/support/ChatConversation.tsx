@@ -87,12 +87,6 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
 
       {/* Reply Input */}
       <div className="p-3 border-t bg-muted/30">
-        {conversation.unread_count > 0 && (
-          <span className="text-xs text-muted-foreground mb-2 block">
-            {conversation.unread_count} unanswered{" "}
-            {conversation.unread_count === 1 ? "message" : "messages"}
-          </span>
-        )}
         <div className="flex gap-2">
           <Textarea
             placeholder="Type a message..."
