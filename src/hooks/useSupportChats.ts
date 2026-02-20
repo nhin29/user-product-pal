@@ -241,6 +241,18 @@ export function useSupportChats() {
     },
   });
 
+  const markAsRead = async (userId: string) => {
+    const { error } = await supabase
+      .from("support_chats")
+      .update({ status: "read" })
+      .eq("user_id", userId)
+      .eq("status", "pending");
+
+    if (!error) {
+      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
+    }
+  };
+
   const sendAdminMessage = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
       const { data: session } = await supabase.auth.getSession();
@@ -277,5 +289,6 @@ export function useSupportChats() {
     autoReplyChat,
     deleteChatHistory,
     sendAdminMessage,
+    markAsRead,
   };
 }
