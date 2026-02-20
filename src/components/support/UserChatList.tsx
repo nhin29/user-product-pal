@@ -40,9 +40,9 @@ export function UserChatList({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium truncate">{user.user_name}</span>
-                {user.pending_count > 0 && (
+                {user.unread_count > 0 && (
                   <Badge variant="default" className="shrink-0">
-                    {user.pending_count}
+                    {user.unread_count}
                   </Badge>
                 )}
               </div>

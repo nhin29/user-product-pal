@@ -15,30 +15,22 @@ interface ChatConversationProps {
 }
 
 export function ChatConversation({ user, onChatDeleted }: ChatConversationProps) {
-  const { answerChat, autoReplyChat, deleteChatHistory, sendAdminMessage, markAsRead } = useSupportChats();
+  const { answerChat, autoReplyChat, deleteChatHistory, sendAdminMessage } = useSupportChats();
   const [answer, setAnswer] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Auto-mark pending messages as read when viewing conversation
-  useEffect(() => {
-    const hasPending = user.chats.some((c) => c.status === "pending");
-    if (hasPending) {
-      markAsRead(user.user_id);
-    }
-  }, [user.user_id, user.chats]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [user.user_id, user.chats]);
 
-  const pendingChats = user.chats.filter((c) => c.status === "pending" || c.status === "read");
+  const unansweredChats = user.chats.filter((c) => c.question && !c.answer);
 
   const handleSend = async () => {
     if (!answer.trim()) return;
 
-    if (pendingChats.length > 0) {
-      await answerChat.mutateAsync({ chatId: pendingChats[0].id, answer: answer.trim() });
+    if (unansweredChats.length > 0) {
+      await answerChat.mutateAsync({ chatId: unansweredChats[0].id, answer: answer.trim() });
     } else {
       await sendAdminMessage.mutateAsync({ userId: user.user_id, message: answer.trim() });
     }
@@ -115,12 +107,12 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
 
       {/* Always-visible Reply Input */}
       <div className="p-3 border-t bg-muted/30">
-        {pendingChats.length > 0 && (
+        {unansweredChats.length > 0 && (
           <div className="flex items-center gap-2 mb-2">
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleAutoReply(pendingChats[0])}
+              onClick={() => handleAutoReply(unansweredChats[0])}
               disabled={autoReplyChat.isPending}
             >
               {autoReplyChat.isPending ? (
@@ -131,13 +123,13 @@ export function ChatConversation({ user, onChatDeleted }: ChatConversationProps)
               AI Auto Reply
             </Button>
             <span className="text-xs text-muted-foreground">
-              {pendingChats.length} unanswered {pendingChats.length === 1 ? "message" : "messages"}
+              {unansweredChats.length} unanswered {unansweredChats.length === 1 ? "message" : "messages"}
             </span>
           </div>
         )}
         <div className="flex gap-2">
           <Textarea
-            placeholder={pendingChats.length > 0 ? "Reply to pending message..." : "Send a follow-up message..."}
+            placeholder={unansweredChats.length > 0 ? "Reply to unanswered message..." : "Send a follow-up message..."}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             onKeyDown={(e) => {
@@ -174,7 +166,7 @@ interface ChatMessageProps {
 }
 
 function ChatMessage({ chat, onAutoReply, isAutoReplying }: ChatMessageProps) {
-  const isPending = chat.status === "pending" || chat.status === "read";
+  const isUnanswered = chat.question && !chat.answer;
 
   return (
     <div className="space-y-2">
@@ -187,7 +179,7 @@ function ChatMessage({ chat, onAutoReply, isAutoReplying }: ChatMessageProps) {
               <span className="text-xs text-muted-foreground">
                 {format(new Date(chat.created_at), "MMM d, h:mm a")}
               </span>
-              {isPending && (
+              {isUnanswered && (
                 <Button
                   size="sm"
                   variant="ghost"

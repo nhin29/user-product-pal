@@ -20,7 +20,7 @@ export interface UserWithChats {
   user_name: string;
   avatar_url: string | null;
   chats: SupportChat[];
-  pending_count: number;
+  unread_count: number;
   last_message_at: string;
   last_seen: string | null;
 }
@@ -78,7 +78,7 @@ export function useSupportChats() {
             user_name: profile?.display_name || "Unknown User",
             avatar_url: profile?.avatar_url || null,
             chats: [],
-            pending_count: 0,
+            unread_count: 0,
             last_message_at: chat.created_at,
             last_seen: lastSeenMap.get(chat.user_id) || null,
           });
@@ -87,8 +87,9 @@ export function useSupportChats() {
         const userChats = userChatsMap.get(chat.user_id)!;
         userChats.chats.push(chat);
         
-        if (chat.status === "pending") {
-          userChats.pending_count++;
+        // Count user-sent messages (with a question) that are not yet answered
+        if (chat.question && !chat.answer) {
+          userChats.unread_count++;
         }
         
         // Update last message time
@@ -241,17 +242,7 @@ export function useSupportChats() {
     },
   });
 
-  const markAsRead = async (userId: string) => {
-    const { error } = await supabase
-      .from("support_chats")
-      .update({ status: "read" })
-      .eq("user_id", userId)
-      .eq("status", "pending");
-
-    if (!error) {
-      queryClient.invalidateQueries({ queryKey: ["support-chats"] });
-    }
-  };
+  // markAsRead removed — badge tracking is now handled in page-level state
 
   const sendAdminMessage = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
@@ -289,6 +280,5 @@ export function useSupportChats() {
     autoReplyChat,
     deleteChatHistory,
     sendAdminMessage,
-    markAsRead,
   };
 }
