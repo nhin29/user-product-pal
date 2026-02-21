@@ -9,6 +9,7 @@ export interface UserProfile {
   avatar_url: string | null;
   email: string | null;
   is_purchase: boolean;
+  is_new: boolean;
   product_ids: string[] | null;
   created_at: string;
   updated_at: string;

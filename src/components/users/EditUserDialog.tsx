@@ -38,7 +38,7 @@ const SHOPIFY_PRODUCT_OPTIONS = [
 ];
 
 interface EditUserDialogProps {
-  user: UserProfile | null;
+  user: (UserProfile & { is_new?: boolean }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string) => Promise<void>;
@@ -90,7 +90,16 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Edit User
+            {user && (
+              user.is_new ? (
+                <span className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/20 px-2.5 py-0.5 text-xs font-semibold text-blue-600">New</span>
+              ) : (
+                <span className="inline-flex items-center rounded-full border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Old</span>
+              )
+            )}
+          </DialogTitle>
           <DialogDescription>
             Update user profile information.
           </DialogDescription>
