@@ -400,6 +400,7 @@ export type Database = {
           id: string
           is_access: boolean
           is_first: boolean
+          is_new: boolean
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[] | null
@@ -414,6 +415,7 @@ export type Database = {
           id?: string
           is_access?: boolean
           is_first?: boolean
+          is_new?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
@@ -428,6 +430,7 @@ export type Database = {
           id?: string
           is_access?: boolean
           is_first?: boolean
+          is_new?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
