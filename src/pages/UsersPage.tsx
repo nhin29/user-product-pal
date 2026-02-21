@@ -119,6 +119,7 @@ export default function UsersPage() {
                   <th className="px-6 py-3 text-left">Email</th>
                   <th className="px-6 py-3 text-left">Role</th>
                   <th className="px-6 py-3 text-left">Purchase Status</th>
+                  <th className="px-6 py-3 text-left">Status</th>
                   <th className="px-6 py-3 text-left">Joined</th>
                   <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
@@ -186,6 +187,17 @@ export default function UsersPage() {
                         <Badge variant="secondary" className="bg-muted text-muted-foreground">
                           <X className="mr-1 h-3 w-3" />
                           Not Purchased
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.is_new ? (
+                        <Badge variant="default" className="bg-blue-500/20 text-blue-600 border-blue-500/30">
+                          New
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                          Old
                         </Badge>
                       )}
                     </td>

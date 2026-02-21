@@ -725,6 +725,7 @@ export type Database = {
           display_name: string
           email: string
           id: string
+          is_new: boolean
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[]
