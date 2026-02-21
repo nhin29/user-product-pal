@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -42,7 +41,7 @@ interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAccess?: boolean) => Promise<void>;
+  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -51,7 +50,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [email, setEmail] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("viewer");
-  const [isAccess, setIsAccess] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -59,7 +57,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       setEmail(user.email || "");
       setSelectedProductIds(user.product_ids || []);
       setSelectedRole(user.role || "viewer");
-      setIsAccess(user.is_access || false);
     }
   }, [user]);
 
@@ -78,15 +75,13 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     const newEmail = email !== user.email ? email : undefined;
     const productIdsChanged = JSON.stringify(selectedProductIds.sort()) !== JSON.stringify((user.product_ids || []).sort());
     const roleChanged = selectedRole !== (user.role || "viewer");
-    const accessChanged = isAccess !== (user.is_access || false);
     
     await onSave(
       user.user_id, 
       displayName, 
       newEmail, 
       productIdsChanged ? selectedProductIds : undefined,
-      roleChanged ? selectedRole : undefined,
-      accessChanged ? isAccess : undefined
+      roleChanged ? selectedRole : undefined
     );
     onOpenChange(false);
   };
@@ -135,14 +130,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <Label htmlFor="is-access" className="cursor-pointer">Prompt Access</Label>
-              <Switch
-                id="is-access"
-                checked={isAccess}
-                onCheckedChange={setIsAccess}
-              />
             </div>
             <div className="grid gap-2">
               <Label>Amazon Product Access</Label>

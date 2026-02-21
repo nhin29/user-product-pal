@@ -398,13 +398,11 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
-          is_access: boolean
           is_first: boolean
           is_new: boolean
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[] | null
-          request_date: string | null
           updated_at: string
           user_id: string
         }
@@ -413,13 +411,11 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
-          is_access?: boolean
           is_first?: boolean
           is_new?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
-          request_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -428,13 +424,11 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
-          is_access?: boolean
           is_first?: boolean
           is_new?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
-          request_date?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -726,7 +720,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      auto_enable_access: { Args: never; Returns: undefined }
       get_profiles_with_email: {
         Args: never
         Returns: {
@@ -735,7 +728,6 @@ export type Database = {
           display_name: string
           email: string
           id: string
-          is_access: boolean
           is_purchase: boolean
           onboarding_completed: boolean
           product_ids: string[]
