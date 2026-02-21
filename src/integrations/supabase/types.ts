@@ -398,7 +398,6 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
-          is_first: boolean
           is_new: boolean
           is_purchase: boolean
           onboarding_completed: boolean
@@ -411,7 +410,6 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
-          is_first?: boolean
           is_new?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
@@ -424,7 +422,6 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
-          is_first?: boolean
           is_new?: boolean
           is_purchase?: boolean
           onboarding_completed?: boolean
