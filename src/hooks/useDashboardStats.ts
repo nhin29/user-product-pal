@@ -21,32 +21,17 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async (): Promise<DashboardStats> => {
-      const [
-        { count: totalUsers },
-        { count: totalProducts },
-        { count: totalCategories },
-        { count: totalProductTypes },
-        { count: totalClicks },
-        { count: totalCopies },
-        { count: totalSaves },
-      ] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("products").select("*", { count: "exact", head: true }),
-        supabase.from("categories").select("*", { count: "exact", head: true }),
-        supabase.from("product_types").select("*", { count: "exact", head: true }),
-        supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "click"),
-        supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "copy"),
-        supabase.from("prompt_interactions").select("*", { count: "exact", head: true }).eq("interaction_type", "save"),
-      ]);
-
+      const { data, error } = await supabase.rpc("get_dashboard_stats");
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
       return {
-        totalUsers: totalUsers || 0,
-        totalProducts: totalProducts || 0,
-        totalCategories: totalCategories || 0,
-        totalProductTypes: totalProductTypes || 0,
-        totalClicks: totalClicks || 0,
-        totalCopies: totalCopies || 0,
-        totalSaves: totalSaves || 0,
+        totalUsers: Number(row?.total_users) || 0,
+        totalProducts: Number(row?.total_products) || 0,
+        totalCategories: Number(row?.total_categories) || 0,
+        totalProductTypes: Number(row?.total_product_types) || 0,
+        totalClicks: Number(row?.total_clicks) || 0,
+        totalCopies: Number(row?.total_copies) || 0,
+        totalSaves: Number(row?.total_saves) || 0,
       };
     },
   });

@@ -59,45 +59,17 @@ export function useUserAnalytics(userId: string) {
   const statsQuery = useQuery({
     queryKey: ["user-analytics-stats", userId],
     queryFn: async (): Promise<UserAnalytics> => {
-      const [
-        { count: totalClicks },
-        { count: totalCopies },
-        { count: totalSaves },
-        { count: totalPageViews },
-        { count: totalEvents },
-      ] = await Promise.all([
-        supabase
-          .from("prompt_interactions")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("interaction_type", "click"),
-        supabase
-          .from("prompt_interactions")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("interaction_type", "copy"),
-        supabase
-          .from("prompt_interactions")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("interaction_type", "save"),
-        supabase
-          .from("analytics_events")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("event_type", "navigation"),
-        supabase
-          .from("analytics_events")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId),
-      ]);
-
+      const { data, error } = await supabase.rpc("get_user_analytics_stats", {
+        p_user_id: userId,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
       return {
-        totalClicks: totalClicks || 0,
-        totalCopies: totalCopies || 0,
-        totalSaves: totalSaves || 0,
-        totalPageViews: totalPageViews || 0,
-        totalEvents: totalEvents || 0,
+        totalClicks: Number(row?.total_clicks) || 0,
+        totalCopies: Number(row?.total_copies) || 0,
+        totalSaves: Number(row?.total_saves) || 0,
+        totalPageViews: Number(row?.total_page_views) || 0,
+        totalEvents: Number(row?.total_events) || 0,
       };
     },
     enabled: !!userId,
