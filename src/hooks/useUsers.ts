@@ -70,6 +70,7 @@ export function useUsers() {
       role,
       isAnalytics,
       isRefund,
+      isNew,
     }: {
       userId: string;
       displayName: string;
@@ -78,9 +79,10 @@ export function useUsers() {
       role?: string;
       isAnalytics?: boolean;
       isRefund?: boolean;
+      isNew?: boolean;
     }) => {
       // Build update object
-      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean } = {
+      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean; is_new?: boolean } = {
         display_name: displayName,
       };
       
@@ -90,6 +92,10 @@ export function useUsers() {
       
       if (isRefund !== undefined) {
         updateData.is_refund = isRefund;
+      }
+
+      if (isNew !== undefined) {
+        updateData.is_new = isNew;
       }
       
       if (productIds !== undefined) {
