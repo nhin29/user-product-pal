@@ -6,9 +6,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { Images, Star, Search } from "lucide-react";
+import { Images, Star, Search, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
@@ -25,13 +32,27 @@ export default function GalleryPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<GalleryImage | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [sortBy, setSortBy] = useState<string>("newest");
 
-  const filtered = images.filter(
-    (img) =>
-      img.user_name.toLowerCase().includes(search.toLowerCase()) ||
-      img.user_email.toLowerCase().includes(search.toLowerCase()) ||
-      (img.completed_prompt || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = images
+    .filter(
+      (img) =>
+        img.user_name.toLowerCase().includes(search.toLowerCase()) ||
+        img.user_email.toLowerCase().includes(search.toLowerCase()) ||
+        (img.completed_prompt || "").toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "rating_high":
+          return (b.rating ?? 0) - (a.rating ?? 0);
+        case "rating_low":
+          return (a.rating ?? 0) - (b.rating ?? 0);
+        case "oldest":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
@@ -49,19 +70,33 @@ export default function GalleryPage() {
         </div>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 flex-wrap">
             <CardTitle className="flex items-center gap-2">
               <Images className="h-5 w-5" />
               Images ({filtered.length})
             </CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by user or prompt..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+            <div className="flex items-center gap-3">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-44">
+                  <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest first</SelectItem>
+                  <SelectItem value="oldest">Oldest first</SelectItem>
+                  <SelectItem value="rating_high">Rating: High → Low</SelectItem>
+                  <SelectItem value="rating_low">Rating: Low → High</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search by user or prompt..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
