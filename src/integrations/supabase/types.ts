@@ -777,6 +777,7 @@ export type Database = {
           total_clicks: number
           total_copies: number
           total_events: number
+          total_generations: number
           total_page_views: number
           total_saves: number
         }[]

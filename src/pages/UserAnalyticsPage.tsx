@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MousePointer, Copy, Eye, Activity, Bookmark, Trash2, Star, ImageIcon } from "lucide-react";
+import { ArrowLeft, MousePointer, Copy, Eye, Activity, Bookmark, Trash2, Star, ImageIcon, Sparkles } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -178,7 +178,7 @@ export default function UserAnalyticsPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-8">
           <StatCard
             title="Total Clicks"
             value={stats?.totalClicks || 0}
@@ -212,6 +212,13 @@ export default function UserAnalyticsPage() {
             value={stats?.totalEvents || 0}
             icon={Activity}
             description="All tracked events"
+            isLoading={isLoadingStats}
+          />
+          <StatCard
+            title="Generations"
+            value={stats?.totalGenerations || 0}
+            icon={Sparkles}
+            description="Images generated"
             isLoading={isLoadingStats}
           />
         </div>
