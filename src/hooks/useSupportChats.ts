@@ -90,21 +90,10 @@ export function useSupportChats() {
         const profile = profileMap.get(convo.user_id);
         const messages = chatsByConvo.get(convo.id) || [];
         
-        // Count unread = user messages that have no admin reply after them
-        // Simple approach: count user messages after the last admin message
-        let unreadCount = 0;
-        let lastAdminIdx = -1;
-        for (let i = messages.length - 1; i >= 0; i--) {
-          if (messages[i].sender_role === "admin") {
-            lastAdminIdx = i;
-            break;
-          }
-        }
-        for (let i = lastAdminIdx + 1; i < messages.length; i++) {
-          if (messages[i].sender_role === "user") {
-            unreadCount++;
-          }
-        }
+        // Count unread = user messages where read_at is null
+        const unreadCount = messages.filter(
+          (m) => m.sender_role === "user" && !m.read_at
+        ).length;
 
         const lastMsg = messages[messages.length - 1];
 
