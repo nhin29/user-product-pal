@@ -37,6 +37,12 @@ const SHOPIFY_PRODUCT_OPTIONS = [
   { id: "prod_TxzgveYwNQur3j", label: "100 Prompts" },
 ];
 
+const META_PRODUCT_OPTIONS = [
+  { id: "prod_U1stXv6wWzqBVe", label: "30+ AI Templates" },
+  { id: "prod_U1sv6wPAwnrTLZ", label: "100+ AI Templates" },
+  { id: "prod_U1tUxdw07i6jj4", label: "Extra 70+ AI Templates" },
+];
+
 interface EditUserDialogProps {
   user: (UserProfile & { is_new?: boolean }) | null;
   open: boolean;
@@ -180,7 +186,29 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                     >
                       {product.label}
                     </label>
+            <div className="grid gap-2">
+              <Label>Meta Product Access</Label>
+              <div className="space-y-2 rounded-md border p-3">
+                {META_PRODUCT_OPTIONS.map((product) => (
+                  <div key={product.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={product.id}
+                      checked={selectedProductIds.includes(product.id)}
+                      onCheckedChange={(checked) => 
+                        handleProductToggle(product.id, checked as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor={product.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {product.label}
+                    </label>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
                 ))}
               </div>
             </div>
