@@ -640,7 +640,6 @@ export type Database = {
           created_at: string
           id: string
           updated_at: string
-          usage_date: string
           used_count: number
           user_id: string
         }
@@ -648,7 +647,6 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
-          usage_date?: string
           used_count?: number
           user_id: string
         }
@@ -656,7 +654,6 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
-          usage_date?: string
           used_count?: number
           user_id?: string
         }

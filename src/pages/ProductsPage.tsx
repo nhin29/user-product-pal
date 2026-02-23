@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet, CalendarIcon } from "lucide-react";
+import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet, CalendarIcon, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import {
   DndContext,
@@ -49,6 +49,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
@@ -70,7 +71,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const { data, isLoading, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter, platformFilter);
+  const { data, isLoading, isFetching, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter, platformFilter);
   const { data: categories } = useCategories();
   const { data: productTypes } = useProductTypes();
   const reorderProducts = useReorderProducts();
@@ -359,8 +360,41 @@ export default function ProductsPage() {
 
         {/* Products Table */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="w-12"><Skeleton className="h-4 w-4" /></TableHead>
+                  <TableHead className="w-10">#</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Image Style</TableHead>
+                  <TableHead>Platform</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Made By</TableHead>
+                  <TableHead>Admin</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: pageSize > 10 ? 10 : pageSize }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-6" /></TableCell>
+                    <TableCell><Skeleton className="h-10 w-10 rounded-lg" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-10 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         ) : error ? (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
@@ -368,7 +402,7 @@ export default function ProductsPage() {
           </div>
         ) : (
           <>
-            <div className="rounded-lg border bg-card">
+            <div className={cn("rounded-lg border bg-card transition-opacity", isFetching && "opacity-60")}>
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}

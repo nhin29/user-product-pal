@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
@@ -29,7 +29,7 @@ export function useProducts(
 
       let query = supabase
         .from("products")
-        .select("*, product_types(name, slug), categories(id, name, slug)", { count: "exact" });
+        .select("id, platform, category_id, product_type_id, image_urls, display_order, created_at, is_admin, made_by, prompt, description, note, updated_at, product_types(name, slug), categories(id, name, slug)", { count: "exact" });
 
       if (search) {
         query = query.or(`title.ilike.%${search}%,platform.ilike.%${search}%`);
@@ -55,6 +55,8 @@ export function useProducts(
       if (error) throw error;
       return { data: data || [], count: count || 0 };
     },
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
