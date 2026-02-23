@@ -401,6 +401,7 @@ export type Database = {
           is_analytics: boolean
           is_new: boolean
           is_purchase: boolean
+          is_refund: boolean
           onboarding_completed: boolean
           product_ids: string[] | null
           updated_at: string
@@ -414,6 +415,7 @@ export type Database = {
           is_analytics?: boolean
           is_new?: boolean
           is_purchase?: boolean
+          is_refund?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
           updated_at?: string
@@ -427,6 +429,7 @@ export type Database = {
           is_analytics?: boolean
           is_new?: boolean
           is_purchase?: boolean
+          is_refund?: boolean
           onboarding_completed?: boolean
           product_ids?: string[] | null
           updated_at?: string
@@ -751,6 +754,7 @@ export type Database = {
           is_analytics: boolean
           is_new: boolean
           is_purchase: boolean
+          is_refund: boolean
           onboarding_completed: boolean
           product_ids: string[]
           role: string

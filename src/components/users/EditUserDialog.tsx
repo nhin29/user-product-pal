@@ -47,7 +47,7 @@ interface EditUserDialogProps {
   user: (UserProfile & { is_new?: boolean }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean) => Promise<void>;
+  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -57,6 +57,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("viewer");
   const [isAnalytics, setIsAnalytics] = useState<boolean>(true);
+  const [isRefund, setIsRefund] = useState<boolean>(false);
 
   useEffect(() => {
     if (user) {
@@ -65,6 +66,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       setSelectedProductIds(user.product_ids || []);
       setSelectedRole(user.role || "viewer");
       setIsAnalytics(user.is_analytics ?? true);
+      setIsRefund(user.is_refund ?? false);
     }
   }, [user]);
 
@@ -84,6 +86,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     const productIdsChanged = JSON.stringify(selectedProductIds.sort()) !== JSON.stringify((user.product_ids || []).sort());
     const roleChanged = selectedRole !== (user.role || "viewer");
     const analyticsChanged = isAnalytics !== (user.is_analytics ?? true);
+    const refundChanged = isRefund !== (user.is_refund ?? false);
     
     await onSave(
       user.user_id, 
@@ -91,7 +94,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       newEmail, 
       productIdsChanged ? selectedProductIds : undefined,
       roleChanged ? selectedRole : undefined,
-      analyticsChanged ? isAnalytics : undefined
+      analyticsChanged ? isAnalytics : undefined,
+      refundChanged ? isRefund : undefined
     );
     onOpenChange(false);
   };
@@ -156,6 +160,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                 id="is_analytics"
                 checked={isAnalytics}
                 onCheckedChange={setIsAnalytics}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="is_refund">Refund</Label>
+              <Switch
+                id="is_refund"
+                checked={isRefund}
+                onCheckedChange={setIsRefund}
               />
             </div>
             <div className="grid gap-2">
