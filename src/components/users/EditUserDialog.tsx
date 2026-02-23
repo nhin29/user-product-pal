@@ -34,7 +34,7 @@ const AMAZON_PRODUCT_OPTIONS = [
 
 const SHOPIFY_PRODUCT_OPTIONS = [
   { id: "prod_TxMHw09aCtGsOM", label: "30 Prompts" },
-  { id: "prod_TxzgveYwNQur3j", label: "100 Prompts" },
+  { id: "prod_TxzgveYwNQur3j", label: "100+ Prompts" },
 ];
 
 const META_PRODUCT_OPTIONS = [
