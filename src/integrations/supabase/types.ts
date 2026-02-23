@@ -717,6 +717,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_dashboard_chart_data: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          clicks: number
+          copies: number
+          day: string
+          events: number
+          page_views: number
+          saves: number
+        }[]
+      }
       get_profiles_with_email: {
         Args: never
         Returns: {
@@ -733,6 +744,25 @@ export type Database = {
           role: string
           updated_at: string
           user_id: string
+        }[]
+      }
+      get_top_products_by_interaction: {
+        Args: { p_interaction_type: string; p_limit?: number }
+        Returns: {
+          image_url: string
+          interaction_count: number
+          product_id: string
+        }[]
+      }
+      get_user_chart_data: {
+        Args: { p_end_date: string; p_start_date: string; p_user_id: string }
+        Returns: {
+          clicks: number
+          copies: number
+          day: string
+          events: number
+          page_views: number
+          saves: number
         }[]
       }
       get_user_role: {

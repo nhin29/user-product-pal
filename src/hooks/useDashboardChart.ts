@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
+import { format, subDays, startOfDay } from "date-fns";
 
 interface ChartDataPoint {
   date: string;
@@ -29,51 +29,21 @@ export function useDashboardChart(period: string) {
       const startDate = startOfDay(subDays(new Date(), days - 1));
       const endDate = new Date();
 
-      const [{ data: interactions, error: interactionsError }, { data: events, error: eventsError }] =
-        await Promise.all([
-          supabase
-            .from("prompt_interactions")
-            .select("interaction_type, created_at")
-            .gte("created_at", startDate.toISOString())
-            .lte("created_at", endDate.toISOString()),
-          supabase
-            .from("analytics_events")
-            .select("event_type, created_at")
-            .gte("created_at", startDate.toISOString())
-            .lte("created_at", endDate.toISOString()),
-        ]);
-
-      if (interactionsError) throw interactionsError;
-      if (eventsError) throw eventsError;
-
-      const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-      const dataMap: Record<string, ChartDataPoint> = {};
-
-      dateRange.forEach((date) => {
-        const dateKey = format(date, "MMM dd");
-        dataMap[dateKey] = { date: dateKey, clicks: 0, copies: 0, saves: 0, pageViews: 0, events: 0 };
+      const { data, error } = await supabase.rpc("get_dashboard_chart_data", {
+        p_start_date: startDate.toISOString(),
+        p_end_date: endDate.toISOString(),
       });
 
-      (interactions || []).forEach((i) => {
-        const dateKey = format(new Date(i.created_at), "MMM dd");
-        if (dataMap[dateKey]) {
-          if (i.interaction_type === "click") dataMap[dateKey].clicks++;
-          else if (i.interaction_type === "copy") dataMap[dateKey].copies++;
-          else if (i.interaction_type === "save") dataMap[dateKey].saves++;
-        }
-      });
+      if (error) throw error;
 
-      (events || []).forEach((e) => {
-        const dateKey = format(new Date(e.created_at), "MMM dd");
-        if (dataMap[dateKey]) {
-          dataMap[dateKey].events++;
-          if (e.event_type === "pageview" || e.event_type === "navigation") {
-            dataMap[dateKey].pageViews++;
-          }
-        }
-      });
-
-      return dateRange.map((date) => dataMap[format(date, "MMM dd")]);
+      return (data || []).map((row: any) => ({
+        date: format(new Date(row.day), "MMM dd"),
+        clicks: Number(row.clicks),
+        copies: Number(row.copies),
+        saves: Number(row.saves),
+        pageViews: Number(row.page_views),
+        events: Number(row.events),
+      }));
     },
   });
 }
