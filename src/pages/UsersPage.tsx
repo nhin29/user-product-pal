@@ -125,8 +125,8 @@ export default function UsersPage() {
     return sortDirection === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
   };
 
-  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean) => {
-    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAnalytics });
+  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean) => {
+    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAnalytics, isRefund });
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -297,7 +297,12 @@ export default function UsersPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        {user.is_purchase ? (
+                        {user.is_refund ? (
+                          <Badge variant="default" className="bg-red-500/20 text-red-600 border-red-500/30">
+                            <X className="mr-1 h-3 w-3" />
+                            Refunded
+                          </Badge>
+                        ) : user.is_purchase ? (
                           <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30">
                             <Check className="mr-1 h-3 w-3" />
                             Purchased

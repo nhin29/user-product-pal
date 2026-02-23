@@ -15,6 +15,7 @@ export interface UserProfile {
   updated_at: string;
   role: string | null;
   is_analytics: boolean;
+  is_refund: boolean;
 }
 
 export function useUsers() {
@@ -68,6 +69,7 @@ export function useUsers() {
       productIds,
       role,
       isAnalytics,
+      isRefund,
     }: {
       userId: string;
       displayName: string;
@@ -75,14 +77,19 @@ export function useUsers() {
       productIds?: string[];
       role?: string;
       isAnalytics?: boolean;
+      isRefund?: boolean;
     }) => {
       // Build update object
-      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean } = {
+      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean } = {
         display_name: displayName,
       };
       
       if (isAnalytics !== undefined) {
         updateData.is_analytics = isAnalytics;
+      }
+      
+      if (isRefund !== undefined) {
+        updateData.is_refund = isRefund;
       }
       
       if (productIds !== undefined) {
