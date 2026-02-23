@@ -14,6 +14,7 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   role: string | null;
+  is_analytics: boolean;
 }
 
 export function useUsers() {
@@ -66,17 +67,23 @@ export function useUsers() {
       email,
       productIds,
       role,
+      isAnalytics,
     }: {
       userId: string;
       displayName: string;
       email?: string;
       productIds?: string[];
       role?: string;
+      isAnalytics?: boolean;
     }) => {
       // Build update object
-      const updateData: { display_name: string; product_ids?: string[] } = {
+      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean } = {
         display_name: displayName,
       };
+      
+      if (isAnalytics !== undefined) {
+        updateData.is_analytics = isAnalytics;
+      }
       
       if (productIds !== undefined) {
         updateData.product_ids = productIds;
