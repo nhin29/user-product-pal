@@ -149,12 +149,6 @@ export default function GalleryPage() {
                 )}
               </div>
 
-              {selected.completed_prompt && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Completed Prompt</p>
-                  <p className="text-sm bg-muted rounded-lg p-3">{selected.completed_prompt}</p>
-                </div>
-              )}
 
               {selected.analyzed_url && (
                 <div>
