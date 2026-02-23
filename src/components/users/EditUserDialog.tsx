@@ -38,8 +38,8 @@ const SHOPIFY_PRODUCT_OPTIONS = [
 ];
 
 const META_PRODUCT_OPTIONS = [
-  { id: "prod_U1stXv6wWzqBVe", label: "Meta Bundle | 30+ AI Templates" },
-  { id: "prod_U1sv6wPAwnrTLZ", label: "Meta Bundle | 100+ AI Templates" },
+  { id: "prod_U1stXv6wWzqBVe", label: "30 Prompts" },
+  { id: "prod_U1sv6wPAwnrTLZ", label: "100 Prompts" },
 ];
 
 interface EditUserDialogProps {
