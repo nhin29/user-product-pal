@@ -8,6 +8,7 @@ interface UserAnalytics {
   totalSaves: number;
   totalPageViews: number;
   totalEvents: number;
+  totalGenerations: number;
 }
 
 interface ProductInteraction {
@@ -70,6 +71,7 @@ export function useUserAnalytics(userId: string) {
         totalSaves: Number(row?.total_saves) || 0,
         totalPageViews: Number(row?.total_page_views) || 0,
         totalEvents: Number(row?.total_events) || 0,
+        totalGenerations: Number(row?.total_generations) || 0,
       };
     },
     enabled: !!userId,
