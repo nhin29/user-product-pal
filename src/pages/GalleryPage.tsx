@@ -157,9 +157,16 @@ export default function GalleryPage() {
                     href={selected.analyzed_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-primary underline break-all"
+                    className="text-sm text-primary underline truncate block max-w-full"
                   >
-                    {selected.analyzed_url}
+                    {(() => {
+                      try {
+                        const url = new URL(selected.analyzed_url);
+                        return url.hostname + url.pathname.slice(0, 30) + (selected.analyzed_url.length > url.hostname.length + 30 ? "…" : "");
+                      } catch {
+                        return selected.analyzed_url.slice(0, 50) + "…";
+                      }
+                    })()}
                   </a>
                 </div>
               )}
