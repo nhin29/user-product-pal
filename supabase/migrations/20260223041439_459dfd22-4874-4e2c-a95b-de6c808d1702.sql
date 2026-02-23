@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN is_analytics boolean NOT NULL DEFAULT true;

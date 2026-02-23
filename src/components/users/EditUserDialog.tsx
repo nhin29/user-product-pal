@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -46,7 +47,7 @@ interface EditUserDialogProps {
   user: (UserProfile & { is_new?: boolean }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string) => Promise<void>;
+  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -55,6 +56,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [email, setEmail] = useState("");
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("viewer");
+  const [isAnalytics, setIsAnalytics] = useState<boolean>(true);
 
   useEffect(() => {
     if (user) {
@@ -62,6 +64,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       setEmail(user.email || "");
       setSelectedProductIds(user.product_ids || []);
       setSelectedRole(user.role || "viewer");
+      setIsAnalytics(user.is_analytics ?? true);
     }
   }, [user]);
 
@@ -80,13 +83,15 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     const newEmail = email !== user.email ? email : undefined;
     const productIdsChanged = JSON.stringify(selectedProductIds.sort()) !== JSON.stringify((user.product_ids || []).sort());
     const roleChanged = selectedRole !== (user.role || "viewer");
+    const analyticsChanged = isAnalytics !== (user.is_analytics ?? true);
     
     await onSave(
       user.user_id, 
       displayName, 
       newEmail, 
       productIdsChanged ? selectedProductIds : undefined,
-      roleChanged ? selectedRole : undefined
+      roleChanged ? selectedRole : undefined,
+      analyticsChanged ? isAnalytics : undefined
     );
     onOpenChange(false);
   };
@@ -144,6 +149,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="is_analytics">Analytics</Label>
+              <Switch
+                id="is_analytics"
+                checked={isAnalytics}
+                onCheckedChange={setIsAnalytics}
+              />
             </div>
             <div className="grid gap-2">
               <Label>Amazon Product Access</Label>
