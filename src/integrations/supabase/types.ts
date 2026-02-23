@@ -728,6 +728,18 @@ export type Database = {
           saves: number
         }[]
       }
+      get_dashboard_stats: {
+        Args: never
+        Returns: {
+          total_categories: number
+          total_clicks: number
+          total_copies: number
+          total_product_types: number
+          total_products: number
+          total_saves: number
+          total_users: number
+        }[]
+      }
       get_profiles_with_email: {
         Args: never
         Returns: {
@@ -752,6 +764,16 @@ export type Database = {
           image_url: string
           interaction_count: number
           product_id: string
+        }[]
+      }
+      get_user_analytics_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          total_clicks: number
+          total_copies: number
+          total_events: number
+          total_page_views: number
+          total_saves: number
         }[]
       }
       get_user_chart_data: {
