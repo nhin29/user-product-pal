@@ -16,6 +16,7 @@ export interface GalleryImage {
   user_avatar: string;
   product_image: string;
   rating: number | null;
+  product_prompt: string;
 }
 
 export function useGallery() {
@@ -35,7 +36,7 @@ export function useGallery() {
 
       const [profilesRes, productsRes, reviewsRes] = await Promise.all([
         supabase.rpc("get_profiles_with_email"),
-        supabase.from("products").select("id, image_urls").in("id", productIds),
+        supabase.from("products").select("id, image_urls, prompt").in("id", productIds),
         supabase.from("reviews").select("generated_image_id, rating").in("generated_image_id", imageIds),
       ]);
 
@@ -58,6 +59,7 @@ export function useGallery() {
           user_email: profile?.email || "",
           user_avatar: profile?.avatar_url || "",
           product_image: product?.image_urls?.[0] || "",
+          product_prompt: product?.prompt || "",
           rating: reviewsMap.get(img.id) ?? null,
         } as GalleryImage;
       });
