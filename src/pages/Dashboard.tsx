@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Package, FolderOpen, Layers, MousePointerClick, Copy, Bookmark } from "lucide-react";
+import { Users, Package, FolderOpen, Layers, MousePointerClick, Copy, Bookmark, ImageIcon } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useDashboardStats, useTopClickedProducts, useTopCopiedProducts, useTopSavedProducts } from "@/hooks/useDashboardStats";
@@ -53,6 +53,11 @@ export default function Dashboard() {
       title: "Total Saves",
       value: stats?.totalSaves || 0,
       icon: Bookmark,
+    },
+    {
+      title: "Total Generations",
+      value: stats?.totalGenerations || 0,
+      icon: ImageIcon,
     },
   ];
 
@@ -131,9 +136,9 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
           {statsLoading
-            ? Array.from({ length: 7 }).map((_, index) => (
+            ? Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="stat-card animate-fade-in">
                   <Skeleton className="h-10 w-10 rounded-lg" />
                   <div className="mt-4 space-y-2">
