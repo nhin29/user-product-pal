@@ -138,15 +138,15 @@ export default function GalleryPage() {
                   <p className="font-medium text-sm">{selected.user_name}</p>
                   <p className="text-xs text-muted-foreground">{selected.user_email}</p>
                 </div>
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(selected.created_at), { addSuffix: true })}
-                </span>
                 {selected.rating !== null && (
-                  <Badge variant="outline" className="gap-1">
+                  <Badge variant="outline" className="gap-1 ml-2">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     {selected.rating}
                   </Badge>
                 )}
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(selected.created_at), { addSuffix: true })}
+                </span>
               </div>
 
 
@@ -167,13 +167,20 @@ export default function GalleryPage() {
               {selected.product_image && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">Origin Product</p>
-                  <OptimizedImage
-                    src={selected.product_image}
-                    alt="Product"
-                    width={96}
-                    height={96}
-                    className="h-16 w-16 rounded-lg object-cover"
-                  />
+                  <div className="flex items-start gap-3">
+                    <OptimizedImage
+                      src={selected.product_image}
+                      alt="Product"
+                      width={96}
+                      height={96}
+                      className="h-16 w-16 rounded-lg object-cover shrink-0"
+                    />
+                    {selected.product_prompt && (
+                      <p className="text-xs text-muted-foreground bg-muted rounded-lg p-2 max-h-[100px] overflow-y-auto">
+                        {selected.product_prompt}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
