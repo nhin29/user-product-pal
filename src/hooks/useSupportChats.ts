@@ -62,19 +62,22 @@ export function useSupportChats() {
         (profiles || []).map((p) => [p.user_id, p])
       );
 
-      // Fetch last seen from analytics_events
+      // Fetch last seen from analytics_events in a single query
       const userIds = [...new Set(convos.map((c) => c.user_id))];
       const lastSeenMap = new Map<string, string>();
-      for (const uid of userIds) {
-        const { data: events } = await supabase
+      if (userIds.length > 0) {
+        const { data: lastSeenData } = await supabase
           .from("analytics_events")
-          .select("created_at")
-          .eq("user_id", uid)
-          .order("created_at", { ascending: false })
-          .limit(1);
-        if (events && events.length > 0) {
-          lastSeenMap.set(uid, events[0].created_at);
-        }
+          .select("user_id, created_at")
+          .in("user_id", userIds)
+          .order("created_at", { ascending: false });
+        
+        // Take only the first (most recent) entry per user
+        (lastSeenData || []).forEach((row) => {
+          if (row.user_id && !lastSeenMap.has(row.user_id)) {
+            lastSeenMap.set(row.user_id, row.created_at);
+          }
+        });
       }
 
       // Group chats by conversation
