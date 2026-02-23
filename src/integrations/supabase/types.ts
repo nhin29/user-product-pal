@@ -737,6 +737,7 @@ export type Database = {
           total_categories: number
           total_clicks: number
           total_copies: number
+          total_generations: number
           total_product_types: number
           total_products: number
           total_saves: number

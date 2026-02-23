@@ -9,6 +9,7 @@ interface DashboardStats {
   totalClicks: number;
   totalCopies: number;
   totalSaves: number;
+  totalGenerations: number;
 }
 
 interface TopProduct {
@@ -32,6 +33,7 @@ export function useDashboardStats() {
         totalClicks: Number(row?.total_clicks) || 0,
         totalCopies: Number(row?.total_copies) || 0,
         totalSaves: Number(row?.total_saves) || 0,
+        totalGenerations: Number(row?.total_generations) || 0,
       };
     },
   });
