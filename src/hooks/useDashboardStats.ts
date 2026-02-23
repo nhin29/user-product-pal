@@ -52,116 +52,34 @@ export function useDashboardStats() {
   });
 }
 
-export function useTopClickedProducts() {
+function useTopProducts(interactionType: string, queryKey: string) {
   return useQuery({
-    queryKey: ["top-clicked-products"],
+    queryKey: [queryKey],
     queryFn: async (): Promise<TopProduct[]> => {
-      const { data: interactions, error: interactionsError } = await supabase
-        .from("prompt_interactions")
-        .select("product_id")
-        .eq("interaction_type", "click");
-
-      if (interactionsError) throw interactionsError;
-
-      const clickCounts: Record<string, number> = {};
-      (interactions || []).forEach((i) => {
-        clickCounts[i.product_id] = (clickCounts[i.product_id] || 0) + 1;
+      const { data, error } = await supabase.rpc("get_top_products_by_interaction", {
+        p_interaction_type: interactionType,
+        p_limit: 5,
       });
 
-      const productIds = Object.keys(clickCounts);
-      if (productIds.length === 0) return [];
+      if (error) throw error;
 
-      const { data: products, error: productsError } = await supabase
-        .from("products")
-        .select("id, image_urls")
-        .in("id", productIds);
-
-      if (productsError) throw productsError;
-
-      return (products || [])
-        .map((p) => ({
-          id: p.id,
-          image_url: p.image_urls?.[0] || "",
-          count: clickCounts[p.id] || 0,
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+      return (data || []).map((row: any) => ({
+        id: row.product_id,
+        image_url: row.image_url || "",
+        count: Number(row.interaction_count),
+      }));
     },
   });
+}
+
+export function useTopClickedProducts() {
+  return useTopProducts("click", "top-clicked-products");
 }
 
 export function useTopCopiedProducts() {
-  return useQuery({
-    queryKey: ["top-copied-products"],
-    queryFn: async (): Promise<TopProduct[]> => {
-      const { data: interactions, error: interactionsError } = await supabase
-        .from("prompt_interactions")
-        .select("product_id")
-        .eq("interaction_type", "copy");
-
-      if (interactionsError) throw interactionsError;
-
-      const copyCounts: Record<string, number> = {};
-      (interactions || []).forEach((i) => {
-        copyCounts[i.product_id] = (copyCounts[i.product_id] || 0) + 1;
-      });
-
-      const productIds = Object.keys(copyCounts);
-      if (productIds.length === 0) return [];
-
-      const { data: products, error: productsError } = await supabase
-        .from("products")
-        .select("id, image_urls")
-        .in("id", productIds);
-
-      if (productsError) throw productsError;
-
-      return (products || [])
-        .map((p) => ({
-          id: p.id,
-          image_url: p.image_urls?.[0] || "",
-          count: copyCounts[p.id] || 0,
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-    },
-  });
+  return useTopProducts("copy", "top-copied-products");
 }
 
 export function useTopSavedProducts() {
-  return useQuery({
-    queryKey: ["top-saved-products"],
-    queryFn: async (): Promise<TopProduct[]> => {
-      const { data: interactions, error: interactionsError } = await supabase
-        .from("prompt_interactions")
-        .select("product_id")
-        .eq("interaction_type", "save");
-
-      if (interactionsError) throw interactionsError;
-
-      const saveCounts: Record<string, number> = {};
-      (interactions || []).forEach((i) => {
-        saveCounts[i.product_id] = (saveCounts[i.product_id] || 0) + 1;
-      });
-
-      const productIds = Object.keys(saveCounts);
-      if (productIds.length === 0) return [];
-
-      const { data: products, error: productsError } = await supabase
-        .from("products")
-        .select("id, image_urls")
-        .in("id", productIds);
-
-      if (productsError) throw productsError;
-
-      return (products || [])
-        .map((p) => ({
-          id: p.id,
-          image_url: p.image_urls?.[0] || "",
-          count: saveCounts[p.id] || 0,
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-    },
-  });
+  return useTopProducts("save", "top-saved-products");
 }
