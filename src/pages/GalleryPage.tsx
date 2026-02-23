@@ -157,7 +157,7 @@ export default function GalleryPage() {
                     href={selected.analyzed_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-primary underline truncate block max-w-full"
+                    className="text-sm text-primary underline break-all"
                   >
                     {selected.analyzed_url}
                   </a>
