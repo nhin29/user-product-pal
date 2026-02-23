@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useGallery } from "@/hooks/useGallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Images, Star, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
@@ -17,10 +18,13 @@ import {
 } from "@/components/ui/dialog";
 import type { GalleryImage } from "@/hooks/useGallery";
 
+const PAGE_SIZE = 20;
+
 export default function GalleryPage() {
   const { images, isLoading } = useGallery();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<GalleryImage | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filtered = images.filter(
     (img) =>
@@ -28,6 +32,13 @@ export default function GalleryPage() {
       img.user_email.toLowerCase().includes(search.toLowerCase()) ||
       (img.completed_prompt || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  const handleLoadMore = useCallback(() => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
+  }, []);
 
   return (
     <AdminLayout>
@@ -66,45 +77,54 @@ export default function GalleryPage() {
                 <p>No generated images found</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filtered.map((img) => (
-                  <div
-                    key={img.id}
-                    className="group relative cursor-pointer rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg transition-shadow"
-                    onClick={() => setSelected(img)}
-                  >
-                    <div className="aspect-square">
-                      <OptimizedImage
-                        src={img.image_url}
-                        alt="Generated"
-                        width={400}
-                        height={400}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6 border border-white/30">
-                          <AvatarImage src={img.user_avatar || undefined} />
-                          <AvatarFallback className="text-[10px]">
-                            {(img.user_name || "?").slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-white font-medium truncate">
-                          {img.user_name}
-                        </span>
-                        {img.rating !== null && (
-                          <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
-                            <Star className="h-3 w-3 mr-0.5 fill-yellow-400 text-yellow-400" />
-                            {img.rating}
-                          </Badge>
-                        )}
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {visible.map((img) => (
+                    <div
+                      key={img.id}
+                      className="group relative cursor-pointer rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg transition-shadow"
+                      onClick={() => setSelected(img)}
+                    >
+                      <div className="aspect-square">
+                        <OptimizedImage
+                          src={img.image_url}
+                          alt="Generated"
+                          width={300}
+                          height={300}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6 border border-white/30">
+                            <AvatarImage src={img.user_avatar || undefined} />
+                            <AvatarFallback className="text-[10px]">
+                              {(img.user_name || "?").slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-white font-medium truncate">
+                            {img.user_name}
+                          </span>
+                          {img.rating !== null && (
+                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                              <Star className="h-3 w-3 mr-0.5 fill-yellow-400 text-yellow-400" />
+                              {img.rating}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+                {hasMore && (
+                  <div className="flex justify-center mt-6">
+                    <Button variant="outline" onClick={handleLoadMore}>
+                      {`Load more (${filtered.length - visibleCount} remaining)`}
+                    </Button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
