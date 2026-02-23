@@ -39,7 +39,7 @@ const SHOPIFY_PRODUCT_OPTIONS = [
 
 const META_PRODUCT_OPTIONS = [
   { id: "prod_U1stXv6wWzqBVe", label: "30 Prompts" },
-  { id: "prod_U1sv6wPAwnrTLZ", label: "100 Prompts" },
+  { id: "prod_U1sv6wPAwnrTLZ", label: "100+ Prompts" },
 ];
 
 interface EditUserDialogProps {
