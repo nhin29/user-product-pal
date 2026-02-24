@@ -804,6 +804,7 @@ export type Database = {
           category_name: string
           image_url: string
           interaction_count: number
+          platform: string
           product_id: string
         }[]
       }

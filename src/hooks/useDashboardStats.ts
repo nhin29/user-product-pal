@@ -18,6 +18,7 @@ interface TopProduct {
   image_url: string;
   count: number;
   category_name: string;
+  platform: string;
 }
 
 export function useDashboardStats() {
@@ -58,6 +59,7 @@ function useTopProducts(interactionType: string, queryKey: string) {
         image_url: row.image_url || "",
         count: Number(row.interaction_count),
         category_name: row.category_name || "",
+        platform: row.platform || "",
       }));
     },
   });
