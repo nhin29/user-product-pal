@@ -5,6 +5,7 @@ import { format, subDays, startOfDay } from "date-fns";
 interface ChartDataPoint {
   date: string;
   newCustomers: number;
+  repeatCustomers: number;
   copies: number;
   saves: number;
   pageViews: number;
@@ -39,6 +40,7 @@ export function useDashboardChart(period: string) {
       return (data || []).map((row: any) => ({
         date: format(new Date(row.day), "MMM dd"),
         newCustomers: Number(row.new_customers),
+        repeatCustomers: Number(row.repeat_customers),
         copies: Number(row.copies),
         saves: Number(row.saves),
         pageViews: Number(row.page_views),

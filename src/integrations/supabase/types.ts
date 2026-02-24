@@ -761,6 +761,7 @@ export type Database = {
           generations: number
           new_customers: number
           page_views: number
+          repeat_customers: number
           saves: number
         }[]
       }
