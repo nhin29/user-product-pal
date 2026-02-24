@@ -317,9 +317,8 @@ export default function UsersPage() {
                                 <span className="text-base">💬</span>
                               </div>
                               {remaining > 0 && (
-                                <div className="flex h-8 items-center gap-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 px-2" title={`${remaining} generations remaining`}>
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10 border border-violet-500/20" title={`${remaining} generations remaining`}>
                                   <span className="text-sm">✨</span>
-                                  <span className="text-xs font-bold text-violet-600">{remaining}</span>
                                 </div>
                               )}
                             </div>
