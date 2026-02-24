@@ -233,14 +233,6 @@ export default function UserAnalyticsPage() {
           />
         </div>
 
-        {/* Onboarding Responses */}
-        <div className="mb-8">
-          <OnboardingResponseCard
-            data={onboardingResponse || null}
-            isLoading={isLoadingOnboarding}
-          />
-        </div>
-
         {/* Activity Chart */}
         <div className="mb-8">
           <ActivityChart
@@ -440,6 +432,14 @@ export default function UserAnalyticsPage() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Onboarding Responses */}
+        <div className="mt-8">
+          <OnboardingResponseCard
+            data={onboardingResponse || null}
+            isLoading={isLoadingOnboarding}
+          />
         </div>
 
         <GeneratedImageDetailDialog
