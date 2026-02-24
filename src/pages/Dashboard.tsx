@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Copy, ImageIcon, MousePointerClick, Bookmark } from "lucide-react";
+import { Users, Copy, ImageIcon, MousePointerClick, Bookmark, Clock } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useDashboardStats, useTopClickedProducts, useTopCopiedProducts, useTopSavedProducts } from "@/hooks/useDashboardStats";
@@ -18,6 +18,16 @@ export default function Dashboard() {
   const { data: chartData, isLoading: chartLoading } = useDashboardChart(chartPeriod);
   const { data: deviceData, isLoading: deviceLoading } = useDeviceAnalytics();
 
+  const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins < 60) return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`;
+  };
+
   const statCards = [
     {
       title: "Total Users",
@@ -33,6 +43,11 @@ export default function Dashboard() {
       title: "Total Generations",
       value: stats?.totalGenerations || 0,
       icon: ImageIcon,
+    },
+    {
+      title: "Avg. Spend Time",
+      value: formatTime(stats?.avgSpendTimeSeconds || 0),
+      icon: Clock,
     },
   ];
 
@@ -111,7 +126,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {statsLoading
             ? Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="stat-card animate-fade-in">
