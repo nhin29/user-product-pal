@@ -74,7 +74,8 @@ export default function UsersPage() {
     }
     if (purchaseFilter !== "all") {
       result = result.filter((u) => {
-        if (purchaseFilter === "purchased") return u.is_purchase;
+        if (purchaseFilter === "purchased") return u.is_purchase && !u.is_refund;
+        if (purchaseFilter === "refunded") return u.is_refund;
         if (purchaseFilter === "manual") return !u.is_purchase && u.product_ids && u.product_ids.length > 0;
         return !u.is_purchase && (!u.product_ids || u.product_ids.length === 0);
       });
@@ -182,6 +183,7 @@ export default function UsersPage() {
             <SelectContent>
               <SelectItem value="all">All Purchases</SelectItem>
               <SelectItem value="purchased">Purchased</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
               <SelectItem value="manual">Manual</SelectItem>
               <SelectItem value="not_purchased">Not Purchased</SelectItem>
             </SelectContent>
