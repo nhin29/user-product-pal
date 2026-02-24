@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Package, FolderOpen, Layers, MousePointerClick, Copy, Bookmark, ImageIcon } from "lucide-react";
+import { Users, Copy, ImageIcon, MousePointerClick, Bookmark } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useDashboardStats, useTopClickedProducts, useTopCopiedProducts, useTopSavedProducts } from "@/hooks/useDashboardStats";
@@ -25,34 +25,9 @@ export default function Dashboard() {
       icon: Users,
     },
     {
-      title: "Total Products",
-      value: stats?.totalProducts || 0,
-      icon: Package,
-    },
-    {
-      title: "Categories",
-      value: stats?.totalCategories || 0,
-      icon: FolderOpen,
-    },
-    {
-      title: "Niches",
-      value: stats?.totalProductTypes || 0,
-      icon: Layers,
-    },
-    {
-      title: "Total Clicks",
-      value: stats?.totalClicks || 0,
-      icon: MousePointerClick,
-    },
-    {
       title: "Total Copies",
       value: stats?.totalCopies || 0,
       icon: Copy,
-    },
-    {
-      title: "Total Saves",
-      value: stats?.totalSaves || 0,
-      icon: Bookmark,
     },
     {
       title: "Total Generations",
@@ -136,9 +111,9 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {statsLoading
-            ? Array.from({ length: 8 }).map((_, index) => (
+            ? Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="stat-card animate-fade-in">
                   <Skeleton className="h-10 w-10 rounded-lg" />
                   <div className="mt-4 space-y-2">
