@@ -328,6 +328,7 @@ export default function UsersPage() {
                       <div className="flex items-center">Email <SortIcon field="email" /></div>
                     </th>
                     <th className="px-6 py-3 text-left">Access</th>
+                    <th className="px-6 py-3 text-left">Platform</th>
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("created_at")}>
                       <div className="flex items-center">Joined <SortIcon field="created_at" /></div>
                     </th>
@@ -399,6 +400,25 @@ export default function UsersPage() {
                                   <span className="text-sm">✨</span>
                                 </div>
                               )}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-6 py-4">
+                        {(() => {
+                          const amazonIds = ["prod_TreWrcz8uVHqIT", "prod_TreWtW6ekESits", "prod_TreV0wplqggLBW", "prod_TmW6D8HwME3dsX"];
+                          const shopifyIds = ["prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j"];
+                          const metaIds = ["prod_U1stXv6wWzqBVe", "prod_U1sv6wPAwnrTLZ"];
+                          const ids = user.product_ids || [];
+                          const hasAmazon = ids.some((id: string) => amazonIds.includes(id));
+                          const hasShopify = ids.some((id: string) => shopifyIds.includes(id));
+                          const hasMeta = ids.some((id: string) => metaIds.includes(id));
+                          if (!hasAmazon && !hasShopify && !hasMeta) return <span className="text-muted-foreground">—</span>;
+                          return (
+                            <div className="flex flex-wrap gap-1">
+                              {hasAmazon && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-orange-400 text-orange-600 bg-orange-500/10">Amazon</Badge>}
+                              {hasShopify && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600 bg-green-500/10">Shopify</Badge>}
+                              {hasMeta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500 text-blue-600 bg-blue-500/10">Meta</Badge>}
                             </div>
                           );
                         })()}
