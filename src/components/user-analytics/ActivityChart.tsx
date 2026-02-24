@@ -156,8 +156,7 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange, showNew
                 content={<ChartTooltipContent />}
                 cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
               />
-              {metrics.map((metric) =>
-                visibleLines[metric.key] ? (
+              {metrics.filter(metric => visibleLines[metric.key]).map((metric) => (
                   <Line
                     key={metric.key}
                     type="monotone"
@@ -168,8 +167,7 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange, showNew
                     dot={{ r: 3, fill: metric.color }}
                     activeDot={{ r: 5, fill: metric.color }}
                   />
-                ) : null
-              )}
+              ))}
             </LineChart>
           </ChartContainer>
         )}
