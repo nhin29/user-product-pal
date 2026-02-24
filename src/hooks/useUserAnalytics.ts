@@ -7,7 +7,7 @@ interface UserAnalytics {
   totalCopies: number;
   totalSaves: number;
   totalPageViews: number;
-  totalEvents: number;
+  totalSpendTimeSeconds: number;
   totalGenerations: number;
 }
 
@@ -70,7 +70,7 @@ export function useUserAnalytics(userId: string) {
         totalCopies: Number(row?.total_copies) || 0,
         totalSaves: Number(row?.total_saves) || 0,
         totalPageViews: Number(row?.total_page_views) || 0,
-        totalEvents: Number(row?.total_events) || 0,
+        totalSpendTimeSeconds: Number(row?.total_spend_time_seconds) || 0,
         totalGenerations: Number(row?.total_generations) || 0,
       };
     },
