@@ -245,7 +245,6 @@ export type Database = {
           field_values: Json | null
           id: string
           image_url: string
-          origin_image: string | null
           product_id: string
           prompt_snapshot: string | null
           user_id: string
@@ -257,7 +256,6 @@ export type Database = {
           field_values?: Json | null
           id?: string
           image_url: string
-          origin_image?: string | null
           product_id: string
           prompt_snapshot?: string | null
           user_id: string
@@ -269,7 +267,6 @@ export type Database = {
           field_values?: Json | null
           id?: string
           image_url?: string
-          origin_image?: string | null
           product_id?: string
           prompt_snapshot?: string | null
           user_id?: string
