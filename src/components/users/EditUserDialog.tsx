@@ -61,6 +61,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [isNew, setIsNew] = useState<boolean>(true);
   const [creditLimit, setCreditLimit] = useState<number>(4);
   const [originalCreditLimit, setOriginalCreditLimit] = useState<number>(4);
+  const [usedCount, setUsedCount] = useState<number>(0);
   const [isLoadingCredits, setIsLoadingCredits] = useState(false);
 
   useEffect(() => {
@@ -78,13 +79,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       import("@/integrations/supabase/client").then(({ supabase }) => {
         supabase
           .from("user_credits")
-          .select("credit_limit")
+          .select("credit_limit, used_count")
           .eq("user_id", user.user_id)
           .maybeSingle()
           .then(({ data }) => {
             const limit = data?.credit_limit ?? 4;
             setCreditLimit(limit);
             setOriginalCreditLimit(limit);
+            setUsedCount(data?.used_count ?? 0);
             setIsLoadingCredits(false);
           });
       });
@@ -205,15 +207,24 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
             </div>
             <div className="grid gap-2">
               <Label htmlFor="creditLimit">Credit Limit</Label>
-              <Input
-                id="creditLimit"
-                type="number"
-                min={0}
-                value={creditLimit}
-                onChange={(e) => setCreditLimit(Number(e.target.value))}
-                placeholder="Credit limit"
-                disabled={isLoadingCredits}
-              />
+              <div className="flex items-center gap-3">
+                <Input
+                  id="creditLimit"
+                  type="number"
+                  min={0}
+                  value={creditLimit}
+                  onChange={(e) => setCreditLimit(Number(e.target.value))}
+                  placeholder="Credit limit"
+                  disabled={isLoadingCredits}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  Used: {usedCount} / {creditLimit}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Remaining: {Math.max(0, creditLimit - usedCount)} credits
+              </p>
             </div>
             <div className="grid gap-2">
               <Label>Amazon Product Access</Label>
