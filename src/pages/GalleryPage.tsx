@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useGallery } from "@/hooks/useGallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,11 +122,11 @@ export default function GalleryPage() {
                       onClick={() => setSelected(img)}
                     >
                       <div className="aspect-square">
-                        <img
+                        <OptimizedImage
                           src={img.image_url}
                           alt="Generated"
-                          loading="lazy"
-                          decoding="async"
+                          width={300}
+                          height={300}
                           className="h-full w-full object-cover"
                         />
                       </div>
