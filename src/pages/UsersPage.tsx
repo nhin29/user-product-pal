@@ -255,19 +255,19 @@ export default function UsersPage() {
                               alt={user.display_name || "User"}
                               loading="lazy"
                               decoding="async"
-                              className={`h-10 w-10 rounded-full object-cover border-2 ${
+                              className={`h-10 w-10 rounded-full object-cover ring-[3px] ring-offset-2 ring-offset-background ${
                                 user.role === "admin"
-                                  ? "border-yellow-500"
-                                  : "border-green-500"
+                                  ? "ring-yellow-500"
+                                  : "ring-emerald-500"
                               }`}
                             />
                           ) : (
-                            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-[3px] ${
                               user.role === "admin"
-                                ? "bg-yellow-500/15 border-yellow-500 text-yellow-600"
-                                : "bg-green-500/15 border-green-500 text-green-600"
+                                ? "bg-yellow-500/25 border-yellow-500 text-yellow-700 dark:text-yellow-400"
+                                : "bg-emerald-500/25 border-emerald-500 text-emerald-700 dark:text-emerald-400"
                             }`}>
-                              <span className="text-sm font-medium">
+                              <span className="text-sm font-bold">
                                 {getInitials(user.display_name)}
                               </span>
                             </div>
