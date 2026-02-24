@@ -37,7 +37,7 @@ const getInitials = (name: string | null) => {
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-type SortField = "display_name" | "email" | "created_at" | "role";
+type SortField = "display_name" | "email" | "created_at" | "role" | "last_active";
 type SortDirection = "asc" | "desc";
 
 export default function UsersPage() {
@@ -165,12 +165,15 @@ export default function UsersPage() {
         case "role":
           cmp = (a.role || "viewer").localeCompare(b.role || "viewer");
           break;
+        case "last_active":
+          cmp = new Date(lastActive[a.user_id] || "1970-01-01").getTime() - new Date(lastActive[b.user_id] || "1970-01-01").getTime();
+          break;
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
 
     return result;
-  }, [users, searchQuery, roleFilter, purchaseFilter, statusFilter, powerUserFilter, powerUsers, sortField, sortDirection]);
+  }, [users, searchQuery, roleFilter, purchaseFilter, statusFilter, powerUserFilter, powerUsers, sortField, sortDirection, lastActive]);
 
   // Reset page when filters change
   const totalPages = Math.max(1, Math.ceil(processedUsers.length / pageSize));
@@ -317,7 +320,9 @@ export default function UsersPage() {
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("created_at")}>
                       <div className="flex items-center">Joined <SortIcon field="created_at" /></div>
                     </th>
-                    <th className="px-6 py-3 text-left">Last Active</th>
+                    <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("last_active")}>
+                      <div className="flex items-center">Last Active <SortIcon field="last_active" /></div>
+                    </th>
                     <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
