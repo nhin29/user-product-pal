@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MousePointer, Copy, Eye, Activity, Bookmark, Trash2, Star, ImageIcon, Sparkles } from "lucide-react";
+import { ArrowLeft, MousePointer, Copy, Eye, Clock, Bookmark, Trash2, Star, ImageIcon, Sparkles } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,7 @@ const StatCard = ({
   isLoading,
 }: {
   title: string;
-  value: number;
+  value: string | number;
   icon: React.ElementType;
   description?: string;
   isLoading?: boolean;
@@ -37,7 +37,7 @@ const StatCard = ({
       {isLoading ? (
         <Skeleton className="h-8 w-20" />
       ) : (
-        <div className="text-2xl font-bold">{value.toLocaleString()}</div>
+        <div className="text-2xl font-bold">{typeof value === 'number' ? value.toLocaleString() : value}</div>
       )}
       {description && (
         <p className="text-xs text-muted-foreground mt-1">{description}</p>
@@ -58,7 +58,7 @@ const getEventIcon = (eventType: string) => {
     case "copy":
       return <Copy className="h-4 w-4 text-purple-500" />;
     default:
-      return <Activity className="h-4 w-4 text-muted-foreground" />;
+      return <Clock className="h-4 w-4 text-muted-foreground" />;
   }
 };
 
@@ -73,6 +73,16 @@ const getEventDescription = (event: { event_type: string; event_name: string; pa
     return "Copied a prompt";
   }
   return event.event_name || event.event_type;
+};
+
+const formatTime = (seconds: number) => {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins < 60) return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`;
 };
 
 export default function UserAnalyticsPage() {
@@ -208,10 +218,10 @@ export default function UserAnalyticsPage() {
             isLoading={isLoadingStats}
           />
           <StatCard
-            title="Total Events"
-            value={stats?.totalEvents || 0}
-            icon={Activity}
-            description="All tracked events"
+            title="Total Spend Time"
+            value={formatTime(stats?.totalSpendTimeSeconds || 0)}
+            icon={Clock}
+            description="Time spent on platform"
             isLoading={isLoadingStats}
           />
           <StatCard
@@ -329,7 +339,7 @@ export default function UserAnalyticsPage() {
                 </div>
               ) : recentActivity.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                  <Clock className="mx-auto h-8 w-8 mb-2 opacity-50" />
                   <p>No activity recorded</p>
                 </div>
               ) : (

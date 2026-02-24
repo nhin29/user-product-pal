@@ -813,10 +813,10 @@ export type Database = {
         Returns: {
           total_clicks: number
           total_copies: number
-          total_events: number
           total_generations: number
           total_page_views: number
           total_saves: number
+          total_spend_time_seconds: number
         }[]
       }
       get_user_chart_data: {
