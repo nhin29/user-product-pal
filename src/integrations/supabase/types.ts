@@ -245,6 +245,7 @@ export type Database = {
           field_values: Json | null
           id: string
           image_url: string
+          origin_image: string | null
           product_id: string
           prompt_snapshot: string | null
           user_id: string
@@ -256,6 +257,7 @@ export type Database = {
           field_values?: Json | null
           id?: string
           image_url: string
+          origin_image?: string | null
           product_id: string
           prompt_snapshot?: string | null
           user_id: string
@@ -267,6 +269,7 @@ export type Database = {
           field_values?: Json | null
           id?: string
           image_url?: string
+          origin_image?: string | null
           product_id?: string
           prompt_snapshot?: string | null
           user_id?: string
@@ -753,18 +756,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_dashboard_chart_data: {
-        Args: { p_end_date: string; p_start_date: string }
-        Returns: {
-          copies: number
-          day: string
-          generations: number
-          new_customers: number
-          page_views: number
-          repeat_customers: number
-          saves: number
-        }[]
-      }
+      get_dashboard_chart_data:
+        | {
+            Args: { p_end_date: string; p_start_date: string }
+            Returns: {
+              copies: number
+              day: string
+              generations: number
+              new_customers: number
+              page_views: number
+              repeat_customers: number
+              saves: number
+            }[]
+          }
+        | {
+            Args: { p_end_date: string; p_start_date: string }
+            Returns: {
+              copies: number
+              day: string
+              generations: number
+              new_customers: number
+              page_views: number
+              repeat_customers: number
+              saves: number
+            }[]
+          }
       get_dashboard_stats: {
         Args: never
         Returns: {
