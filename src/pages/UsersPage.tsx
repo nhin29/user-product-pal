@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, MessageSquareText, Sparkles } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -313,12 +313,12 @@ export default function UsersPage() {
                           const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
                           return (
                             <div className="flex items-center gap-1.5">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15" title="Prompt Access">
-                                <MessageSquareText className="h-4 w-4 text-emerald-600" />
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20" title="Prompt Access">
+                                <span className="text-base">💬</span>
                               </div>
                               {remaining > 0 && (
-                                <div className="flex h-8 items-center gap-1 rounded-lg bg-violet-500/15 px-2" title={`${remaining} generations remaining`}>
-                                  <Sparkles className="h-4 w-4 text-violet-600" />
+                                <div className="flex h-8 items-center gap-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 px-2" title={`${remaining} generations remaining`}>
+                                  <span className="text-sm">✨</span>
                                   <span className="text-xs font-bold text-violet-600">{remaining}</span>
                                 </div>
                               )}
