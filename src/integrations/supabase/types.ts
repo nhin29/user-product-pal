@@ -171,6 +171,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_time_tracking: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          total_seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          total_seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          total_seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_sessions: {
         Row: {
           browser: string | null
