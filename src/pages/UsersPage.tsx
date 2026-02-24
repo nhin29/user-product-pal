@@ -50,9 +50,12 @@ export default function UsersPage() {
 
   // Credits data
   const [userCredits, setUserCredits] = useState<Record<string, { credit_limit: number; used_count: number }>>({});
+  const [powerUsers, setPowerUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (users.length === 0) return;
+
+    // Fetch credits
     supabase
       .from("user_credits")
       .select("user_id, credit_limit, used_count")
@@ -63,6 +66,30 @@ export default function UsersPage() {
           setUserCredits(map);
         }
       });
+
+    // Fetch copy counts + generation counts to determine power users (10+)
+    Promise.all([
+      supabase
+        .from("prompt_interactions")
+        .select("user_id")
+        .eq("interaction_type", "copy"),
+      supabase
+        .from("generated_images")
+        .select("user_id"),
+    ]).then(([copiesRes, gensRes]) => {
+      const counts: Record<string, number> = {};
+      copiesRes.data?.forEach((r) => {
+        if (r.user_id) counts[r.user_id] = (counts[r.user_id] || 0) + 1;
+      });
+      gensRes.data?.forEach((r) => {
+        if (r.user_id) counts[r.user_id] = (counts[r.user_id] || 0) + 1;
+      });
+      const set = new Set<string>();
+      Object.entries(counts).forEach(([uid, count]) => {
+        if (count > 10) set.add(uid);
+      });
+      setPowerUsers(set);
+    });
   }, [users]);
 
   // Filters
@@ -293,9 +320,14 @@ export default function UsersPage() {
                             </div>
                           )}
                           <div>
-                            <p className="font-medium text-foreground">
-                              {user.display_name || "Unnamed User"}
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="font-medium text-foreground">
+                                {user.display_name || "Unnamed User"}
+                              </p>
+                              {powerUsers.has(user.user_id) && (
+                                <span className="text-amber-500" title="Power user: 10+ copies & generations">⭐</span>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">
                               ID: {user.user_id.slice(0, 8)}...
                             </p>
