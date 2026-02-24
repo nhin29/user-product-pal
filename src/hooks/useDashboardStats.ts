@@ -10,6 +10,7 @@ interface DashboardStats {
   totalCopies: number;
   totalSaves: number;
   totalGenerations: number;
+  avgSpendTimeSeconds: number;
 }
 
 interface TopProduct {
@@ -34,6 +35,7 @@ export function useDashboardStats() {
         totalCopies: Number(row?.total_copies) || 0,
         totalSaves: Number(row?.total_saves) || 0,
         totalGenerations: Number(row?.total_generations) || 0,
+        avgSpendTimeSeconds: Number(row?.avg_spend_time_seconds) || 0,
       };
     },
   });

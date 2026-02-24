@@ -768,6 +768,7 @@ export type Database = {
       get_dashboard_stats: {
         Args: never
         Returns: {
+          avg_spend_time_seconds: number
           total_categories: number
           total_clicks: number
           total_copies: number
