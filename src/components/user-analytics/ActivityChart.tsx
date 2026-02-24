@@ -23,6 +23,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 interface ChartDataPoint {
   date: string;
   newCustomers?: number;
+  repeatCustomers?: number;
   copies: number;
   saves: number;
   pageViews: number;
@@ -44,18 +45,19 @@ const periods = [
   { value: "90d", label: "Last 90 days" },
 ];
 
-type MetricKey = "newCustomers" | "copies" | "saves" | "pageViews" | "generations";
+type MetricKey = "newCustomers" | "repeatCustomers" | "copies" | "saves" | "pageViews" | "generations";
 
 export function ActivityChart({ data, isLoading, period, onPeriodChange, showNewCustomers = true }: ActivityChartProps) {
   const allMetrics: { key: MetricKey; label: string; color: string }[] = [
     { key: "newCustomers", label: "New Customers", color: "hsl(var(--chart-1))" },
+    { key: "repeatCustomers", label: "Repeat Customers", color: "hsl(142, 76%, 36%)" },
     { key: "copies", label: "Copies", color: "hsl(var(--chart-2))" },
     { key: "saves", label: "Saves", color: "hsl(var(--chart-5))" },
     { key: "pageViews", label: "Page Views", color: "hsl(var(--chart-3))" },
     { key: "generations", label: "Generations", color: "hsl(var(--chart-4))" },
   ];
 
-  const metrics = showNewCustomers ? allMetrics : allMetrics.filter(m => m.key !== "newCustomers");
+  const metrics = showNewCustomers ? allMetrics : allMetrics.filter(m => m.key !== "newCustomers" && m.key !== "repeatCustomers");
 
   const chartConfig = Object.fromEntries(
     metrics.map(m => [m.key, { label: m.label, color: m.color }])
@@ -63,6 +65,7 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange, showNew
 
   const [visibleLines, setVisibleLines] = useState<Record<MetricKey, boolean>>({
     newCustomers: true,
+    repeatCustomers: true,
     copies: true,
     saves: true,
     pageViews: true,
