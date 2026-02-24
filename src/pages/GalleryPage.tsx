@@ -227,8 +227,9 @@ export default function GalleryPage() {
               )}
 
               {(() => {
+                const fv = selected.field_values as Record<string, unknown> | null;
                 const originSrc = selected.origin_image || 
-                  (selected.field_values as Record<string, unknown>)?.["var:product_source_image_path"] as string | undefined;
+                  (fv ? Object.values(fv).find((v) => typeof v === "string" && v.startsWith("https://")) as string | undefined : undefined);
                 return originSrc ? (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-1">Origin Image</p>
