@@ -801,6 +801,7 @@ export type Database = {
       get_top_products_by_interaction: {
         Args: { p_interaction_type: string; p_limit?: number }
         Returns: {
+          category_name: string
           image_url: string
           interaction_count: number
           product_id: string
