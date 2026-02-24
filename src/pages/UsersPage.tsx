@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, FileText, ImageIcon } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, MessageSquareText, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -312,15 +312,14 @@ export default function UsersPage() {
                           const credit = userCredits[user.user_id];
                           const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
                           return (
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-emerald-600" title="Prompt Access">
-                                <FileText className="h-3.5 w-3.5" />
-                                <span className="text-xs font-medium">Prompt</span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/15" title="Prompt Access">
+                                <MessageSquareText className="h-4 w-4 text-emerald-600" />
                               </div>
                               {remaining > 0 && (
-                                <div className="flex items-center gap-1 rounded-full bg-violet-500/15 px-2.5 py-1 text-violet-600" title={`${remaining} generations remaining`}>
-                                  <ImageIcon className="h-3.5 w-3.5" />
-                                  <span className="text-xs font-medium">{remaining}</span>
+                                <div className="flex h-8 items-center gap-1 rounded-lg bg-violet-500/15 px-2" title={`${remaining} generations remaining`}>
+                                  <Sparkles className="h-4 w-4 text-violet-600" />
+                                  <span className="text-xs font-bold text-violet-600">{remaining}</span>
                                 </div>
                               )}
                             </div>
