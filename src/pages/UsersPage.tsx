@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash2, Loader2, BarChart3, Check, X, Hand, Shield, User, Plus, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, FileText, ImageIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,23 @@ export default function UsersPage() {
   const [deleteUserData, setDeleteUserData] = useState<UserProfile | null>(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const { users, isLoading, error, deleteUser, updateUserProfile, createUser } = useUsers();
+
+  // Credits data
+  const [userCredits, setUserCredits] = useState<Record<string, { credit_limit: number; used_count: number }>>({});
+
+  useEffect(() => {
+    if (users.length === 0) return;
+    supabase
+      .from("user_credits")
+      .select("user_id, credit_limit, used_count")
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, { credit_limit: number; used_count: number }> = {};
+          data.forEach((c) => { map[c.user_id] = { credit_limit: c.credit_limit, used_count: c.used_count }; });
+          setUserCredits(map);
+        }
+      });
+  }, [users]);
 
   // Filters
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -239,7 +257,7 @@ export default function UsersPage() {
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("email")}>
                       <div className="flex items-center">Email <SortIcon field="email" /></div>
                     </th>
-                    <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Access</th>
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("created_at")}>
                       <div className="flex items-center">Joined <SortIcon field="created_at" /></div>
                     </th>
@@ -290,15 +308,24 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {user.is_new ? (
-                          <Badge variant="default" className="bg-blue-500/20 text-blue-600 border-blue-500/30">
-                            New
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                            Old
-                          </Badge>
-                        )}
+                        {(() => {
+                          const credit = userCredits[user.user_id];
+                          const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-emerald-600" title="Prompt Access">
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="text-xs font-medium">Prompt</span>
+                              </div>
+                              {remaining > 0 && (
+                                <div className="flex items-center gap-1 rounded-full bg-violet-500/15 px-2.5 py-1 text-violet-600" title={`${remaining} generations remaining`}>
+                                  <ImageIcon className="h-3.5 w-3.5" />
+                                  <span className="text-xs font-medium">{remaining}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-muted-foreground">
