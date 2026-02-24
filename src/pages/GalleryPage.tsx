@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OptimizedImage } from "@/components/ui/optimized-image";
+
 import { Images, Star, Search, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -121,11 +121,11 @@ export default function GalleryPage() {
                       onClick={() => setSelected(img)}
                     >
                       <div className="aspect-square">
-                        <OptimizedImage
+                        <img
                           src={img.image_url}
                           alt="Generated"
-                          width={300}
-                          height={300}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -172,13 +172,12 @@ export default function GalleryPage() {
           </DialogHeader>
           {selected && (
             <div className="space-y-4">
-              <div className="rounded-xl overflow-hidden border border-border">
-                <OptimizedImage
+              <div className="rounded-xl overflow-hidden border border-border flex items-center justify-center bg-muted">
+                <img
                   src={selected.image_url}
                   alt="Generated"
-                  width={800}
-                  height={800}
-                  className="w-full object-contain max-h-[400px]"
+                  loading="eager"
+                  className="w-full h-auto object-contain max-h-[500px]"
                 />
               </div>
 
@@ -230,11 +229,10 @@ export default function GalleryPage() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">Origin Product</p>
                   <div className="flex items-start gap-3">
-                    <OptimizedImage
+                    <img
                       src={selected.product_image}
                       alt="Product"
-                      width={96}
-                      height={96}
+                      loading="lazy"
                       className="h-16 w-16 rounded-lg object-cover shrink-0"
                     />
                     {selected.product_prompt && (
