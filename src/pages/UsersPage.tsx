@@ -391,14 +391,10 @@ export default function UsersPage() {
                           const credit = userCredits[user.user_id];
                           const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
                           return (
-                            <div className="flex items-center gap-1.5">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/20" title="Prompt Access">
-                                <span className="text-base">💬</span>
-                              </div>
+                            <div className="flex flex-wrap gap-1">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500 text-emerald-600 bg-emerald-500/10 whitespace-nowrap">Prompt</Badge>
                               {remaining > 0 && (
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-transparent border border-indigo-400" title={`${remaining} generations remaining`}>
-                                  <span className="text-sm">✨</span>
-                                </div>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-indigo-400 text-indigo-600 bg-indigo-500/10 whitespace-nowrap">Software</Badge>
                               )}
                             </div>
                           );
