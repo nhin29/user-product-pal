@@ -226,19 +226,23 @@ export default function GalleryPage() {
                 </div>
               )}
 
-              {selected.origin_image && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Origin Image</p>
-                  <div className="rounded-lg overflow-hidden border border-border bg-muted inline-block">
-                    <img
-                      src={selected.origin_image}
-                      alt="Origin"
-                      loading="lazy"
-                      className="max-h-[200px] w-auto object-contain"
-                    />
+              {(() => {
+                const originSrc = selected.origin_image || 
+                  (selected.field_values as Record<string, unknown>)?.["var:product_source_image_path"] as string | undefined;
+                return originSrc ? (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Origin Image</p>
+                    <div className="rounded-lg overflow-hidden border border-border bg-muted inline-block">
+                      <img
+                        src={originSrc}
+                        alt="Origin"
+                        loading="lazy"
+                        className="max-h-[200px] w-auto object-contain"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : null;
+              })()}
 
               {selected.product_image && (
                 <div>
