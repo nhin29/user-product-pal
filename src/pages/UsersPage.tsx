@@ -255,11 +255,19 @@ export default function UsersPage() {
                               alt={user.display_name || "User"}
                               loading="lazy"
                               decoding="async"
-                              className="h-10 w-10 rounded-full object-cover"
+                              className={`h-10 w-10 rounded-full object-cover border-2 ${
+                                user.role === "admin"
+                                  ? "border-yellow-500"
+                                  : "border-green-500"
+                              }`}
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                              <span className="text-sm font-medium text-primary">
+                            <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                              user.role === "admin"
+                                ? "bg-yellow-500/15 border-yellow-500 text-yellow-600"
+                                : "bg-green-500/15 border-green-500 text-green-600"
+                            }`}>
+                              <span className="text-sm font-medium">
                                 {getInitials(user.display_name)}
                               </span>
                             </div>
