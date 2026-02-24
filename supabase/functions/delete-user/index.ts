@@ -79,16 +79,58 @@ Deno.serve(async (req) => {
       return json(400, { error: "userId is required" });
     }
 
-    // Delete profile first (ignore missing)
-    const { error: profileError } = await supabaseAdmin
+    // Get user email for stripe_subscribers cleanup
+    const { data: profileData } = await supabaseAdmin
       .from("profiles")
-      .delete()
+      .select("user_id")
+      .eq("user_id", userId)
+      .single();
+
+    const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const userEmail = userData?.user?.email;
+
+    // Delete all related data from every table
+    // First delete chats via conversations
+    const { data: conversations } = await supabaseAdmin
+      .from("conversations")
+      .select("id")
       .eq("user_id", userId);
 
-    if (profileError) {
-      console.error("Error deleting profile:", profileError);
+    if (conversations && conversations.length > 0) {
+      const convIds = conversations.map((c) => c.id);
+      await supabaseAdmin.from("chats").delete().in("conversation_id", convIds);
+      await supabaseAdmin.from("conversations").delete().eq("user_id", userId);
     }
 
+    // Delete reviews first (references generated_images)
+    await supabaseAdmin.from("reviews").delete().eq("user_id", userId);
+
+    // Delete all user data from each table
+    await Promise.all([
+      supabaseAdmin.from("analytics_events").delete().eq("user_id", userId),
+      supabaseAdmin.from("bookmarks").delete().eq("user_id", userId),
+      supabaseAdmin.from("daily_time_tracking").delete().eq("user_id", userId),
+      supabaseAdmin.from("device_sessions").delete().eq("user_id", userId),
+      supabaseAdmin.from("generated_images").delete().eq("user_id", userId),
+      supabaseAdmin.from("onboarding_responses").delete().eq("user_id", userId),
+      supabaseAdmin.from("prompt_interactions").delete().eq("user_id", userId),
+      supabaseAdmin.from("prompt_requests").delete().eq("user_id", userId),
+      supabaseAdmin.from("support_chats").delete().eq("user_id", userId),
+      supabaseAdmin.from("user_credits").delete().eq("user_id", userId),
+      supabaseAdmin.from("user_product_seen").delete().eq("user_id", userId),
+      supabaseAdmin.from("user_roles").delete().eq("user_id", userId),
+      supabaseAdmin.from("project_reviews").delete().eq("user_id", userId),
+    ]);
+
+    // Delete stripe subscriber by email
+    if (userEmail) {
+      await supabaseAdmin.from("stripe_subscribers").delete().eq("email", userEmail);
+    }
+
+    // Delete profile
+    await supabaseAdmin.from("profiles").delete().eq("user_id", userId);
+
+    // Finally delete the auth user
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteError) {
       console.error("Error deleting auth user:", deleteError);
