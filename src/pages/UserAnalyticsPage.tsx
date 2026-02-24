@@ -294,6 +294,14 @@ export default function UserAnalyticsPage() {
                         className="h-12 w-12 rounded-lg"
                       />
                       <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {product.category_name && (
+                            <span className="text-sm font-medium text-foreground">{product.category_name}</span>
+                          )}
+                          {product.platform && (
+                            <span className="text-xs capitalize text-muted-foreground">· {product.platform}</span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <MousePointer className="h-3 w-3" />

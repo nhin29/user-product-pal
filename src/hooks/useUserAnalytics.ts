@@ -17,6 +17,8 @@ interface ProductInteraction {
   clicks: number;
   copies: number;
   saves: number;
+  category_name: string;
+  platform: string;
 }
 
 
@@ -109,18 +111,20 @@ export function useUserAnalytics(userId: string) {
       // Get product details
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, image_urls")
+        .select("id, image_urls, platform, categories(name)")
         .in("id", productIds);
 
       if (productsError) throw productsError;
 
       return (products || [])
-        .map((p) => ({
+        .map((p: any) => ({
           id: p.id,
           image_url: p.image_urls?.[0] || "",
           clicks: productCounts[p.id]?.clicks || 0,
           copies: productCounts[p.id]?.copies || 0,
           saves: productCounts[p.id]?.saves || 0,
+          category_name: p.categories?.name || "",
+          platform: p.platform || "",
         }))
         .sort((a, b) => b.clicks + b.copies + b.saves - (a.clicks + a.copies + a.saves));
     },
