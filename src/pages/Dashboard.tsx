@@ -56,7 +56,7 @@ export default function Dashboard() {
     isLoading, 
     emptyMessage 
   }: { 
-    products?: { id: string; image_url: string; count: number; category_name: string }[];
+    products?: { id: string; image_url: string; count: number; category_name: string; platform: string }[];
     isLoading: boolean;
     emptyMessage: string;
   }) => {
@@ -104,7 +104,10 @@ export default function Dashboard() {
             />
             <div className="flex-1 min-w-0">
               {product.category_name && (
-                <span className="text-sm text-muted-foreground">{product.category_name}</span>
+                <p className="text-sm text-muted-foreground">{product.category_name}</p>
+              )}
+              {product.platform && (
+                <p className="text-xs capitalize text-muted-foreground/70">{product.platform}</p>
               )}
             </div>
             <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1">
