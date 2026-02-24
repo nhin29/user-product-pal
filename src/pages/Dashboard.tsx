@@ -56,7 +56,7 @@ export default function Dashboard() {
     isLoading, 
     emptyMessage 
   }: { 
-    products?: { id: string; image_url: string; count: number }[];
+    products?: { id: string; image_url: string; count: number; category_name: string }[];
     isLoading: boolean;
     emptyMessage: string;
   }) => {
@@ -102,7 +102,11 @@ export default function Dashboard() {
               decoding="async"
               className="h-12 w-12 rounded-lg object-cover"
             />
-            <div className="flex-1 min-w-0" />
+            <div className="flex-1 min-w-0">
+              {product.category_name && (
+                <span className="text-sm text-muted-foreground">{product.category_name}</span>
+              )}
+            </div>
             <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1">
               <span className="text-sm font-semibold text-primary">
                 {product.count}
