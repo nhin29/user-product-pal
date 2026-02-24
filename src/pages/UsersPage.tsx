@@ -96,6 +96,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [purchaseFilter, setPurchaseFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [powerUserFilter, setPowerUserFilter] = useState(false);
 
   // Sort
   const [sortField, setSortField] = useState<SortField>("created_at");
@@ -128,6 +129,9 @@ export default function UsersPage() {
     if (statusFilter !== "all") {
       result = result.filter((u) => (statusFilter === "new" ? u.is_new : !u.is_new));
     }
+    if (powerUserFilter) {
+      result = result.filter((u) => powerUsers.has(u.user_id));
+    }
 
     // Apply sort
     result.sort((a, b) => {
@@ -150,7 +154,7 @@ export default function UsersPage() {
     });
 
     return result;
-  }, [users, searchQuery, roleFilter, purchaseFilter, statusFilter, sortField, sortDirection]);
+  }, [users, searchQuery, roleFilter, purchaseFilter, statusFilter, powerUserFilter, powerUsers, sortField, sortDirection]);
 
   // Reset page when filters change
   const totalPages = Math.max(1, Math.ceil(processedUsers.length / pageSize));
@@ -243,6 +247,15 @@ export default function UsersPage() {
               <SelectItem value="old">Old</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant={powerUserFilter ? "default" : "outline"}
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={() => { setPowerUserFilter((v) => !v); setCurrentPage(1); }}
+            title="Filter power users (10+ copies & generations)"
+          >
+            ⭐ Power
+          </Button>
         </div>
 
         {/* Loading State */}
