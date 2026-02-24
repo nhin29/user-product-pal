@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, MousePointer, Copy, Eye, Clock, Bookmark, Trash2, Star, ImageIcon, Sparkles } from "lucide-react";
+import { ArrowLeft, MousePointer, Copy, Eye, Clock, Bookmark, Trash2, Star, ImageIcon, Sparkles, MessageSquare } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserAnalytics } from "@/hooks/useUserAnalytics";
 import { useUserAnalyticsChart } from "@/hooks/useUserAnalyticsChart";
@@ -13,6 +14,7 @@ import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
 import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
 import { GeneratedImageDetailDialog } from "@/components/user-analytics/GeneratedImageDetailDialog";
+import { UserFeedbackCard } from "@/components/user-analytics/UserFeedbackCard";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import type { GeneratedImageWithRating } from "@/hooks/useUserAnalytics";
 const StatCard = ({
@@ -434,12 +436,23 @@ export default function UserAnalyticsPage() {
           </Card>
         </div>
 
-        {/* Onboarding Responses */}
+        {/* Onboarding & Feedback Tabs */}
         <div className="mt-8">
-          <OnboardingResponseCard
-            data={onboardingResponse || null}
-            isLoading={isLoadingOnboarding}
-          />
+          <Tabs defaultValue="onboarding">
+            <TabsList>
+              <TabsTrigger value="onboarding">Onboarding Responses</TabsTrigger>
+              <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            </TabsList>
+            <TabsContent value="onboarding">
+              <OnboardingResponseCard
+                data={onboardingResponse || null}
+                isLoading={isLoadingOnboarding}
+              />
+            </TabsContent>
+            <TabsContent value="feedback">
+              <UserFeedbackCard userId={userId || ""} />
+            </TabsContent>
+          </Tabs>
         </div>
 
         <GeneratedImageDetailDialog
