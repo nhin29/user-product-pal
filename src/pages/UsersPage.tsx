@@ -415,7 +415,7 @@ export default function UsersPage() {
                           const hasMeta = ids.some((id: string) => metaIds.includes(id));
                           if (!hasAmazon && !hasShopify && !hasMeta) return <span className="text-muted-foreground">—</span>;
                           return (
-                            <div className="flex flex-wrap gap-1">
+                          <div className="grid grid-cols-2 gap-1">
                               {hasAmazon && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-orange-400 text-orange-600 bg-orange-500/10">Amazon</Badge>}
                               {hasShopify && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600 bg-green-500/10">Shopify</Badge>}
                               {hasMeta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500 text-blue-600 bg-blue-500/10">Meta</Badge>}
