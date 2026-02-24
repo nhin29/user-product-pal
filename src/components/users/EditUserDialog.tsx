@@ -47,7 +47,7 @@ interface EditUserDialogProps {
   user: (UserProfile & { is_new?: boolean }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, isNew?: boolean) => Promise<void>;
+  onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, isNew?: boolean, creditLimit?: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -59,6 +59,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [isAnalytics, setIsAnalytics] = useState<boolean>(true);
   const [isRefund, setIsRefund] = useState<boolean>(false);
   const [isNew, setIsNew] = useState<boolean>(true);
+  const [creditLimit, setCreditLimit] = useState<number>(4);
+  const [originalCreditLimit, setOriginalCreditLimit] = useState<number>(4);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -69,6 +72,22 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       setIsAnalytics(user.is_analytics ?? true);
       setIsRefund(user.is_refund ?? false);
       setIsNew(user.is_new ?? true);
+      
+      // Fetch credit limit for this user
+      setIsLoadingCredits(true);
+      import("@/integrations/supabase/client").then(({ supabase }) => {
+        supabase
+          .from("user_credits")
+          .select("credit_limit")
+          .eq("user_id", user.user_id)
+          .maybeSingle()
+          .then(({ data }) => {
+            const limit = data?.credit_limit ?? 4;
+            setCreditLimit(limit);
+            setOriginalCreditLimit(limit);
+            setIsLoadingCredits(false);
+          });
+      });
     }
   }, [user]);
 
@@ -90,6 +109,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     const analyticsChanged = isAnalytics !== (user.is_analytics ?? true);
     const refundChanged = isRefund !== (user.is_refund ?? false);
     const newChanged = isNew !== (user.is_new ?? true);
+    const creditLimitChanged = creditLimit !== originalCreditLimit;
     
     await onSave(
       user.user_id, 
@@ -99,7 +119,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       roleChanged ? selectedRole : undefined,
       analyticsChanged ? isAnalytics : undefined,
       refundChanged ? isRefund : undefined,
-      newChanged ? isNew : undefined
+      newChanged ? isNew : undefined,
+      creditLimitChanged ? creditLimit : undefined
     );
     onOpenChange(false);
   };
@@ -180,6 +201,18 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                 id="is_new"
                 checked={isNew}
                 onCheckedChange={setIsNew}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="creditLimit">Credit Limit</Label>
+              <Input
+                id="creditLimit"
+                type="number"
+                min={0}
+                value={creditLimit}
+                onChange={(e) => setCreditLimit(Number(e.target.value))}
+                placeholder="Credit limit"
+                disabled={isLoadingCredits}
               />
             </div>
             <div className="grid gap-2">

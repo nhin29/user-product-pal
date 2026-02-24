@@ -399,6 +399,7 @@ export type Database = {
           display_name: string | null
           id: string
           is_analytics: boolean
+          is_first: boolean
           is_new: boolean
           is_purchase: boolean
           is_refund: boolean
@@ -413,6 +414,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_analytics?: boolean
+          is_first?: boolean
           is_new?: boolean
           is_purchase?: boolean
           is_refund?: boolean
@@ -427,6 +429,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_analytics?: boolean
+          is_first?: boolean
           is_new?: boolean
           is_purchase?: boolean
           is_refund?: boolean
@@ -644,6 +647,7 @@ export type Database = {
       user_credits: {
         Row: {
           created_at: string
+          credit_limit: number
           id: string
           updated_at: string
           used_count: number
@@ -651,6 +655,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credit_limit?: number
           id?: string
           updated_at?: string
           used_count?: number
@@ -658,6 +663,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credit_limit?: number
           id?: string
           updated_at?: string
           used_count?: number
@@ -804,7 +810,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_daily_credits: { Args: { p_user_id: string }; Returns: number }
+      increment_credits: { Args: { p_user_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"

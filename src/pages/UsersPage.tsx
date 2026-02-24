@@ -125,8 +125,8 @@ export default function UsersPage() {
     return sortDirection === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
   };
 
-  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, isNew?: boolean) => {
-    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAnalytics, isRefund, isNew });
+  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, isNew?: boolean, creditLimit?: number) => {
+    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAnalytics, isRefund, isNew, creditLimit });
   };
 
   const handleDeleteUser = async (userId: string) => {

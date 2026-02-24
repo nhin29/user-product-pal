@@ -71,6 +71,7 @@ export function useUsers() {
       isAnalytics,
       isRefund,
       isNew,
+      creditLimit,
     }: {
       userId: string;
       displayName: string;
@@ -80,6 +81,7 @@ export function useUsers() {
       isAnalytics?: boolean;
       isRefund?: boolean;
       isNew?: boolean;
+      creditLimit?: number;
     }) => {
       // Build update object
       const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean; is_new?: boolean } = {
@@ -138,13 +140,11 @@ export function useUsers() {
           const userEmail = email || currentUser.email;
           if (userEmail) {
             if (productIds.length > 0) {
-              // Grant access: upsert into stripe_subscribers
               const { error: subError } = await supabase
                 .from("stripe_subscribers")
                 .upsert({ email: userEmail }, { onConflict: "email" });
               if (subError) throw subError;
             } else {
-              // Revoke all access: remove from stripe_subscribers
               const { error: subError } = await supabase
                 .from("stripe_subscribers")
                 .delete()
@@ -153,6 +153,17 @@ export function useUsers() {
             }
           }
         }
+      }
+
+      // Update credit limit if changed
+      if (creditLimit !== undefined) {
+        const { error: creditError } = await supabase
+          .from("user_credits")
+          .upsert(
+            { user_id: userId, credit_limit: creditLimit },
+            { onConflict: "user_id" }
+          );
+        if (creditError) throw creditError;
       }
     },
     onSuccess: () => {
