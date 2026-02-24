@@ -237,10 +237,6 @@ export default function UsersPage() {
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("email")}>
                       <div className="flex items-center">Email <SortIcon field="email" /></div>
                     </th>
-                    <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("role")}>
-                      <div className="flex items-center">Role <SortIcon field="role" /></div>
-                    </th>
-                    <th className="px-6 py-3 text-left">Purchase Status</th>
                     <th className="px-6 py-3 text-left">Status</th>
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("created_at")}>
                       <div className="flex items-center">Joined <SortIcon field="created_at" /></div>
@@ -282,42 +278,6 @@ export default function UsersPage() {
                         <span className="text-muted-foreground">
                           {user.email || "No email"}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {user.role === "admin" ? (
-                          <Badge variant="default" className="bg-purple-500/20 text-purple-600 border-purple-500/30">
-                            <Shield className="mr-1 h-3 w-3" />
-                            Admin
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                            <User className="mr-1 h-3 w-3" />
-                            Viewer
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {user.is_refund ? (
-                          <Badge variant="default" className="bg-red-500/20 text-red-600 border-red-500/30">
-                            <X className="mr-1 h-3 w-3" />
-                            Refunded
-                          </Badge>
-                        ) : user.is_purchase ? (
-                          <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30">
-                            <Check className="mr-1 h-3 w-3" />
-                            Purchased
-                          </Badge>
-                        ) : user.product_ids && user.product_ids.length > 0 ? (
-                          <Badge variant="default" className="bg-amber-500/20 text-amber-600 border-amber-500/30">
-                            <Hand className="mr-1 h-3 w-3" />
-                            Manual
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                            <X className="mr-1 h-3 w-3" />
-                            Not Purchased
-                          </Badge>
-                        )}
                       </td>
                       <td className="px-6 py-4">
                         {user.is_new ? (
