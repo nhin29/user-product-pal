@@ -51,6 +51,7 @@ export default function UsersPage() {
   // Credits data
   const [userCredits, setUserCredits] = useState<Record<string, { credit_limit: number; used_count: number }>>({});
   const [powerUsers, setPowerUsers] = useState<Set<string>>(new Set());
+  const [lastActive, setLastActive] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (users.length === 0) return;
@@ -90,6 +91,21 @@ export default function UsersPage() {
       });
       setPowerUsers(set);
     });
+
+    // Fetch last active dates
+    supabase
+      .from("daily_time_tracking")
+      .select("user_id, date")
+      .order("date", { ascending: false })
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach((r) => {
+            if (!map[r.user_id]) map[r.user_id] = r.date;
+          });
+          setLastActive(map);
+        }
+      });
   }, [users]);
 
   // Filters
@@ -301,6 +317,7 @@ export default function UsersPage() {
                     <th className="px-6 py-3 text-left cursor-pointer select-none" onClick={() => handleSort("created_at")}>
                       <div className="flex items-center">Joined <SortIcon field="created_at" /></div>
                     </th>
+                    <th className="px-6 py-3 text-left">Last Active</th>
                     <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -373,6 +390,13 @@ export default function UsersPage() {
                       <td className="px-6 py-4">
                         <span className="text-muted-foreground">
                           {format(new Date(user.created_at), "MMM d, yyyy")}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-muted-foreground">
+                          {lastActive[user.user_id]
+                            ? format(new Date(lastActive[user.user_id]), "MMM d, yyyy")
+                            : "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
