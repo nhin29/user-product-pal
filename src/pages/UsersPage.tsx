@@ -92,20 +92,31 @@ export default function UsersPage() {
       setPowerUsers(set);
     });
 
-    // Fetch last active dates
-    supabase
-      .from("daily_time_tracking")
-      .select("user_id, date")
-      .order("date", { ascending: false })
-      .then(({ data }) => {
-        if (data) {
-          const map: Record<string, string> = {};
+    // Fetch last active dates (paginate to bypass 1000-row limit)
+    const fetchAllLastActive = async () => {
+      const map: Record<string, string> = {};
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+      while (hasMore) {
+        const { data } = await supabase
+          .from("daily_time_tracking")
+          .select("user_id, date")
+          .order("date", { ascending: false })
+          .range(offset, offset + batchSize - 1);
+        if (data && data.length > 0) {
           data.forEach((r) => {
             if (!map[r.user_id]) map[r.user_id] = r.date;
           });
-          setLastActive(map);
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
         }
-      });
+      }
+      setLastActive(map);
+    };
+    fetchAllLastActive();
   }, [users]);
 
   // Filters
