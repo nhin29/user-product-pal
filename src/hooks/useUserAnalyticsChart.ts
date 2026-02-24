@@ -4,7 +4,6 @@ import { format, subDays, startOfDay } from "date-fns";
 
 interface ChartDataPoint {
   date: string;
-  clicks: number;
   copies: number;
   saves: number;
   pageViews: number;
@@ -39,7 +38,6 @@ export function useUserAnalyticsChart(userId: string, period: string) {
 
       return (data || []).map((row: any) => ({
         date: format(new Date(row.day), "MMM dd"),
-        clicks: Number(row.clicks),
         copies: Number(row.copies),
         saves: Number(row.saves),
         pageViews: Number(row.page_views),

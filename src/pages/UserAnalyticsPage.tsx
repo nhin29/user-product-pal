@@ -238,6 +238,7 @@ export default function UserAnalyticsPage() {
             isLoading={isLoadingChart}
             period={chartPeriod}
             onPeriodChange={setChartPeriod}
+            showNewCustomers={false}
           />
         </div>
 

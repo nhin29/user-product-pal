@@ -729,10 +729,10 @@ export type Database = {
       get_dashboard_chart_data: {
         Args: { p_end_date: string; p_start_date: string }
         Returns: {
-          clicks: number
           copies: number
           day: string
           generations: number
+          new_customers: number
           page_views: number
           saves: number
         }[]
@@ -791,7 +791,6 @@ export type Database = {
       get_user_chart_data: {
         Args: { p_end_date: string; p_start_date: string; p_user_id: string }
         Returns: {
-          clicks: number
           copies: number
           day: string
           generations: number

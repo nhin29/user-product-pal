@@ -22,7 +22,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 
 interface ChartDataPoint {
   date: string;
-  clicks: number;
+  newCustomers?: number;
   copies: number;
   saves: number;
   pageViews: number;
@@ -34,30 +34,8 @@ interface ActivityChartProps {
   isLoading: boolean;
   period: string;
   onPeriodChange: (period: string) => void;
+  showNewCustomers?: boolean;
 }
-
-const chartConfig = {
-  clicks: {
-    label: "Clicks",
-    color: "hsl(var(--chart-1))",
-  },
-  copies: {
-    label: "Copies",
-    color: "hsl(var(--chart-2))",
-  },
-  saves: {
-    label: "Saves",
-    color: "hsl(var(--chart-5))",
-  },
-  pageViews: {
-    label: "Page Views",
-    color: "hsl(var(--chart-3))",
-  },
-  generations: {
-    label: "Generations",
-    color: "hsl(var(--chart-4))",
-  },
-};
 
 const periods = [
   { value: "7d", label: "Last 7 days" },
@@ -66,11 +44,25 @@ const periods = [
   { value: "90d", label: "Last 90 days" },
 ];
 
-type MetricKey = "clicks" | "copies" | "saves" | "pageViews" | "generations";
+type MetricKey = "newCustomers" | "copies" | "saves" | "pageViews" | "generations";
 
-export function ActivityChart({ data, isLoading, period, onPeriodChange }: ActivityChartProps) {
+export function ActivityChart({ data, isLoading, period, onPeriodChange, showNewCustomers = true }: ActivityChartProps) {
+  const allMetrics: { key: MetricKey; label: string; color: string }[] = [
+    { key: "newCustomers", label: "New Customers", color: "hsl(var(--chart-1))" },
+    { key: "copies", label: "Copies", color: "hsl(var(--chart-2))" },
+    { key: "saves", label: "Saves", color: "hsl(var(--chart-5))" },
+    { key: "pageViews", label: "Page Views", color: "hsl(var(--chart-3))" },
+    { key: "generations", label: "Generations", color: "hsl(var(--chart-4))" },
+  ];
+
+  const metrics = showNewCustomers ? allMetrics : allMetrics.filter(m => m.key !== "newCustomers");
+
+  const chartConfig = Object.fromEntries(
+    metrics.map(m => [m.key, { label: m.label, color: m.color }])
+  );
+
   const [visibleLines, setVisibleLines] = useState<Record<MetricKey, boolean>>({
-    clicks: true,
+    newCustomers: true,
     copies: true,
     saves: true,
     pageViews: true,
@@ -80,14 +72,6 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
   const toggleLine = (key: MetricKey) => {
     setVisibleLines((prev) => ({ ...prev, [key]: !prev[key] }));
   };
-
-  const metrics: { key: MetricKey; label: string; color: string }[] = [
-    { key: "clicks", label: "Clicks", color: "hsl(var(--chart-1))" },
-    { key: "copies", label: "Copies", color: "hsl(var(--chart-2))" },
-    { key: "saves", label: "Saves", color: "hsl(var(--chart-5))" },
-    { key: "pageViews", label: "Page Views", color: "hsl(var(--chart-3))" },
-    { key: "generations", label: "Generations", color: "hsl(var(--chart-4))" },
-  ];
 
   return (
     <Card className="col-span-full">
@@ -172,60 +156,19 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
                 content={<ChartTooltipContent />}
                 cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
               />
-              {visibleLines.clicks && (
-                <Line
-                  type="monotone"
-                  dataKey="clicks"
-                  name="Clicks"
-                  stroke="hsl(var(--chart-1))"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "hsl(var(--chart-1))" }}
-                  activeDot={{ r: 5, fill: "hsl(var(--chart-1))" }}
-                />
-              )}
-              {visibleLines.copies && (
-                <Line
-                  type="monotone"
-                  dataKey="copies"
-                  name="Copies"
-                  stroke="hsl(var(--chart-2))"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "hsl(var(--chart-2))" }}
-                  activeDot={{ r: 5, fill: "hsl(var(--chart-2))" }}
-                />
-              )}
-              {visibleLines.saves && (
-                <Line
-                  type="monotone"
-                  dataKey="saves"
-                  name="Saves"
-                  stroke="hsl(var(--chart-5))"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "hsl(var(--chart-5))" }}
-                  activeDot={{ r: 5, fill: "hsl(var(--chart-5))" }}
-                />
-              )}
-              {visibleLines.pageViews && (
-                <Line
-                  type="monotone"
-                  dataKey="pageViews"
-                  name="Page Views"
-                  stroke="hsl(var(--chart-3))"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "hsl(var(--chart-3))" }}
-                  activeDot={{ r: 5, fill: "hsl(var(--chart-3))" }}
-                />
-              )}
-              {visibleLines.generations && (
-                <Line
-                  type="monotone"
-                  dataKey="generations"
-                  name="Generations"
-                  stroke="hsl(var(--chart-4))"
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: "hsl(var(--chart-4))" }}
-                  activeDot={{ r: 5, fill: "hsl(var(--chart-4))" }}
-                />
+              {metrics.map((metric) =>
+                visibleLines[metric.key] ? (
+                  <Line
+                    key={metric.key}
+                    type="monotone"
+                    dataKey={metric.key}
+                    name={metric.label}
+                    stroke={metric.color}
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: metric.color }}
+                    activeDot={{ r: 5, fill: metric.color }}
+                  />
+                ) : null
               )}
             </LineChart>
           </ChartContainer>
