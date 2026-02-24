@@ -26,7 +26,7 @@ interface ChartDataPoint {
   copies: number;
   saves: number;
   pageViews: number;
-  events: number;
+  generations: number;
 }
 
 interface ActivityChartProps {
@@ -53,8 +53,8 @@ const chartConfig = {
     label: "Page Views",
     color: "hsl(var(--chart-3))",
   },
-  events: {
-    label: "Events",
+  generations: {
+    label: "Generations",
     color: "hsl(var(--chart-4))",
   },
 };
@@ -66,7 +66,7 @@ const periods = [
   { value: "90d", label: "Last 90 days" },
 ];
 
-type MetricKey = "clicks" | "copies" | "saves" | "pageViews" | "events";
+type MetricKey = "clicks" | "copies" | "saves" | "pageViews" | "generations";
 
 export function ActivityChart({ data, isLoading, period, onPeriodChange }: ActivityChartProps) {
   const [visibleLines, setVisibleLines] = useState<Record<MetricKey, boolean>>({
@@ -74,7 +74,7 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
     copies: true,
     saves: true,
     pageViews: true,
-    events: true,
+    generations: true,
   });
 
   const toggleLine = (key: MetricKey) => {
@@ -86,7 +86,7 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
     { key: "copies", label: "Copies", color: "hsl(var(--chart-2))" },
     { key: "saves", label: "Saves", color: "hsl(var(--chart-5))" },
     { key: "pageViews", label: "Page Views", color: "hsl(var(--chart-3))" },
-    { key: "events", label: "Events", color: "hsl(var(--chart-4))" },
+    { key: "generations", label: "Generations", color: "hsl(var(--chart-4))" },
   ];
 
   return (
@@ -216,11 +216,11 @@ export function ActivityChart({ data, isLoading, period, onPeriodChange }: Activ
                   activeDot={{ r: 5, fill: "hsl(var(--chart-3))" }}
                 />
               )}
-              {visibleLines.events && (
+              {visibleLines.generations && (
                 <Line
                   type="monotone"
-                  dataKey="events"
-                  name="Events"
+                  dataKey="generations"
+                  name="Generations"
                   stroke="hsl(var(--chart-4))"
                   strokeWidth={2}
                   dot={{ r: 3, fill: "hsl(var(--chart-4))" }}

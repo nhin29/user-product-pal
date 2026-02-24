@@ -8,7 +8,7 @@ interface ChartDataPoint {
   copies: number;
   saves: number;
   pageViews: number;
-  events: number;
+  generations: number;
 }
 
 function getDaysFromPeriod(period: string): number {
@@ -42,7 +42,7 @@ export function useDashboardChart(period: string) {
         copies: Number(row.copies),
         saves: Number(row.saves),
         pageViews: Number(row.page_views),
-        events: Number(row.events),
+        generations: Number(row.generations),
       }));
     },
   });
