@@ -10,6 +10,7 @@ export interface GalleryImage {
   completed_prompt: string | null;
   prompt_snapshot: string | null;
   analyzed_url: string | null;
+  origin_image: string | null;
   field_values: any;
   user_name: string;
   user_email: string;

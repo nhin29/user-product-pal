@@ -226,6 +226,20 @@ export default function GalleryPage() {
                 </div>
               )}
 
+              {selected.origin_image && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Origin Image</p>
+                  <div className="rounded-lg overflow-hidden border border-border bg-muted inline-block">
+                    <img
+                      src={selected.origin_image}
+                      alt="Origin"
+                      loading="lazy"
+                      className="max-h-[200px] w-auto object-contain"
+                    />
+                  </div>
+                </div>
+              )}
+
               {selected.product_image && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">Origin Product</p>
