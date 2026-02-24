@@ -732,7 +732,7 @@ export type Database = {
           clicks: number
           copies: number
           day: string
-          events: number
+          generations: number
           page_views: number
           saves: number
         }[]
@@ -794,7 +794,7 @@ export type Database = {
           clicks: number
           copies: number
           day: string
-          events: number
+          generations: number
           page_views: number
           saves: number
         }[]
