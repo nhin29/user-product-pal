@@ -129,7 +129,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Edit User
@@ -146,7 +146,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 py-4">
+            <div className="space-y-4 sm:col-span-1">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -226,6 +227,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                 Remaining: {Math.max(0, creditLimit - usedCount)} credits
               </p>
             </div>
+            </div>
+            <div className="space-y-4 sm:col-span-1">
             <div className="grid gap-2">
               <Label>Amazon Product Access</Label>
               <div className="space-y-2 rounded-md border p-3">
@@ -291,6 +294,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                   </div>
                 ))}
               </div>
+            </div>
             </div>
           </div>
           <DialogFooter>
