@@ -49,7 +49,7 @@ export default function UsersPage() {
   const { users, isLoading, error, deleteUser, updateUserProfile, createUser } = useUsers();
 
   // Credits data
-  const [userCredits, setUserCredits] = useState<Record<string, { credit_limit: number; used_count: number }>>({});
+  const [userCredits, setUserCredits] = useState<Record<string, { credit_limit: number; used_count: number; status: string }>>({});
   const [powerUsers, setPowerUsers] = useState<Set<string>>(new Set());
   const [lastActive, setLastActive] = useState<Record<string, string>>({});
 
@@ -59,11 +59,11 @@ export default function UsersPage() {
     // Fetch credits
     supabase
       .from("user_credits")
-      .select("user_id, credit_limit, used_count")
+      .select("user_id, credit_limit, used_count, status")
       .then(({ data }) => {
         if (data) {
-          const map: Record<string, { credit_limit: number; used_count: number }> = {};
-          data.forEach((c) => { map[c.user_id] = { credit_limit: c.credit_limit, used_count: c.used_count }; });
+          const map: Record<string, { credit_limit: number; used_count: number; status: string }> = {};
+          data.forEach((c) => { map[c.user_id] = { credit_limit: c.credit_limit, used_count: c.used_count, status: (c as any).status ?? 'trial' }; });
           setUserCredits(map);
         }
       });
@@ -376,11 +376,11 @@ export default function UsersPage() {
                       <td className="px-6 py-4">
                         {(() => {
                           const credit = userCredits[user.user_id];
-                          const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
+                          const isSubscribed = credit?.status === 'subscribed';
                           return (
                             <div className="flex flex-col items-start gap-1">
                               <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-yellow-500 text-yellow-700 bg-yellow-500/15 whitespace-nowrap">Prompt</Badge>
-                              {remaining > 0 && (
+                              {isSubscribed && (
                                 <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Software</Badge>
                               )}
                             </div>
