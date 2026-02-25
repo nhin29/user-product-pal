@@ -158,13 +158,6 @@ export default function UserAnalyticsPage() {
                   <h1 className="text-2xl font-semibold text-foreground">
                     {user?.display_name || "Unknown User"}
                   </h1>
-                  {user && (
-                    user.is_new ? (
-                      <span className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/20 px-2.5 py-0.5 text-xs font-semibold text-blue-600">New</span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Old</span>
-                    )
-                  )}
                 </div>
                 <p className="text-muted-foreground">User Analytics & Activity</p>
               </div>

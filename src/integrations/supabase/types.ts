@@ -788,7 +788,6 @@ export type Database = {
           email: string
           id: string
           is_analytics: boolean
-          is_new: boolean
           is_purchase: boolean
           is_refund: boolean
           onboarding_completed: boolean

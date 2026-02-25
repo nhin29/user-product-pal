@@ -44,7 +44,7 @@ const META_PRODUCT_OPTIONS = [
 ];
 
 interface EditUserDialogProps {
-  user: (UserProfile & { is_new?: boolean }) | null;
+  user: UserProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, isNew?: boolean, creditLimit?: number) => Promise<void>;

@@ -122,7 +122,7 @@ export default function UsersPage() {
   // Filters
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [purchaseFilter, setPurchaseFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  
   const [powerUserFilter, setPowerUserFilter] = useState(false);
 
   // Sort
@@ -153,9 +153,6 @@ export default function UsersPage() {
         return !u.is_purchase && (!u.product_ids || u.product_ids.length === 0);
       });
     }
-    if (statusFilter !== "all") {
-      result = result.filter((u) => (statusFilter === "new" ? u.is_new : !u.is_new));
-    }
     if (powerUserFilter) {
       result = result.filter((u) => powerUsers.has(u.user_id));
     }
@@ -184,7 +181,7 @@ export default function UsersPage() {
     });
 
     return result;
-  }, [users, searchQuery, roleFilter, purchaseFilter, statusFilter, powerUserFilter, powerUsers, sortField, sortDirection, lastActive]);
+  }, [users, searchQuery, roleFilter, purchaseFilter, powerUserFilter, powerUsers, sortField, sortDirection, lastActive]);
 
   // Reset page when filters change
   const totalPages = Math.max(1, Math.ceil(processedUsers.length / pageSize));
@@ -205,8 +202,8 @@ export default function UsersPage() {
     return sortDirection === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
   };
 
-  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, isNew?: boolean, creditLimit?: number) => {
-    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAnalytics, isRefund, isNew, creditLimit });
+  const handleSaveUser = async (userId: string, displayName: string, email?: string, productIds?: string[], role?: string, isAnalytics?: boolean, isRefund?: boolean, _isNew?: boolean, creditLimit?: number) => {
+    await updateUserProfile.mutateAsync({ userId, displayName, email, productIds, role, isAnalytics, isRefund, creditLimit });
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -267,16 +264,6 @@ export default function UsersPage() {
               <SelectItem value="not_purchased">Not Purchased</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="old">Old</SelectItem>
-            </SelectContent>
-          </Select>
           <Button
             variant={powerUserFilter ? "default" : "outline"}
             size="sm"
@@ -307,7 +294,7 @@ export default function UsersPage() {
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-lg font-medium text-foreground">No users found</p>
             <p className="mt-1 text-muted-foreground">
-              {searchQuery || roleFilter !== "all" || purchaseFilter !== "all" || statusFilter !== "all"
+              {searchQuery || roleFilter !== "all" || purchaseFilter !== "all"
                 ? "Try adjusting your search or filters"
                 : "Users will appear here when they sign up"}
             </p>
