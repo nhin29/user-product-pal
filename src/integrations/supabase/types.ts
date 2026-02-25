@@ -150,6 +150,7 @@ export type Database = {
       conversations: {
         Row: {
           created_at: string
+          folder_id: string | null
           id: string
           status: string
           updated_at: string
@@ -157,6 +158,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          folder_id?: string | null
           id?: string
           status?: string
           updated_at?: string
@@ -164,12 +166,21 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          folder_id?: string | null
           id?: string
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "support_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_time_tracking: {
         Row: {
@@ -670,6 +681,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      support_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "support_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_credits: {
         Row: {
