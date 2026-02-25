@@ -394,7 +394,7 @@ export default function UsersPage() {
                             <div className="flex flex-wrap gap-1">
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500 text-emerald-600 bg-emerald-500/10 whitespace-nowrap">Prompt</Badge>
                               {remaining > 0 && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-indigo-400 text-indigo-600 bg-indigo-500/10 whitespace-nowrap">Software</Badge>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-violet-400 text-violet-600 bg-violet-500/10 whitespace-nowrap">Software</Badge>
                               )}
                             </div>
                           );
@@ -413,8 +413,8 @@ export default function UsersPage() {
                           return (
                           <div className="flex flex-col items-start gap-1">
                               {hasAmazon && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-orange-400 text-orange-600 bg-orange-500/10 whitespace-nowrap">Amazon</Badge>}
-                              {hasShopify && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600 bg-green-500/10 whitespace-nowrap">Shopify</Badge>}
-                              {hasMeta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-500 text-blue-600 bg-blue-500/10 whitespace-nowrap">Meta</Badge>}
+                              {hasShopify && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-teal-500 text-teal-600 bg-teal-500/10 whitespace-nowrap">Shopify</Badge>}
+                              {hasMeta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-sky-500 text-sky-600 bg-sky-500/10 whitespace-nowrap">Meta</Badge>}
                             </div>
                           );
                         })()}
