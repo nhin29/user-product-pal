@@ -238,14 +238,6 @@ export default function ProductsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate("/categories")}>
-              <FolderOpen className="mr-2 h-4 w-4" />
-              Image Styles
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/product-types")}>
-              <Layers className="mr-2 h-4 w-4" />
-              Niche
-            </Button>
             {selectedIds.length > 0 && (
               <>
                 <Button
@@ -358,6 +350,17 @@ export default function ProductsPage() {
               Clear
             </Button>
           )}
+
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/categories")}>
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Image Styles
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/product-types")}>
+              <Layers className="mr-2 h-4 w-4" />
+              Niche
+            </Button>
+          </div>
         </div>
 
         {/* Drag hint */}
