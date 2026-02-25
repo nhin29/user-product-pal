@@ -352,11 +352,11 @@ export default function ProductsPage() {
           )}
 
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="secondary" onClick={() => navigate("/categories")}>
+            <Button variant="secondary" className="border border-border hover:bg-primary hover:text-primary-foreground transition-colors duration-200" onClick={() => navigate("/categories")}>
               <FolderOpen className="mr-2 h-4 w-4" />
               Image Styles
             </Button>
-            <Button variant="secondary" onClick={() => navigate("/product-types")}>
+            <Button variant="secondary" className="border border-border hover:bg-primary hover:text-primary-foreground transition-colors duration-200" onClick={() => navigate("/product-types")}>
               <Layers className="mr-2 h-4 w-4" />
               Niche
             </Button>
