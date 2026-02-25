@@ -9,7 +9,7 @@ export interface UserProfile {
   avatar_url: string | null;
   email: string | null;
   is_purchase: boolean;
-  is_new: boolean;
+  
   product_ids: string[] | null;
   created_at: string;
   updated_at: string;
@@ -70,7 +70,7 @@ export function useUsers() {
       role,
       isAnalytics,
       isRefund,
-      isNew,
+      
       creditLimit,
     }: {
       userId: string;
@@ -80,11 +80,11 @@ export function useUsers() {
       role?: string;
       isAnalytics?: boolean;
       isRefund?: boolean;
-      isNew?: boolean;
+      
       creditLimit?: number;
     }) => {
       // Build update object
-      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean; is_new?: boolean } = {
+      const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean } = {
         display_name: displayName,
       };
       
@@ -96,9 +96,6 @@ export function useUsers() {
         updateData.is_refund = isRefund;
       }
 
-      if (isNew !== undefined) {
-        updateData.is_new = isNew;
-      }
       
       if (productIds !== undefined) {
         updateData.product_ids = productIds;
