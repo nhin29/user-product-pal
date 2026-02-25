@@ -11,6 +11,9 @@ export interface ChatMessage {
   message: string;
   created_at: string;
   read_at: string | null;
+  attachment_url: string | null;
+  attachment_type: string | null;
+  attachment_name: string | null;
 }
 
 export interface UserConversation {
@@ -159,9 +162,15 @@ export function useSupportChats() {
     mutationFn: async ({
       conversationId,
       message,
+      attachmentUrl,
+      attachmentType,
+      attachmentName,
     }: {
       conversationId: string;
       message: string;
+      attachmentUrl?: string | null;
+      attachmentType?: string | null;
+      attachmentName?: string | null;
     }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
@@ -171,7 +180,10 @@ export function useSupportChats() {
         sender_id: session.session.user.id,
         sender_role: "admin",
         message,
-      });
+        attachment_url: attachmentUrl || null,
+        attachment_type: attachmentType || null,
+        attachment_name: attachmentName || null,
+      } as any);
 
       if (error) throw error;
     },
