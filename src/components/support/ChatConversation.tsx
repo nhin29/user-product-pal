@@ -1,10 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { UserConversation, ChatMessage, useSupportChats } from "@/hooks/useSupportChats";
+import { useSupportFolders } from "@/hooks/useSupportFolders";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Send, Loader2, Trash2, FolderInput, Inbox } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 
@@ -15,6 +23,7 @@ interface ChatConversationProps {
 
 export function ChatConversation({ conversation, onChatDeleted }: ChatConversationProps) {
   const { sendMessage, deleteConversation } = useSupportChats();
+  const { folders, moveConversation } = useSupportFolders();
   const [message, setMessage] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,6 +47,8 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
     onChatDeleted?.();
   };
 
+  const currentFolderName = folders.find((f) => f.id === conversation.folder_id)?.name || "Inbox";
+
   return (
     <>
       {/* Header */}
@@ -57,6 +68,36 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
             Last seen {formatDistanceToNow(new Date(conversation.last_seen), { addSuffix: true })}
           </span>
         )}
+
+        {/* Move to folder */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <FolderInput className="h-4 w-4" />
+              <span className="text-xs">{currentFolderName}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              onClick={() => moveConversation.mutate({ conversationId: conversation.conversation_id, folderId: null })}
+            >
+              <Inbox className="h-3.5 w-3.5 mr-2" /> Inbox
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {folders.map((f) => (
+              <DropdownMenuItem
+                key={f.id}
+                onClick={() =>
+                  moveConversation.mutate({ conversationId: conversation.conversation_id, folderId: f.id })
+                }
+              >
+                {f.parent_id && <span className="ml-3" />}
+                {f.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button
           variant="ghost"
           size="icon"

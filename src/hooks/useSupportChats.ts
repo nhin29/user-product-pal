@@ -20,6 +20,7 @@ export interface UserConversation {
   user_name: string;
   avatar_url: string | null;
   status: string;
+  folder_id: string | null;
   messages: ChatMessage[];
   unread_count: number;
   last_message_at: string;
@@ -107,6 +108,7 @@ export function useSupportChats() {
           user_name: profile?.display_name || "Unknown User",
           avatar_url: profile?.avatar_url || null,
           status: convo.status,
+          folder_id: convo.folder_id || null,
           messages,
           unread_count: unreadCount,
           last_message_at: lastMsg?.created_at || convo.created_at,
