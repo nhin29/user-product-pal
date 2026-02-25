@@ -1,0 +1,1 @@
+UPDATE public.user_credits SET credit_limit = 4, used_count = 0;
