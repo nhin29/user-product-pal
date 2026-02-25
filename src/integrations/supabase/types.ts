@@ -676,6 +676,7 @@ export type Database = {
           created_at: string
           credit_limit: number
           id: string
+          status: string
           updated_at: string
           used_count: number
           user_id: string
@@ -684,6 +685,7 @@ export type Database = {
           created_at?: string
           credit_limit?: number
           id?: string
+          status?: string
           updated_at?: string
           used_count?: number
           user_id: string
@@ -692,6 +694,7 @@ export type Database = {
           created_at?: string
           credit_limit?: number
           id?: string
+          status?: string
           updated_at?: string
           used_count?: number
           user_id?: string
