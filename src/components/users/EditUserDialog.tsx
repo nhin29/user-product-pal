@@ -62,6 +62,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [creditLimit, setCreditLimit] = useState<number>(4);
   const [originalCreditLimit, setOriginalCreditLimit] = useState<number>(4);
   const [usedCount, setUsedCount] = useState<number>(0);
+  const [creditStatus, setCreditStatus] = useState<string>("trial");
   const [isLoadingCredits, setIsLoadingCredits] = useState(false);
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       import("@/integrations/supabase/client").then(({ supabase }) => {
         supabase
           .from("user_credits")
-          .select("credit_limit, used_count")
+          .select("credit_limit, used_count, status")
           .eq("user_id", user.user_id)
           .maybeSingle()
           .then(({ data }) => {
@@ -86,7 +87,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
             setCreditLimit(limit);
             setOriginalCreditLimit(limit);
             setUsedCount(data?.used_count ?? 0);
-            setIsLoadingCredits(false);
+            setCreditStatus((data as any)?.status ?? "trial");
           });
       });
     }
@@ -204,9 +205,22 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                   Used: {usedCount} / {creditLimit}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Remaining: {Math.max(0, creditLimit - usedCount)} credits
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Remaining: {Math.max(0, creditLimit - usedCount)} credits
+                </p>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                  creditStatus === "subscribed" 
+                    ? "border-emerald-500 text-emerald-700 bg-emerald-500/15" 
+                    : creditStatus === "expired"
+                    ? "border-red-500 text-red-700 bg-red-500/15"
+                    : creditStatus === "free"
+                    ? "border-gray-400 text-gray-600 bg-gray-400/15"
+                    : "border-yellow-500 text-yellow-700 bg-yellow-500/15"
+                }`}>
+                  {creditStatus.charAt(0).toUpperCase() + creditStatus.slice(1)}
+                </span>
+              </div>
             </div>
             </div>
             <div className="space-y-4 sm:col-span-1">
