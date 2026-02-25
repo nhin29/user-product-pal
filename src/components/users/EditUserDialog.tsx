@@ -58,7 +58,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [selectedRole, setSelectedRole] = useState<string>("viewer");
   const [isAnalytics, setIsAnalytics] = useState<boolean>(true);
   const [isRefund, setIsRefund] = useState<boolean>(false);
-  const [isNew, setIsNew] = useState<boolean>(true);
+  
   const [creditLimit, setCreditLimit] = useState<number>(4);
   const [originalCreditLimit, setOriginalCreditLimit] = useState<number>(4);
   const [usedCount, setUsedCount] = useState<number>(0);
@@ -72,7 +72,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       setSelectedRole(user.role || "viewer");
       setIsAnalytics(user.is_analytics ?? true);
       setIsRefund(user.is_refund ?? false);
-      setIsNew(user.is_new ?? true);
       
       // Fetch credit limit for this user
       setIsLoadingCredits(true);
@@ -110,7 +109,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     const roleChanged = selectedRole !== (user.role || "viewer");
     const analyticsChanged = isAnalytics !== (user.is_analytics ?? true);
     const refundChanged = isRefund !== (user.is_refund ?? false);
-    const newChanged = isNew !== (user.is_new ?? true);
     const creditLimitChanged = creditLimit !== originalCreditLimit;
     
     await onSave(
@@ -121,7 +119,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       roleChanged ? selectedRole : undefined,
       analyticsChanged ? isAnalytics : undefined,
       refundChanged ? isRefund : undefined,
-      newChanged ? isNew : undefined,
+      undefined,
       creditLimitChanged ? creditLimit : undefined
     );
     onOpenChange(false);
@@ -131,16 +129,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Edit User
-            {user && (
-              user.is_new ? (
-                <span className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/20 px-2.5 py-0.5 text-xs font-semibold text-blue-600">New</span>
-              ) : (
-                <span className="inline-flex items-center rounded-full border bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Old</span>
-              )
-            )}
-          </DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
             Update user profile information.
           </DialogDescription>
@@ -196,14 +185,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                 id="is_refund"
                 checked={isRefund}
                 onCheckedChange={setIsRefund}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="is_new">New User</Label>
-              <Switch
-                id="is_new"
-                checked={isNew}
-                onCheckedChange={setIsNew}
               />
             </div>
             <div className="grid gap-2">
