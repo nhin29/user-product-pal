@@ -251,16 +251,18 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
             className="hidden"
             onChange={handleFileSelect}
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 h-9 w-9"
-            onClick={() => fileInputRef.current?.click()}
-            type="button"
-          >
-            <Paperclip className="h-5 w-5 text-muted-foreground" />
-          </Button>
-          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+          <div className="flex flex-col gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => fileInputRef.current?.click()}
+              type="button"
+            >
+              <Paperclip className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+          </div>
           <Textarea
             ref={textareaRef}
             placeholder="Type a message..."
