@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet, CalendarIcon, RefreshCw } from "lucide-react";
+import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet, CalendarIcon, RefreshCw, FolderOpen, Layers } from "lucide-react";
 import { format } from "date-fns";
 import {
   DndContext,
@@ -15,6 +15,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export default function ProductsPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -236,6 +238,14 @@ export default function ProductsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/categories")}>
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Image Styles
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/product-types")}>
+              <Layers className="mr-2 h-4 w-4" />
+              Niche
+            </Button>
             {selectedIds.length > 0 && (
               <>
                 <Button
