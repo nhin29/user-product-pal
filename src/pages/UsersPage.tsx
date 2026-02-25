@@ -392,9 +392,9 @@ export default function UsersPage() {
                           const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
                           return (
                             <div className="flex flex-wrap gap-1">
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500 text-emerald-600 bg-emerald-500/10 whitespace-nowrap">Prompt</Badge>
+                              <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-emerald-500 text-emerald-700 bg-emerald-500/15 whitespace-nowrap">Prompt</Badge>
                               {remaining > 0 && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-violet-400 text-violet-600 bg-violet-500/10 whitespace-nowrap">Software</Badge>
+                                <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Software</Badge>
                               )}
                             </div>
                           );
@@ -412,9 +412,9 @@ export default function UsersPage() {
                           if (!hasAmazon && !hasShopify && !hasMeta) return <span className="text-muted-foreground">—</span>;
                           return (
                           <div className="flex flex-col items-start gap-1">
-                              {hasAmazon && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-orange-400 text-orange-600 bg-orange-500/10 whitespace-nowrap">Amazon</Badge>}
-                              {hasShopify && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-teal-500 text-teal-600 bg-teal-500/10 whitespace-nowrap">Shopify</Badge>}
-                              {hasMeta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-sky-500 text-sky-600 bg-sky-500/10 whitespace-nowrap">Meta</Badge>}
+                              {hasAmazon && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-orange-500 text-orange-700 bg-orange-500/15 whitespace-nowrap">Amazon</Badge>}
+                              {hasShopify && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-teal-500 text-teal-700 bg-teal-500/15 whitespace-nowrap">Shopify</Badge>}
+                              {hasMeta && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-sky-500 text-sky-700 bg-sky-500/15 whitespace-nowrap">Meta</Badge>}
                             </div>
                           );
                         })()}
