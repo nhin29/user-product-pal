@@ -1,0 +1,1 @@
+UPDATE public.user_credits SET status = 'trial';
