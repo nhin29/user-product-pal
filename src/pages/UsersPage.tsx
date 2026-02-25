@@ -378,7 +378,7 @@ export default function UsersPage() {
                           const credit = userCredits[user.user_id];
                           const remaining = credit ? Math.max(0, credit.credit_limit - credit.used_count) : 0;
                           return (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-col items-start gap-1">
                               <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-emerald-500 text-emerald-700 bg-emerald-500/15 whitespace-nowrap">Prompt</Badge>
                               {remaining > 0 && (
                                 <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Software</Badge>
