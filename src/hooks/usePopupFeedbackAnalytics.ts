@@ -51,13 +51,24 @@ interface RawFeedback {
   dismissed_at: string | null;
 }
 
-export function usePopupFeedbackAnalytics() {
+export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
   return useQuery({
-    queryKey: ["popup-feedback-analytics"],
+    queryKey: ["popup-feedback-analytics", startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async (): Promise<PopupFeedbackData> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("feedback_questionnaire")
-        .select("nps_score, image_quality_rating, ease_of_use, features_used, improvements, completed_at, dismissed_at");
+        .select("nps_score, image_quality_rating, ease_of_use, features_used, improvements, completed_at, dismissed_at, created_at");
+
+      if (startDate) {
+        query = query.gte("created_at", startDate.toISOString());
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", end.toISOString());
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       const rows = (data || []) as RawFeedback[];
