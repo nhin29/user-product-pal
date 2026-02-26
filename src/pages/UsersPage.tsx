@@ -374,7 +374,9 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {(() => {
+                        {user.is_refund ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (() => {
                           const credit = userCredits[user.user_id];
                           const isSubscribed = credit?.status === 'subscribed';
                           return (
@@ -388,7 +390,9 @@ export default function UsersPage() {
                         })()}
                       </td>
                       <td className="px-6 py-4">
-                        {(() => {
+                        {user.is_refund ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (() => {
                           const amazonIds = ["prod_TreWrcz8uVHqIT", "prod_TreWtW6ekESits", "prod_TreV0wplqggLBW", "prod_TmW6D8HwME3dsX"];
                           const shopifyIds = ["prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j"];
                           const metaIds = ["prod_U1stXv6wWzqBVe", "prod_U1sv6wPAwnrTLZ"];
