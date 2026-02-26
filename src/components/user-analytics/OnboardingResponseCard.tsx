@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClipboardList, Target, Palette, DollarSign, ShoppingCart, Store, AlertCircle, MessageSquare, Users, Briefcase } from "lucide-react";
+import { ClipboardList, Target, Palette, DollarSign, ShoppingCart, Store, AlertCircle, MessageSquare } from "lucide-react";
 
 interface OnboardingResponse {
   niche: string[] | null;
@@ -21,7 +21,6 @@ interface OnboardingResponseCardProps {
   isLoading: boolean;
 }
 
-// Label mappings for database values
 const nicheLabels: Record<string, string> = {
   health_beauty: "Health & Beauty",
   wellness_supplements: "Wellness & Supplements",
@@ -44,11 +43,10 @@ const designGoalLabels: Record<string, string> = {
   freelancer: "Freelancer (Fiverr, Upwork, etc.)",
   agency: "Design agency",
   not_started: "Haven't started yet",
-  scale_catalog: "Scale catalog (10+ SKUs)",
 };
 
 const productsMonthlyLabels: Record<string, string> = {
-  less_1: "<1",
+  less_than_1: "<1",
   "1_2": "1-2",
   "3_5": "3-5",
   "5_10": "5-10",
@@ -70,23 +68,19 @@ const salesChannelsLabels: Record<string, string> = {
   etsy: "Etsy",
   tiktok: "TikTok Shop",
   not_amazon: "I don't sell on Amazon yet",
-  amazon_etsy: "Amazon & Etsy",
-  amazon_shopify: "Amazon & Shopify",
 };
 
 const problemsBeforeLabels: Record<string, string> = {
   high_costs: "High design costs",
-  afford_costs: "High design costs",
   low_converting: "Low-converting images",
   time_consuming: "Time-consuming development",
   low_quality: "Low-quality design",
-  canva_generic: "Generic Canva templates",
-  compliance_confusion: "Amazon compliance confusion",
+  amazon_compliance: "Amazon compliance confusion",
 };
 
 const primaryGoalLabels: Record<string, string> = {
   launch_faster: "Launch new products faster",
-  replace_team: "Replace design team",
+  replace_design_team: "Replace design team",
   improve_ctr: "Improve CTR on existing products",
   scale_catalog: "Scale catalog (10+ SKUs)",
   reduce_costs: "Reduce image costs",
@@ -96,6 +90,12 @@ const primaryGoalLabels: Record<string, string> = {
 const getLabel = (value: string | null, labels: Record<string, string>): string => {
   if (!value) return "Not specified";
   return labels[value] || value.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const getArrayLabels = (values: string[] | string | null, labels: Record<string, string>): string[] => {
+  if (!values) return [];
+  const arr = Array.isArray(values) ? values : [values];
+  return arr.map(v => getLabel(v, labels));
 };
 
 const ResponseItem = ({
@@ -117,6 +117,17 @@ const ResponseItem = ({
     </div>
   </div>
 );
+
+const BadgeList = ({ items }: { items: string[] }) =>
+  items.length > 0 ? (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((item, i) => (
+        <Badge key={i} variant="secondary" className="text-xs">{item}</Badge>
+      ))}
+    </div>
+  ) : (
+    <p className="text-sm text-muted-foreground">Not specified</p>
+  );
 
 export function OnboardingResponseCard({ data, isLoading }: OnboardingResponseCardProps) {
   if (isLoading) {
@@ -163,9 +174,7 @@ export function OnboardingResponseCard({ data, isLoading }: OnboardingResponseCa
   const niches = [
     ...(data.niche || []).map(n => getLabel(n, nicheLabels)),
     data.niche_other,
-  ].filter(Boolean);
-
-  const problems = (data.problems_before || []).map(p => getLabel(p, problemsBeforeLabels));
+  ].filter(Boolean) as string[];
 
   return (
     <Card>
@@ -185,109 +194,14 @@ export function OnboardingResponseCard({ data, isLoading }: OnboardingResponseCa
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
-          {/* Q1: Niche */}
-          <ResponseItem
-            icon={Store}
-            question="Q1: Which niche are you in?"
-            value={
-              niches.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {niches.map((niche, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
-                      {niche}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Not specified</p>
-              )
-            }
-          />
-
-          {/* Q2: Why PeelKit */}
-          <ResponseItem
-            icon={MessageSquare}
-            question="Q2: Why did you choose PeelKit over alternatives?"
-            value={
-              <p className="text-sm font-medium">
-                {getLabel(data.why_peelkit, whyPeelkitLabels)}
-              </p>
-            }
-          />
-
-          {/* Q3: Design Goal (Who handles design) */}
-          <ResponseItem
-            icon={Palette}
-            question="Q3: Who currently handles your product design & imagery?"
-            value={
-              <p className="text-sm font-medium">
-                {getLabel(data.design_goal, designGoalLabels)}
-              </p>
-            }
-          />
-
-          {/* Q4: Products Monthly */}
-          <ResponseItem
-            icon={ShoppingCart}
-            question="Q4: How many products are you launching monthly?"
-            value={
-              <p className="text-sm font-medium">
-                {getLabel(data.products_monthly, productsMonthlyLabels)}
-              </p>
-            }
-          />
-
-          {/* Q5: Monthly Revenue */}
-          <ResponseItem
-            icon={DollarSign}
-            question="Q5: What's your monthly Amazon revenue right now?"
-            value={
-              <p className="text-sm font-medium">
-                {getLabel(data.monthly_revenue, monthlyRevenueLabels)}
-              </p>
-            }
-          />
-
-          {/* Q6: Sales Channels */}
-          <ResponseItem
-            icon={Briefcase}
-            question="Q6: Where else do you sell your products?"
-            value={
-              <p className="text-sm font-medium">
-                {getLabel(data.sales_channels, salesChannelsLabels)}
-              </p>
-            }
-          />
-
-          {/* Q7: Problems Before */}
-          <ResponseItem
-            icon={AlertCircle}
-            question="Q7: What was your biggest problem BEFORE PeelKit?"
-            value={
-              problems.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {problems.map((problem, i) => (
-                    <Badge key={i} variant="outline" className="text-xs">
-                      {problem}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Not specified</p>
-              )
-            }
-          />
-
-          {/* Q8: Primary Goal */}
-          <ResponseItem
-            icon={Target}
-            question="Q8: What's your primary goal with PeelKit?"
-            value={
-              <p className="text-sm font-medium">
-                {getLabel(data.primary_goal, primaryGoalLabels)}
-              </p>
-            }
-          />
+          <ResponseItem icon={Store} question="Q1: Which niche are you in?" value={<BadgeList items={niches} />} />
+          <ResponseItem icon={MessageSquare} question="Q2: Why did you choose PeelKit over alternatives?" value={<BadgeList items={getArrayLabels(data.why_peelkit, whyPeelkitLabels)} />} />
+          <ResponseItem icon={Palette} question="Q3: Who currently handles your product design & imagery?" value={<BadgeList items={getArrayLabels(data.design_goal, designGoalLabels)} />} />
+          <ResponseItem icon={ShoppingCart} question="Q4: How many products are you launching monthly?" value={<p className="text-sm font-medium">{getLabel(data.products_monthly, productsMonthlyLabels)}</p>} />
+          <ResponseItem icon={DollarSign} question="Q5: What's your monthly Amazon revenue right now?" value={<p className="text-sm font-medium">{getLabel(data.monthly_revenue, monthlyRevenueLabels)}</p>} />
+          <ResponseItem icon={Store} question="Q6: Where else do you sell your products?" value={<BadgeList items={getArrayLabels(data.sales_channels, salesChannelsLabels)} />} />
+          <ResponseItem icon={AlertCircle} question="Q7: What was your biggest problem BEFORE PeelKit?" value={<BadgeList items={getArrayLabels(data.problems_before, problemsBeforeLabels)} />} />
+          <ResponseItem icon={Target} question="Q8: What's your primary goal with PeelKit?" value={<p className="text-sm font-medium">{getLabel(data.primary_goal, primaryGoalLabels)}</p>} />
         </div>
       </CardContent>
     </Card>
