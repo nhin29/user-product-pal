@@ -7,12 +7,12 @@ interface OnboardingResponse {
   niche: string[] | null;
   niche_other: string | null;
   primary_goal: string | null;
-  design_goal: string | null;
+  design_goal: string[] | null;
   monthly_revenue: string | null;
   products_monthly: string | null;
-  sales_channels: string | null;
+  sales_channels: string[] | null;
   problems_before: string[] | null;
-  why_peelkit: string | null;
+  why_peelkit: string[] | null;
   completed_at: string | null;
 }
 
