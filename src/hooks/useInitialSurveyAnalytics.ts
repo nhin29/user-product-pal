@@ -28,13 +28,21 @@ const whyPeelkitLabels: Record<string, string> = {
   only_option: "Only option I found for this",
 };
 
-// Q3
+// Q3 - design_goal stores "who handles design" answers (new survey)
+// but old data stored "primary goal" values here too
 const designGoalLabels: Record<string, string> = {
   solo: "I do it myself (solo)",
   in_house: "In-house designer / team member",
   freelancer: "Freelancer (Fiverr, Upwork, etc.)",
   agency: "Design agency",
   not_started: "Haven't started yet",
+  // Legacy keys from old survey version
+  launch_faster: "Launch new products faster",
+  replace_design_team: "Replace design team",
+  improve_ctr: "Improve CTR on existing products",
+  scale_catalog: "Scale catalog (10+ SKUs)",
+  reduce_costs: "Reduce image costs",
+  experimenting: "Just experimenting",
 };
 
 // Q4
@@ -63,6 +71,12 @@ const salesChannelsLabels: Record<string, string> = {
   etsy: "Etsy",
   tiktok: "TikTok Shop",
   not_amazon: "I don't sell on Amazon yet",
+  // Legacy keys from old survey version
+  amazon_shopify: "Amazon + Shopify",
+  amazon_etsy: "Amazon + Etsy",
+  amazon_tiktok: "Amazon + TikTok Shop",
+  multiple: "Multiple channels (Amazon + 2+ others)",
+  shopify_etsy_only: "Shopify/Etsy only (no Amazon)",
 };
 
 // Q7
@@ -72,6 +86,12 @@ const problemsBeforeLabels: Record<string, string> = {
   time_consuming: "Time-consuming development",
   low_quality: "Low-quality design",
   amazon_compliance: "Amazon compliance confusion",
+  // Legacy keys from old survey version
+  designer_delays: "Designer delays / ghosting",
+  designer_quality: "Designer quality",
+  afford_costs: "Can't afford per-product design costs",
+  canva_generic: "Canva too generic",
+  slow_turnaround: "Speed / slow turnaround",
 };
 
 // Q8
@@ -82,6 +102,9 @@ const primaryGoalLabels: Record<string, string> = {
   scale_catalog: "Scale catalog (10+ SKUs)",
   reduce_costs: "Reduce image costs",
   experimenting: "Just experimenting",
+  // Legacy keys from old survey version
+  replace_designer: "Replace designer / reduce costs",
+  test_ads: "Test Meta/Instagram ads",
 };
 
 interface RawResponse {
