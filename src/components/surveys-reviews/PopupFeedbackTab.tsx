@@ -107,9 +107,23 @@ export default function PopupFeedbackTab() {
 
   const clearDates = () => { setStartDate(undefined); setEndDate(undefined); };
 
+  const dateFilter = (
+    <div className="flex items-center gap-2 flex-wrap">
+      <DatePickerButton date={startDate} onSelect={setStartDate} placeholder="Start date" />
+      <span className="text-muted-foreground text-sm">to</span>
+      <DatePickerButton date={endDate} onSelect={setEndDate} placeholder="End date" />
+      {(startDate || endDate) && (
+        <Button variant="ghost" size="sm" onClick={clearDates} className="h-8 px-2">
+          <X className="h-4 w-4 mr-1" /> Clear
+        </Button>
+      )}
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="space-y-4">
+        {dateFilter}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-20" />
@@ -126,15 +140,18 @@ export default function PopupFeedbackTab() {
 
   if (!data || data.totalResponses === 0) {
     return (
-      <Card>
-        <CardContent className="py-16 text-center text-muted-foreground">
-          <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-30" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No Feedback Yet</h3>
-          <p className="text-sm max-w-md mx-auto">
-            No pop-up feedback responses have been collected yet. Data will appear here once users complete the feedback questionnaire.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {dateFilter}
+        <Card>
+          <CardContent className="py-16 text-center text-muted-foreground">
+            <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-30" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Feedback Yet</h3>
+            <p className="text-sm max-w-md mx-auto">
+              No pop-up feedback responses have been collected yet. Data will appear here once users complete the feedback questionnaire.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -165,17 +182,7 @@ export default function PopupFeedbackTab() {
 
   return (
     <div className="space-y-6">
-      {/* Date Range Filter */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <DatePickerButton date={startDate} onSelect={setStartDate} placeholder="Start date" />
-        <span className="text-muted-foreground text-sm">to</span>
-        <DatePickerButton date={endDate} onSelect={setEndDate} placeholder="End date" />
-        {(startDate || endDate) && (
-          <Button variant="ghost" size="sm" onClick={clearDates} className="h-8 px-2">
-            <X className="h-4 w-4 mr-1" /> Clear
-          </Button>
-        )}
-      </div>
+      {dateFilter}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Total Responses" value={data.totalResponses} />
         <StatCard icon={CheckCircle} label="Completed" value={data.completedCount} />
