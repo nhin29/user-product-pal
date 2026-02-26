@@ -185,7 +185,12 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
               <Switch
                 id="is_refund"
                 checked={isRefund}
-                onCheckedChange={setIsRefund}
+                onCheckedChange={(checked) => {
+                  setIsRefund(checked);
+                  if (checked) {
+                    setSelectedProductIds([]);
+                  }
+                }}
               />
             </div>
             <div className="grid gap-2">

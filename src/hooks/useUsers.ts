@@ -94,6 +94,11 @@ export function useUsers() {
       
       if (isRefund !== undefined) {
         updateData.is_refund = isRefund;
+        // When setting refund to true, clear all product access
+        if (isRefund) {
+          updateData.product_ids = [];
+          productIds = [];
+        }
       }
 
       
