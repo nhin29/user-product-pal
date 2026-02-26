@@ -3,10 +3,11 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useSupportChats, UserConversation } from "@/hooks/useSupportChats";
 import { useSupportFolders } from "@/hooks/useSupportFolders";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Search, X } from "lucide-react";
 import { UserChatList } from "@/components/support/UserChatList";
 import { ChatConversation } from "@/components/support/ChatConversation";
 import { FolderTree } from "@/components/support/FolderTree";
+import { Input } from "@/components/ui/input";
 
 export default function SupportChatsPage() {
   const { conversations, isLoading, markAsRead } = useSupportChats();
@@ -14,6 +15,7 @@ export default function SupportChatsPage() {
   const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [readConvos, setReadConvos] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSelectConvo = (convo: UserConversation) => {
     setSelectedConvoId(convo.conversation_id);
@@ -61,7 +63,19 @@ export default function SupportChatsPage() {
     return conversations.filter((c) => c.folder_id && ids.has(c.folder_id));
   }, [conversations, folders, selectedFolderId]);
 
-  const conversationsWithReadState = filteredConversations.map((convo) => ({
+  // Apply search filter
+  const searchedConversations = useMemo(() => {
+    if (!searchQuery.trim()) return filteredConversations;
+    const q = searchQuery.toLowerCase();
+    return filteredConversations.filter(
+      (c) =>
+        c.user_name.toLowerCase().includes(q) ||
+        c.user_email.toLowerCase().includes(q) ||
+        c.messages.some((m) => m.message.toLowerCase().includes(q))
+    );
+  }, [filteredConversations, searchQuery]);
+
+  const conversationsWithReadState = searchedConversations.map((convo) => ({
     ...convo,
     unread_count: readConvos.has(convo.conversation_id) ? 0 : convo.unread_count,
   }));
@@ -111,12 +125,29 @@ export default function SupportChatsPage() {
 
           {/* User List */}
           <div className="lg:col-span-3 border rounded-lg overflow-hidden flex flex-col">
-            <div className="p-3 border-b bg-muted/50">
+            <div className="p-3 border-b bg-muted/50 space-y-2">
               <h2 className="font-semibold text-sm">
                 {selectedFolderId === null
                   ? "Inbox"
                   : folders.find((f) => f.id === selectedFolderId)?.name || "Folder"}
               </h2>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search chats..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 pl-8 pr-8 text-xs"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex-1 overflow-auto">
               {isLoading ? (

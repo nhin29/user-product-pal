@@ -257,6 +257,45 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_questionnaire: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          dismissed_at: string | null
+          ease_of_use: string | null
+          features_used: string[] | null
+          id: string
+          image_quality_rating: number | null
+          improvements: string[] | null
+          nps_score: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          ease_of_use?: string | null
+          features_used?: string[] | null
+          id?: string
+          image_quality_rating?: number | null
+          improvements?: string[] | null
+          nps_score?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          ease_of_use?: string | null
+          features_used?: string[] | null
+          id?: string
+          image_quality_rating?: number | null
+          improvements?: string[] | null
+          nps_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       generated_images: {
         Row: {
           analyzed_url: string | null
