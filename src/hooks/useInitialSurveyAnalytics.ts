@@ -87,12 +87,12 @@ const primaryGoalLabels: Record<string, string> = {
 interface RawResponse {
   niche: string[] | null;
   niche_other: string | null;
-  why_peelkit: string | string[] | null;
-  design_goal: string | string[] | null;
+  why_peelkit: string[] | null;
+  design_goal: string[] | null;
   products_monthly: string | null;
   monthly_revenue: string | null;
-  sales_channels: string | string[] | null;
-  problems_before: string[] | string | null;
+  sales_channels: string[] | null;
+  problems_before: string[] | null;
   primary_goal: string | null;
 }
 
