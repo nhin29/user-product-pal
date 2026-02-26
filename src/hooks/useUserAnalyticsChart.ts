@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays, startOfDay } from "date-fns";
-import { formatNY } from "@/lib/dateUtils";
+import { formatPlainDate } from "@/lib/dateUtils";
 
 interface ChartDataPoint {
   date: string;
@@ -38,7 +38,7 @@ export function useUserAnalyticsChart(userId: string, period: string) {
       if (error) throw error;
 
       return (data || []).map((row: any) => ({
-        date: formatNY(row.day, "MMM dd"),
+        date: formatPlainDate(row.day, "MMM dd"),
         copies: Number(row.copies),
         saves: Number(row.saves),
         pageViews: Number(row.page_views),
