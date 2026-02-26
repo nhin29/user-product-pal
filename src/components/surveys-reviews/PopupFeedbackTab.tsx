@@ -10,8 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   usePopupFeedbackAnalytics,
   easeOfUseLabels,
-  featuresUsedLabels,
-  improvementsLabels,
+  usefulnessLabels,
 } from "@/hooks/usePopupFeedbackAnalytics";
 import {
   BarChart,
@@ -155,28 +154,27 @@ export default function PopupFeedbackTab() {
     );
   }
 
-  const npsData = Object.entries(data.npsDistribution).map(([score, count]) => ({
-    name: score,
-    count,
-  }));
-
+  // Q1: Image Quality Rating (1-5 stars)
   const qualityData = Object.entries(data.imageQualityDistribution).map(([score, count]) => ({
     name: `${score}★`,
     count,
   }));
 
+  // Q2: Ease of Use
   const easeData = Object.entries(data.easeOfUseCounts).map(([key, count]) => ({
     name: easeOfUseLabels[key] || key,
     count,
   }));
 
-  const featuresData = Object.entries(data.featuresUsedCounts).map(([key, count]) => ({
-    name: featuresUsedLabels[key] || key,
+  // Q3: What would make PeelKit more useful
+  const usefulnessData = Object.entries(data.usefulnessCounts).map(([key, count]) => ({
+    name: usefulnessLabels[key] || key,
     count,
   }));
 
-  const improvementsData = Object.entries(data.improvementsCounts).map(([key, count]) => ({
-    name: improvementsLabels[key] || key,
+  // Q4: NPS (1-10)
+  const npsData = Object.entries(data.npsDistribution).map(([score, count]) => ({
+    name: score,
     count,
   }));
 
@@ -209,14 +207,33 @@ export default function PopupFeedbackTab() {
         </Card>
       )}
 
-      {/* Charts */}
+      {/* Charts - Q1 to Q4 */}
       <div className="grid md:grid-cols-2 gap-4">
-        <BarChartCard title="NPS Score Distribution (0-10)" data={npsData} />
-        <BarChartCard title="Image Quality Rating Distribution" data={qualityData} />
-        <BarChartCard title="Ease of Use" data={easeData} />
-        <BarChartCard title="Features Used (multi-select)" data={featuresData} />
-        <BarChartCard title="Suggested Improvements (multi-select)" data={improvementsData} />
+        <BarChartCard title="Q1: Image Quality Rating (1-5 ⭐)" data={qualityData} />
+        <BarChartCard title="Q2: Ease of Finding Template & Generating" data={easeData} />
+        <BarChartCard title="Q3: What Would Make PeelKit More Useful (multi-select)" data={usefulnessData} />
+        <BarChartCard title="Q4: Likelihood to Recommend (1-10)" data={npsData} />
       </div>
+
+      {/* Q5: Additional Feedback */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Q5: Additional Feedback</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.additionalFeedback.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No text feedback yet</p>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {data.additionalFeedback.map((feedback, i) => (
+                <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                  <p className="text-sm text-foreground">{feedback}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

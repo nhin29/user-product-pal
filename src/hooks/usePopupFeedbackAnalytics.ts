@@ -10,8 +10,8 @@ export interface PopupFeedbackData {
   npsDistribution: Record<number, number>;
   imageQualityDistribution: Record<number, number>;
   easeOfUseCounts: Record<string, number>;
-  featuresUsedCounts: Record<string, number>;
-  improvementsCounts: Record<string, number>;
+  usefulnessCounts: Record<string, number>;
+  additionalFeedback: string[];
 }
 
 const easeOfUseLabels: Record<string, string> = {
@@ -22,31 +22,22 @@ const easeOfUseLabels: Record<string, string> = {
   very_difficult: "Very Difficult",
 };
 
-const featuresUsedLabels: Record<string, string> = {
-  copy_prompts: "Copy Prompts",
-  browse_templates: "Browse Templates",
-  generate_images: "Generate Images",
-  save_favorites: "Save Favorites",
-  customize_prompts: "Customize Prompts",
-};
-
-const improvementsLabels: Record<string, string> = {
+const usefulnessLabels: Record<string, string> = {
+  more_categories: "More Template Categories",
+  better_quality: "Better Image Quality",
   faster_generation: "Faster Generation",
-  more_categories: "More Categories",
-  better_prompts: "Better Prompts",
-  more_templates: "More Templates",
-  pricing: "Better Pricing",
-  mobile_app: "Mobile App",
+  bulk_generation: "Bulk Generation",
+  video_content: "Video Content",
 };
 
-export { easeOfUseLabels, featuresUsedLabels, improvementsLabels };
+export { easeOfUseLabels, usefulnessLabels };
 
 interface RawFeedback {
   nps_score: number | null;
   image_quality_rating: number | null;
   ease_of_use: string | null;
-  features_used: string[] | null;
   improvements: string[] | null;
+  additional_feedback: string | null;
   completed_at: string | null;
   dismissed_at: string | null;
 }
@@ -57,7 +48,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
     queryFn: async (): Promise<PopupFeedbackData> => {
       let query = supabase
         .from("feedback_questionnaire")
-        .select("nps_score, image_quality_rating, ease_of_use, features_used, improvements, completed_at, dismissed_at, created_at");
+        .select("nps_score, image_quality_rating, ease_of_use, improvements, additional_feedback, completed_at, dismissed_at, created_at");
 
       if (startDate) {
         query = query.gte("created_at", startDate.toISOString());
@@ -77,21 +68,14 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
       const completedCount = rows.filter((r) => r.completed_at).length;
       const dismissedCount = rows.filter((r) => r.dismissed_at).length;
 
-      // NPS
-      const npsValues = rows.map((r) => r.nps_score).filter((v): v is number => v !== null);
-      const avgNps = npsValues.length > 0 ? npsValues.reduce((a, b) => a + b, 0) / npsValues.length : null;
-      const npsDistribution: Record<number, number> = {};
-      for (let i = 0; i <= 10; i++) npsDistribution[i] = 0;
-      npsValues.forEach((v) => { npsDistribution[v] = (npsDistribution[v] || 0) + 1; });
-
-      // Image Quality
+      // Q1: Image Quality (1-5)
       const qualityValues = rows.map((r) => r.image_quality_rating).filter((v): v is number => v !== null);
       const avgImageQuality = qualityValues.length > 0 ? qualityValues.reduce((a, b) => a + b, 0) / qualityValues.length : null;
       const imageQualityDistribution: Record<number, number> = {};
       for (let i = 1; i <= 5; i++) imageQualityDistribution[i] = 0;
       qualityValues.forEach((v) => { imageQualityDistribution[v] = (imageQualityDistribution[v] || 0) + 1; });
 
-      // Ease of Use
+      // Q2: Ease of Use
       const easeOfUseCounts: Record<string, number> = {};
       Object.keys(easeOfUseLabels).forEach((k) => (easeOfUseCounts[k] = 0));
       rows.forEach((r) => {
@@ -100,25 +84,27 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         }
       });
 
-      // Features Used
-      const featuresUsedCounts: Record<string, number> = {};
-      Object.keys(featuresUsedLabels).forEach((k) => (featuresUsedCounts[k] = 0));
-      rows.forEach((r) => {
-        const arr = Array.isArray(r.features_used) ? r.features_used : [];
-        arr.forEach((f) => {
-          if (f in featuresUsedLabels) featuresUsedCounts[f] += 1;
-        });
-      });
-
-      // Improvements
-      const improvementsCounts: Record<string, number> = {};
-      Object.keys(improvementsLabels).forEach((k) => (improvementsCounts[k] = 0));
+      // Q3: Usefulness / Improvements (multi-select)
+      const usefulnessCounts: Record<string, number> = {};
+      Object.keys(usefulnessLabels).forEach((k) => (usefulnessCounts[k] = 0));
       rows.forEach((r) => {
         const arr = Array.isArray(r.improvements) ? r.improvements : [];
         arr.forEach((imp) => {
-          if (imp in improvementsLabels) improvementsCounts[imp] += 1;
+          if (imp in usefulnessLabels) usefulnessCounts[imp] += 1;
         });
       });
+
+      // Q4: NPS (1-10)
+      const npsValues = rows.map((r) => r.nps_score).filter((v): v is number => v !== null);
+      const avgNps = npsValues.length > 0 ? npsValues.reduce((a, b) => a + b, 0) / npsValues.length : null;
+      const npsDistribution: Record<number, number> = {};
+      for (let i = 1; i <= 10; i++) npsDistribution[i] = 0;
+      npsValues.forEach((v) => { npsDistribution[v] = (npsDistribution[v] || 0) + 1; });
+
+      // Q5: Additional feedback (text)
+      const additionalFeedback = rows
+        .map((r) => r.additional_feedback)
+        .filter((v): v is string => !!v && v.trim().length > 0);
 
       return {
         totalResponses: total,
@@ -129,8 +115,8 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         npsDistribution,
         imageQualityDistribution,
         easeOfUseCounts,
-        featuresUsedCounts,
-        improvementsCounts,
+        usefulnessCounts,
+        additionalFeedback,
       };
     },
   });

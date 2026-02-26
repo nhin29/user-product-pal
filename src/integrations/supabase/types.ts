@@ -259,6 +259,7 @@ export type Database = {
       }
       feedback_questionnaire: {
         Row: {
+          additional_feedback: string | null
           completed_at: string | null
           created_at: string
           dismissed_at: string | null
@@ -271,6 +272,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          additional_feedback?: string | null
           completed_at?: string | null
           created_at?: string
           dismissed_at?: string | null
@@ -283,6 +285,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          additional_feedback?: string | null
           completed_at?: string | null
           created_at?: string
           dismissed_at?: string | null

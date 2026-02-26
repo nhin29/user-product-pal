@@ -1,0 +1,1 @@
+ALTER TABLE public.feedback_questionnaire ADD COLUMN additional_feedback text;
