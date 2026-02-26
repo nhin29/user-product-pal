@@ -75,7 +75,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const { data, isLoading, isFetching, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, nicheFilter, platformFilter);
+  const { data, isLoading, isFetching, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, "", platformFilter);
   const { data: categories } = useCategories();
   const { data: productTypes } = useProductTypes();
   const reorderProducts = useReorderProducts();
@@ -133,7 +133,7 @@ export default function ProductsPage() {
   const someSelected = products.some((p) => selectedIds.includes(p.id));
 
   // Check if any filters are active (drag disabled when filters active)
-  const hasActiveFilters = categoryFilter || nicheFilter || platformFilter || debouncedSearch;
+  const hasActiveFilters = categoryFilter || platformFilter || debouncedSearch;
 
   // DnD sensors
   const sensors = useSensors(
@@ -172,7 +172,6 @@ export default function ProductsPage() {
 
   const handleNicheChange = (value: string) => {
     setNicheFilter(value === "all" ? "" : value);
-    setCurrentPage(1);
   };
 
   const handlePlatformChange = (value: string) => {
@@ -487,6 +486,7 @@ export default function ProductsPage() {
                             key={product.id}
                             product={product}
                             productImages={productImagesMap.get(product.id) || []}
+                            selectedNicheId={nicheFilter}
                             index={(currentPage - 1) * pageSize + idx + 1}
                             isSelected={selectedIds.includes(product.id)}
                             onSelect={handleSelectOne}
