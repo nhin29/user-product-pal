@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useUserAnalytics } from "@/hooks/useUserAnalytics";
 import { useUserAnalyticsChart } from "@/hooks/useUserAnalyticsChart";
 import { useUsers } from "@/hooks/useUsers";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import { ActivityChart } from "@/components/user-analytics/ActivityChart";
 import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingResponseCard";
 import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
@@ -352,7 +352,7 @@ export default function UserAnalyticsPage() {
                           {getEventDescription(event)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(event.created_at), {
+                          {formatDistanceToNowNY(event.created_at, {
                             addSuffix: true,
                           })}
                         </p>

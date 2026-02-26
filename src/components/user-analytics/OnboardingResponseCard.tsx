@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toLocaleDateStringNY } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClipboardList, Target, Palette, DollarSign, ShoppingCart, Store, AlertCircle, MessageSquare } from "lucide-react";
@@ -187,7 +188,7 @@ export function OnboardingResponseCard({ data, isLoading }: OnboardingResponseCa
           User's onboarding survey answers
           {data.completed_at && (
             <span className="ml-2 text-xs">
-              • Completed {new Date(data.completed_at).toLocaleDateString()}
+              • Completed {toLocaleDateStringNY(data.completed_at)}
             </span>
           )}
         </CardDescription>

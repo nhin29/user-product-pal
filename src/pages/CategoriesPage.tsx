@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toLocaleDateStringNY } from "@/lib/dateUtils";
 import { Search, Plus, MoreHorizontal, Edit, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -138,7 +139,7 @@ export default function CategoriesPage() {
                       </TableCell>
                       <TableCell>
                         <span className="text-muted-foreground text-sm">
-                          {new Date(category.created_at).toLocaleDateString()}
+                          {toLocaleDateStringNY(category.created_at)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">

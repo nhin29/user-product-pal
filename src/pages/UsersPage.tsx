@@ -23,7 +23,7 @@ import { useUsers, UserProfile } from "@/hooks/useUsers";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
-import { format } from "date-fns";
+import { formatNY } from "@/lib/dateUtils";
 
 const getInitials = (name: string | null) => {
   if (!name) return "?";
@@ -408,13 +408,13 @@ export default function UsersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-muted-foreground">
-                          {format(new Date(user.created_at), "MMM d, yyyy")}
+                          {formatNY(user.created_at, "MMM d, yyyy")}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-muted-foreground">
                           {lastActive[user.user_id]
-                            ? format(new Date(lastActive[user.user_id]), "MMM d, yyyy")
+                            ? formatNY(lastActive[user.user_id], "MMM d, yyyy")
                             : "—"}
                         </span>
                       </td>

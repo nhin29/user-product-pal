@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { toLocaleDateStringNY } from "@/lib/dateUtils";
 import {
   Dialog,
   DialogContent,
@@ -165,7 +166,7 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-xs text-muted-foreground">Created</p>
-                <p className="text-sm font-medium">{new Date(product.created_at).toLocaleDateString()}</p>
+                <p className="text-sm font-medium">{toLocaleDateStringNY(product.created_at)}</p>
               </div>
             </div>
           </div>

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Star, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatNY, formatDistanceToNowNY } from "@/lib/dateUtils";
 import { useToast } from "@/hooks/use-toast";
 
 function StarRating({ rating }: { rating: number }) {
@@ -206,7 +206,7 @@ export default function ReviewsTab() {
                             <span className="text-sm font-medium text-foreground">{review.display_name || "Anonymous"}</span>
                             <StarRating rating={review.rating} />
                           </div>
-                          <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}</span>
+                          <span className="text-xs text-muted-foreground">{formatDistanceToNowNY(review.created_at, { addSuffix: true })}</span>
                         </div>
                         {review.comment && <p className="mt-1.5 text-sm text-foreground/80 truncate">{review.comment}</p>}
                       </div>
@@ -250,7 +250,7 @@ export default function ReviewsTab() {
                 )}
                 <div>
                   <p className="font-medium text-foreground">{selectedReview.display_name || "Anonymous"}</p>
-                  <p className="text-xs text-muted-foreground">{format(new Date(selectedReview.created_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                  <p className="text-xs text-muted-foreground">{formatNY(selectedReview.created_at, "MMM d, yyyy 'at' h:mm a")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

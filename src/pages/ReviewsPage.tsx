@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Star, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatNY, formatDistanceToNowNY } from "@/lib/dateUtils";
 import { useToast } from "@/hooks/use-toast";
 
 function StarRating({ rating }: { rating: number }) {
@@ -300,7 +300,7 @@ export default function ReviewsPage() {
                               <StarRating rating={review.rating} />
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                              {formatDistanceToNowNY(review.created_at, { addSuffix: true })}
                             </span>
                           </div>
                           {review.comment && (
@@ -393,7 +393,7 @@ export default function ReviewsPage() {
                       {selectedReview.display_name || "Anonymous"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(selectedReview.created_at), "MMM d, yyyy 'at' h:mm a")}
+                      {formatNY(selectedReview.created_at, "MMM d, yyyy 'at' h:mm a")}
                     </p>
                   </div>
                 </div>

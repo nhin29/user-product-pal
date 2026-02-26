@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, MessageSquare } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowNY } from "@/lib/dateUtils";
 
 interface UserFeedbackCardProps {
   userId: string;
@@ -66,7 +66,7 @@ export function UserFeedbackCard({ userId }: UserFeedbackCardProps) {
                     ))}
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                    {formatDistanceToNowNY(review.created_at, { addSuffix: true })}
                   </span>
                 </div>
                 {review.comment && (

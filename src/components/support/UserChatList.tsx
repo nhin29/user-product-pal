@@ -1,7 +1,7 @@
 import { UserConversation } from "@/hooks/useSupportChats";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
 
 interface UserChatListProps {
@@ -54,14 +54,14 @@ export function UserChatList({
                   {lastMsg?.message}
                 </p>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {formatDistanceToNow(new Date(convo.last_message_at), {
+                  {formatDistanceToNowNY(convo.last_message_at, {
                     addSuffix: true,
                   })}
                 </span>
               </div>
               {convo.last_seen && (
                 <p className="text-xs text-muted-foreground/70 mt-0.5">
-                  Last seen {formatDistanceToNow(new Date(convo.last_seen), { addSuffix: true })}
+                  Last seen {formatDistanceToNowNY(convo.last_seen, { addSuffix: true })}
                 </p>
               )}
             </div>

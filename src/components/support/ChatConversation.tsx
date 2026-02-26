@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Send, Loader2, Trash2, FolderInput, Inbox, Paperclip, X, FileText, Download } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatNY, formatDistanceToNowNY } from "@/lib/dateUtils";
 import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 import { EmojiPicker } from "./EmojiPicker";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,7 +156,7 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
         </div>
         {conversation.last_seen && (
           <span className="text-xs text-muted-foreground">
-            Last seen {formatDistanceToNow(new Date(conversation.last_seen), { addSuffix: true })}
+            Last seen {formatDistanceToNowNY(conversation.last_seen, { addSuffix: true })}
           </span>
         )}
 
@@ -341,12 +341,12 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
 
         <div className={`flex items-center gap-1.5 mt-1 ${isAdmin ? "justify-end" : ""}`}>
           <span className={`text-xs ${isAdmin ? "opacity-70" : "text-muted-foreground"}`}>
-            {format(new Date(msg.created_at), "MMM d, h:mm a")}
+            {formatNY(msg.created_at, "MMM d, h:mm a")}
           </span>
           {isAdmin && (
             <span className={`text-xs ${msg.read_at ? "opacity-90" : "opacity-50"}`}>
               {msg.read_at
-                ? `✓✓ Seen ${formatDistanceToNow(new Date(msg.read_at), { addSuffix: true })}`
+                ? `✓✓ Seen ${formatDistanceToNowNY(msg.read_at, { addSuffix: true })}`
                 : "✓ Sent"}
             </span>
           )}
