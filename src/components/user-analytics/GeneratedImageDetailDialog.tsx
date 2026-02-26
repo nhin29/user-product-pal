@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Star, ExternalLink, Calendar, Link2, FileText } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import type { GeneratedImageWithRating } from "@/hooks/useUserAnalytics";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,7 +74,7 @@ export function GeneratedImageDetailDialog({ image, open, onOpenChange }: Props)
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Created:</span>
-            <span>{formatDistanceToNow(new Date(image.created_at), { addSuffix: true })}</span>
+            <span>{formatDistanceToNowNY(image.created_at, { addSuffix: true })}</span>
           </div>
 
           {/* Analyzed URL */}

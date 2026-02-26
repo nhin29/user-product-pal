@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import {
   Dialog,
   DialogContent,
@@ -200,7 +200,7 @@ export default function GalleryPage() {
                   </Badge>
                 )}
                 <span className="ml-auto text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(selected.created_at), { addSuffix: true })}
+                  {formatDistanceToNowNY(selected.created_at, { addSuffix: true })}
                 </span>
               </div>
 

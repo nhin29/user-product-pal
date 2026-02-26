@@ -1,5 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { toLocaleDateStringNY } from "@/lib/dateUtils";
 import { GripVertical, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -161,7 +162,7 @@ export function SortableProductRow({
       </TableCell>
       <TableCell>
         <span className="text-muted-foreground text-sm">
-          {new Date(product.created_at).toLocaleDateString()}
+          {toLocaleDateStringNY(product.created_at)}
         </span>
       </TableCell>
       <TableCell className="text-right">
