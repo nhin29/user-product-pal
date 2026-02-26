@@ -38,3 +38,14 @@ export function toLocaleDateStringNY(date: string | Date): string {
     year: "numeric",
   });
 }
+
+/**
+ * Format a plain date string (YYYY-MM-DD) without timezone conversion.
+ * Use this for date-only fields (no time component) to avoid UTC shift issues.
+ */
+export function formatPlainDate(dateStr: string, formatStr: string): string {
+  // Parse as local date to avoid UTC midnight shift
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const localDate = new Date(year, month - 1, day);
+  return dateFnsFormat(localDate, formatStr);
+}
