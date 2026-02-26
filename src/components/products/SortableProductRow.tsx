@@ -21,8 +21,14 @@ const platformColors: Record<string, string> = {
   other: "bg-muted text-muted-foreground",
 };
 
+interface ProductImageData {
+  image_url: string;
+  niche_id: string | null;
+}
+
 interface SortableProductRowProps {
   product: Product;
+  productImages: ProductImageData[];
   index: number;
   isSelected: boolean;
   onSelect: (id: string, checked: boolean) => void;
@@ -33,6 +39,7 @@ interface SortableProductRowProps {
 
 export function SortableProductRow({
   product,
+  productImages,
   index,
   isSelected,
   onSelect,
@@ -55,6 +62,15 @@ export function SortableProductRow({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  // Use product_images cover, fallback to image_urls[0]
+  const coverUrl = productImages.length > 0
+    ? productImages[0].image_url
+    : product.image_urls?.[0] || null;
+
+  const imageCount = productImages.length > 0
+    ? productImages.length
+    : (product.image_urls?.length || 0);
 
   return (
     <TableRow
@@ -86,9 +102,9 @@ export function SortableProductRow({
           className="h-10 w-10 overflow-hidden rounded-lg bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
           onClick={() => onPreview(product)}
         >
-        {product.image_urls?.[0] ? (
+          {coverUrl ? (
             <img
-              src={product.image_urls[0]}
+              src={coverUrl}
               alt="Product"
               loading="lazy"
               decoding="async"
@@ -116,7 +132,7 @@ export function SortableProductRow({
       </TableCell>
       <TableCell>
         <span className="text-muted-foreground text-sm">
-          {product.image_urls?.length || 0} images
+          {imageCount} {imageCount === 1 ? "image" : "images"}
         </span>
       </TableCell>
       <TableCell>
