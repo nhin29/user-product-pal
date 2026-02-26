@@ -28,7 +28,7 @@ function SurveyQuestionCard({ data, index }: { data: SurveyQuestionData; index: 
 
   const mostCommon = entries[0];
   const leastCommon = entries.filter(e => e.count > 0).slice(-1)[0];
-  const usePie = entries.length <= 6 && !data.isMultiSelect;
+  const usePie = false;
 
   return (
     <Card>

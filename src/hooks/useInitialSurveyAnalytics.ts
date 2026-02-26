@@ -138,12 +138,12 @@ export function useInitialSurveyAnalytics() {
       const questions: SurveyQuestionData[] = [
         { question: "Which niche are you in?", questionKey: "niche", isMultiSelect: true, labels: nicheLabelsExt, counts: nicheCounts, totalResponses: total },
         { question: "Why did you choose PeelKit over alternatives?", questionKey: "why_peelkit", isMultiSelect: false, labels: whyPeelkitLabels, counts: countSingleField(responses, "why_peelkit", whyPeelkitLabels), totalResponses: total },
-        { question: "What's your primary goal with PeelKit?", questionKey: "design_goal", isMultiSelect: false, labels: designGoalLabels, counts: countSingleField(responses, "design_goal", designGoalLabels), totalResponses: total },
         { question: "How many products are you launching monthly?", questionKey: "products_monthly", isMultiSelect: false, labels: productsMonthlyLabels, counts: countSingleField(responses, "products_monthly", productsMonthlyLabels), totalResponses: total },
-        { question: "What's your monthly Amazon/Meta ad revenue right now?", questionKey: "monthly_revenue", isMultiSelect: false, labels: monthlyRevenueLabels, counts: countSingleField(responses, "monthly_revenue", monthlyRevenueLabels), totalResponses: total },
-        { question: "Where else do you sell your products?", questionKey: "sales_channels", isMultiSelect: false, labels: salesChannelsLabels, counts: countSingleField(responses, "sales_channels", salesChannelsLabels), totalResponses: total },
         { question: "What was your biggest problem BEFORE PeelKit?", questionKey: "problems_before", isMultiSelect: true, labels: problemsBeforeLabels, counts: countArrayField(responses, "problems_before", problemsBeforeLabels), totalResponses: total },
         { question: "What's your primary goal with PeelKit?", questionKey: "primary_goal", isMultiSelect: false, labels: primaryGoalLabels, counts: countSingleField(responses, "primary_goal", primaryGoalLabels), totalResponses: total },
+        { question: "What's your monthly Amazon/Meta ad revenue right now?", questionKey: "monthly_revenue", isMultiSelect: false, labels: monthlyRevenueLabels, counts: countSingleField(responses, "monthly_revenue", monthlyRevenueLabels), totalResponses: total },
+        { question: "Where else do you sell your products?", questionKey: "sales_channels", isMultiSelect: false, labels: salesChannelsLabels, counts: countSingleField(responses, "sales_channels", salesChannelsLabels), totalResponses: total },
+        { question: "What's your design/imagery goal with PeelKit?", questionKey: "design_goal", isMultiSelect: false, labels: designGoalLabels, counts: countSingleField(responses, "design_goal", designGoalLabels), totalResponses: total },
       ];
 
       return { totalResponses: total, questions };
