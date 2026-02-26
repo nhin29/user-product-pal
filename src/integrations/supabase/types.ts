@@ -305,7 +305,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
-          design_goal: string | null
+          design_goal: string[] | null
           id: string
           monthly_revenue: string | null
           niche: string[] | null
@@ -313,15 +313,15 @@ export type Database = {
           primary_goal: string | null
           problems_before: string[] | null
           products_monthly: string | null
-          sales_channels: string | null
+          sales_channels: string[] | null
           updated_at: string
           user_id: string
-          why_peelkit: string | null
+          why_peelkit: string[] | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
-          design_goal?: string | null
+          design_goal?: string[] | null
           id?: string
           monthly_revenue?: string | null
           niche?: string[] | null
@@ -329,15 +329,15 @@ export type Database = {
           primary_goal?: string | null
           problems_before?: string[] | null
           products_monthly?: string | null
-          sales_channels?: string | null
+          sales_channels?: string[] | null
           updated_at?: string
           user_id: string
-          why_peelkit?: string | null
+          why_peelkit?: string[] | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
-          design_goal?: string | null
+          design_goal?: string[] | null
           id?: string
           monthly_revenue?: string | null
           niche?: string[] | null
@@ -345,10 +345,10 @@ export type Database = {
           primary_goal?: string | null
           problems_before?: string[] | null
           products_monthly?: string | null
-          sales_channels?: string | null
+          sales_channels?: string[] | null
           updated_at?: string
           user_id?: string
-          why_peelkit?: string | null
+          why_peelkit?: string[] | null
         }
         Relationships: []
       }
