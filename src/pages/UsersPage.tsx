@@ -358,6 +358,9 @@ export default function UsersPage() {
                               <p className="font-medium text-foreground">
                                 {user.display_name || "Unnamed User"}
                               </p>
+                              {user.is_refund && (
+                                <span className="text-red-500" title="Refunded">♻️</span>
+                              )}
                               {powerUsers.has(user.user_id) && (
                                 <span className="text-amber-500" title="Power user: 10+ copies & generations">⭐</span>
                               )}
