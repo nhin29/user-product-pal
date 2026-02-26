@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, Users, CheckCircle, XCircle, TrendingUp, Star } from "lucide-react";
+import { MessageSquare, Users, CheckCircle, XCircle, TrendingUp, Star, CalendarIcon, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   usePopupFeedbackAnalytics,
   easeOfUseLabels,
@@ -19,6 +25,22 @@ import {
 } from "recharts";
 
 const CHART_COLOR = "hsl(var(--primary))";
+
+function DatePickerButton({ date, onSelect, placeholder }: { date?: Date; onSelect: (d?: Date) => void; placeholder: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className={cn("w-[150px] justify-start text-left font-normal text-sm", !date && "text-muted-foreground")}>
+          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+          {date ? format(date, "MMM d, yyyy") : placeholder}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={date} onSelect={(d) => onSelect(d || undefined)} initialFocus className="p-3 pointer-events-auto" />
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) {
   return (
@@ -79,7 +101,11 @@ function BarChartCard({
 }
 
 export default function PopupFeedbackTab() {
-  const { data, isLoading } = usePopupFeedbackAnalytics();
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const { data, isLoading } = usePopupFeedbackAnalytics(startDate, endDate);
+
+  const clearDates = () => { setStartDate(undefined); setEndDate(undefined); };
 
   if (isLoading) {
     return (
@@ -139,7 +165,17 @@ export default function PopupFeedbackTab() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats */}
+      {/* Date Range Filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <DatePickerButton date={startDate} onSelect={setStartDate} placeholder="Start date" />
+        <span className="text-muted-foreground text-sm">to</span>
+        <DatePickerButton date={endDate} onSelect={setEndDate} placeholder="End date" />
+        {(startDate || endDate) && (
+          <Button variant="ghost" size="sm" onClick={clearDates} className="h-8 px-2">
+            <X className="h-4 w-4 mr-1" /> Clear
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Total Responses" value={data.totalResponses} />
         <StatCard icon={CheckCircle} label="Completed" value={data.completedCount} />
