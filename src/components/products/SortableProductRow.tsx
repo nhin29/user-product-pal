@@ -29,6 +29,7 @@ interface ProductImageData {
 interface SortableProductRowProps {
   product: Product;
   productImages: ProductImageData[];
+  selectedNicheId: string;
   index: number;
   isSelected: boolean;
   onSelect: (id: string, checked: boolean) => void;
@@ -40,6 +41,7 @@ interface SortableProductRowProps {
 export function SortableProductRow({
   product,
   productImages,
+  selectedNicheId,
   index,
   isSelected,
   onSelect,
@@ -63,11 +65,20 @@ export function SortableProductRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // Use product_images cover, fallback to image_urls[0]
-  const coverUrl = productImages.length > 0
-    ? productImages[0].image_url
-    : product.image_urls?.[0] || null;
-
+  // Determine cover image based on selected niche
+  let coverUrl: string | null = null;
+  if (productImages.length > 0) {
+    if (selectedNicheId) {
+      // Find the first image matching the selected niche (already sorted by display_order)
+      const nicheImage = productImages.find(img => img.niche_id === selectedNicheId);
+      coverUrl = nicheImage?.image_url || productImages[0].image_url;
+    } else {
+      // No niche selected or "all" — show first image (cover)
+      coverUrl = productImages[0].image_url;
+    }
+  } else {
+    coverUrl = product.image_urls?.[0] || null;
+  }
   const imageCount = productImages.length > 0
     ? productImages.length
     : (product.image_urls?.length || 0);
