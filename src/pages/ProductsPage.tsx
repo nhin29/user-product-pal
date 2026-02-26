@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, Plus, Trash2, Copy, Loader2, ChevronLeft, ChevronRight, Filter, X, GripVertical, FileSpreadsheet, CalendarIcon, RefreshCw, FolderOpen, Layers } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -36,6 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProducts, useCategories, useProductTypes, Product, useReorderProducts } from "@/hooks/useProducts";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { useProductsRealtime } from "@/hooks/useProductsRealtime";
 import { AddProductDialog } from "@/components/products/AddProductDialog";
 import { EditProductDialog } from "@/components/products/EditProductDialog";
@@ -99,6 +101,33 @@ export default function ProductsPage() {
   const products = data?.data || [];
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Fetch product_images for all visible products
+  const productIdsForImages = useMemo(() => products.map(p => p.id), [products]);
+  const { data: allProductImages } = useQuery({
+    queryKey: ["product-images-bulk", productIdsForImages],
+    queryFn: async () => {
+      if (productIdsForImages.length === 0) return [];
+      const { data, error } = await supabase
+        .from("product_images")
+        .select("product_id, image_url, niche_id, display_order")
+        .in("product_id", productIdsForImages)
+        .order("display_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: productIdsForImages.length > 0,
+  });
+
+  // Group images by product_id
+  const productImagesMap = useMemo(() => {
+    const map = new Map<string, { image_url: string; niche_id: string | null }[]>();
+    (allProductImages || []).forEach(img => {
+      if (!map.has(img.product_id)) map.set(img.product_id, []);
+      map.get(img.product_id)!.push({ image_url: img.image_url, niche_id: img.niche_id });
+    });
+    return map;
+  }, [allProductImages]);
 
   const allSelected = products.length > 0 && products.every((p) => selectedIds.includes(p.id));
   const someSelected = products.some((p) => selectedIds.includes(p.id));
@@ -457,6 +486,7 @@ export default function ProductsPage() {
                           <SortableProductRow
                             key={product.id}
                             product={product}
+                            productImages={productImagesMap.get(product.id) || []}
                             index={(currentPage - 1) * pageSize + idx + 1}
                             isSelected={selectedIds.includes(product.id)}
                             onSelect={handleSelectOne}
