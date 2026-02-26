@@ -8,7 +8,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Product } from "@/hooks/useProducts";
+import { Product, useProductTypes } from "@/hooks/useProducts";
+import { useProductImages } from "@/hooks/useProductImages";
 import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, Calendar, Tag, Monitor, Layers, Star, StickyNote, UserCircle } from "lucide-react";
 
@@ -37,7 +38,6 @@ function useProductReviews(productId: string | undefined) {
     queryKey: ["product-reviews", productId],
     queryFn: async () => {
       if (!productId) return [];
-      // Get generated_image_ids for this product, then fetch their reviews
       const { data: images } = await supabase
         .from("generated_images")
         .select("id")
@@ -62,9 +62,7 @@ function StarRating({ rating }: { rating: number }) {
         <Star
           key={star}
           className={`h-4 w-4 ${
-            star <= rating
-              ? "fill-yellow-400 text-yellow-400"
-              : "text-muted-foreground/30"
+            star <= rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"
           }`}
         />
       ))}
@@ -74,14 +72,23 @@ function StarRating({ rating }: { rating: number }) {
 
 export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPreviewDialogProps) {
   const { data: reviews = [], isLoading: reviewsLoading } = useProductReviews(product?.id);
+  const { data: productImages = [] } = useProductImages(product?.id);
+  const { data: productTypes } = useProductTypes();
 
   if (!product) return null;
 
   const categoryName = (product as any).categories?.name || "Uncategorized";
-  const productTypeName = (product as any).product_types?.name || "—";
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+  const averageRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
+
+  // Build a niche name lookup
+  const nicheMap = new Map(productTypes?.map(t => [t.id, t.name]) || []);
+
+  // Use product_images if available, fallback to image_urls
+  const displayImages = productImages.length > 0
+    ? productImages.map(img => ({ url: img.image_url, niche: nicheMap.get(img.niche_id || "") || null }))
+    : (product.image_urls || []).map(url => ({ url, niche: null }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,24 +98,29 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Images Grid */}
+          {/* Images Grid with niche badges */}
           <div>
-            {(product.image_urls || []).length > 0 ? (
+            {displayImages.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
-                {(product.image_urls || []).map((url, index) => (
+                {displayImages.map((img, index) => (
                   <div
                     key={index}
                     className="relative group aspect-square overflow-hidden rounded-lg border bg-muted cursor-pointer"
-                    onClick={() => window.open(url, "_blank")}
+                    onClick={() => window.open(img.url, "_blank")}
                   >
                     <img
-                      src={url}
+                      src={img.url}
                       alt={`Product image ${index + 1}`}
                       loading="lazy"
                       decoding="async"
                       className="h-full w-full object-cover transition-transform group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    {img.niche && (
+                      <Badge variant="secondary" className="absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0.5">
+                        {img.niche}
+                      </Badge>
+                    )}
                     <Button
                       variant="secondary"
                       size="icon"
@@ -126,16 +138,8 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             )}
           </div>
 
-
           {/* Details Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Layers className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-xs text-muted-foreground">Product Type</p>
-                <p className="text-sm font-medium">{productTypeName}</p>
-              </div>
-            </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Monitor className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
@@ -146,7 +150,7 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Tag className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
-                <p className="text-xs text-muted-foreground">Category</p>
+                <p className="text-xs text-muted-foreground">Image Style</p>
                 <p className="text-sm font-medium">{categoryName}</p>
               </div>
             </div>
@@ -161,19 +165,16 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-xs text-muted-foreground">Created</p>
-                <p className="text-sm font-medium">
-                  {new Date(product.created_at).toLocaleDateString()}
-                </p>
+                <p className="text-sm font-medium">{new Date(product.created_at).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
 
-          {/* Note Section */}
+          {/* Note */}
           {product.note && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <StickyNote className="h-4 w-4" />
-                Note
+                <StickyNote className="h-4 w-4" /> Note
               </h3>
               <div className="p-3 rounded-lg bg-muted/50 border">
                 <p className="text-sm text-foreground whitespace-pre-wrap">{product.note}</p>
@@ -181,7 +182,7 @@ export function ProductPreviewDialog({ open, onOpenChange, product }: ProductPre
             </div>
           )}
 
-          {/* Prompt with scroll */}
+          {/* Prompt */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">Image Prompt</h3>
             <ScrollArea className="h-24 rounded-lg bg-muted/50 border">

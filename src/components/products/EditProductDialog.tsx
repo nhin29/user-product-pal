@@ -45,20 +45,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUpdateProduct, useProductTypes, useCategories, Product } from "@/hooks/useProducts";
+import { useProductImages, useSyncProductImages, type ProductImageInput } from "@/hooks/useProductImages";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, Link, X, ImageIcon, Plus, GripVertical } from "lucide-react";
 
-function SortableImage({
+interface ImageWithNiche {
+  url: string;
+  file?: File;
+  preview?: string;
+  niche_id: string | null;
+}
+
+function SortableImageCard({
   id,
-  url,
+  img,
   index,
   onRemove,
+  onNicheChange,
+  productTypes,
 }: {
   id: string;
-  url: string;
+  img: ImageWithNiche;
   index: number;
   onRemove: (index: number) => void;
+  onNicheChange: (index: number, nicheId: string | null) => void;
+  productTypes: { id: string; name: string }[] | undefined;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -70,36 +82,50 @@ function SortableImage({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group">
-      <img
-        src={url}
-        alt={`Image ${index + 1}`}
-        loading="lazy"
-        decoding="async"
-        className="w-full h-24 object-cover rounded-lg border"
-        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-      />
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30">
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-1 left-1 h-6 w-6 flex items-center justify-center rounded bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+        className="flex items-center justify-center h-8 w-6 cursor-grab active:cursor-grabbing flex-shrink-0"
       >
-        <GripVertical className="h-3 w-3 text-muted-foreground" />
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <img
+        src={img.preview || img.url}
+        alt={`Image ${index + 1}`}
+        loading="lazy"
+        decoding="async"
+        className="h-14 w-14 rounded-md object-cover border flex-shrink-0"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+      />
+      <div className="flex-1 min-w-0">
+        {index === 0 && (
+          <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-medium mb-1 inline-block">Cover</span>
+        )}
+        <Select
+          value={img.niche_id || "none"}
+          onValueChange={(v) => onNicheChange(index, v === "none" ? null : v)}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Select niche" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No niche</SelectItem>
+            {productTypes?.map((type) => (
+              <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <Button
         type="button"
-        variant="destructive"
+        variant="ghost"
         size="icon"
-        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-8 w-8 flex-shrink-0 text-destructive hover:text-destructive"
         onClick={() => onRemove(index)}
       >
-        <X className="h-3 w-3" />
+        <X className="h-4 w-4" />
       </Button>
-      {index === 0 && (
-        <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-medium">
-          Cover
-        </span>
-      )}
     </div>
   );
 }
@@ -109,7 +135,6 @@ const productSchema = z.object({
   description: z.string().max(1000, "Description too long").optional(),
   prompt: z.string().min(1, "Prompt is required"),
   platform: z.enum(["amazon", "shopify", "meta", "other"]),
-  product_type_id: z.string().optional(),
   made_by: z.string().max(200, "Made by is too long").optional(),
   note: z.string().max(1000, "Note is too long").optional(),
 });
@@ -127,14 +152,15 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   const { data: productTypes } = useProductTypes();
   const { data: categories } = useCategories();
   const updateProduct = useUpdateProduct();
+  const { data: existingProductImages } = useProductImages(product?.id);
+  const syncProductImages = useSyncProductImages();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [imageTab, setImageTab] = useState<"upload" | "url">("url");
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [uploadPreviews, setUploadPreviews] = useState<string[]>([]);
-  const [existingUrls, setExistingUrls] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageWithNiche[]>([]);
   const [urlInput, setUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -142,8 +168,8 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   );
 
   const imageIds = useMemo(
-    () => existingUrls.map((url, i) => `img-${i}-${url.slice(-20)}`),
-    [existingUrls]
+    () => images.map((img, i) => `img-${i}-${(img.url || img.preview || "").slice(-20)}`),
+    [images]
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -151,7 +177,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     if (over && active.id !== over.id) {
       const oldIndex = imageIds.indexOf(active.id as string);
       const newIndex = imageIds.indexOf(over.id as string);
-      setExistingUrls((prev) => arrayMove(prev, oldIndex, newIndex));
+      setImages((prev) => arrayMove(prev, oldIndex, newIndex));
     }
   };
 
@@ -162,12 +188,12 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
       description: "",
       prompt: "",
       platform: "amazon",
-      product_type_id: undefined,
       made_by: "",
       note: "",
     },
   });
 
+  // Initialize form when product changes
   useEffect(() => {
     if (product) {
       form.reset({
@@ -175,42 +201,61 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         description: product.description || "",
         prompt: product.prompt,
         platform: product.platform as "amazon" | "shopify" | "meta" | "other",
-        product_type_id: product.product_type_id || undefined,
         made_by: product.made_by || "",
         note: product.note || "",
       });
-      setExistingUrls(product.image_urls || []);
-      setImageTab("url");
-      setUploadedFiles([]);
-      setUploadPreviews([]);
+      setInitialized(false);
     }
   }, [product, form]);
+
+  // Load images from product_images table
+  useEffect(() => {
+    if (product && existingProductImages && !initialized) {
+      if (existingProductImages.length > 0) {
+        setImages(existingProductImages.map(img => ({
+          url: img.image_url,
+          niche_id: img.niche_id,
+        })));
+      } else {
+        // Fallback to image_urls if no product_images exist
+        setImages((product.image_urls || []).map(url => ({
+          url,
+          niche_id: product.product_type_id || null,
+        })));
+      }
+      setInitialized(true);
+    }
+  }, [product, existingProductImages, initialized]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const imageFiles = files.filter(f => f.type.startsWith("image/"));
-
-    const newPreviews = imageFiles.map(f => URL.createObjectURL(f));
-    setUploadedFiles(prev => [...prev, ...imageFiles]);
-    setUploadPreviews(prev => [...prev, ...newPreviews]);
-    
+    const newImages: ImageWithNiche[] = imageFiles.map(f => ({
+      url: "",
+      file: f,
+      preview: URL.createObjectURL(f),
+      niche_id: null,
+    }));
+    setImages(prev => [...prev, ...newImages]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeUploadedFile = (index: number) => {
-    URL.revokeObjectURL(uploadPreviews[index]);
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-    setUploadPreviews(prev => prev.filter((_, i) => i !== index));
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      const img = prev[index];
+      if (img.preview) URL.revokeObjectURL(img.preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
-  const removeExistingUrl = (index: number) => {
-    setExistingUrls(prev => prev.filter((_, i) => i !== index));
+  const updateImageNiche = (index: number, nicheId: string | null) => {
+    setImages(prev => prev.map((img, i) => i === index ? { ...img, niche_id: nicheId } : img));
   };
 
   const addUrl = () => {
     const trimmed = urlInput.trim();
     if (trimmed && (trimmed.startsWith("http://") || trimmed.startsWith("https://"))) {
-      setExistingUrls(prev => [...prev, trimmed]);
+      setImages(prev => [...prev, { url: trimmed, niche_id: null }]);
       setUrlInput("");
     } else if (trimmed) {
       toast({ variant: "destructive", title: "Invalid URL", description: "Please enter a valid URL" });
@@ -218,76 +263,66 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   };
 
   const clearUploads = () => {
-    uploadPreviews.forEach(p => URL.revokeObjectURL(p));
-    setUploadedFiles([]);
-    setUploadPreviews([]);
+    images.forEach(img => { if (img.preview) URL.revokeObjectURL(img.preview); });
+    setImages([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("product-images")
-      .upload(fileName, file);
-
+    const { error: uploadError } = await supabase.storage.from("product-images").upload(fileName, file);
     if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage
-      .from("product-images")
-      .getPublicUrl(fileName);
-
+    const { data } = supabase.storage.from("product-images").getPublicUrl(fileName);
     return data.publicUrl;
   };
 
   const onSubmit = async (data: ProductFormData) => {
     if (!product) return;
     
+    if (images.length === 0) {
+      toast({ variant: "destructive", title: "Image required", description: "Please add at least one image" });
+      return;
+    }
+
     try {
       setIsUploading(true);
-      
-      // Upload new files
-      let newUploadedUrls: string[] = [];
-      if (uploadedFiles.length > 0) {
-        newUploadedUrls = await Promise.all(uploadedFiles.map(f => uploadImage(f)));
-      }
 
-      const finalImageUrls = [...existingUrls, ...newUploadedUrls];
-
-      if (finalImageUrls.length === 0) {
-        toast({ variant: "destructive", title: "Image required", description: "Please add at least one image" });
-        setIsUploading(false);
-        return;
+      // Upload new files and resolve URLs
+      const resolvedImages: ProductImageInput[] = [];
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        let url = img.url;
+        if (img.file) {
+          url = await uploadImage(img.file);
+        }
+        resolvedImages.push({ image_url: url, niche_id: img.niche_id, display_order: i });
       }
 
       await updateProduct.mutateAsync({
         id: product.id,
         updates: {
           category_id: data.category_id,
-          image_urls: finalImageUrls,
+          image_urls: resolvedImages.map(i => i.image_url),
           prompt: data.prompt,
           platform: data.platform,
-          product_type_id: data.product_type_id || null,
           description: data.description || null,
           made_by: data.made_by || null,
           note: data.note || null,
         },
       });
 
-      toast({
-        title: "Product updated",
-        description: "The product has been updated successfully.",
+      // Sync to product_images table
+      await syncProductImages.mutateAsync({
+        productId: product.id,
+        images: resolvedImages,
       });
-      
+
+      toast({ title: "Product updated", description: "The product has been updated successfully." });
       clearUploads();
       onOpenChange(false);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update product",
-      });
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to update product" });
     } finally {
       setIsUploading(false);
     }
@@ -297,6 +332,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     if (!open) {
       clearUploads();
       setImageTab("url");
+      setInitialized(false);
     }
     onOpenChange(open);
   };
@@ -305,12 +341,10 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
-          <DialogDescription>
-            Update the product details below.
-          </DialogDescription>
+          <DialogDescription>Update the product details below.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -329,9 +363,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                       </FormControl>
                       <SelectContent>
                         {categories?.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
+                          <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -365,52 +397,24 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="product_type_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select product type (optional)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {productTypes?.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Multi Image Section */}
+            {/* Image list with per-image niche and drag-and-drop */}
             <div className="space-y-2">
               <FormLabel>Product Images</FormLabel>
-              <p className="text-xs text-muted-foreground">Drag to reorder. First image is the cover.</p>
+              <p className="text-xs text-muted-foreground">Drag to reorder. First image is the cover. Each image can have its own niche.</p>
               
-              {/* Existing images with drag-and-drop */}
-              {existingUrls.length > 0 && (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
+              {images.length > 0 && (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={imageIds} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-3 gap-2">
-                      {existingUrls.map((url, index) => (
-                        <SortableImage
+                    <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                      {images.map((img, index) => (
+                        <SortableImageCard
                           key={imageIds[index]}
                           id={imageIds[index]}
-                          url={url}
+                          img={img}
                           index={index}
-                          onRemove={removeExistingUrl}
+                          onRemove={removeImage}
+                          onNicheChange={updateImageNiche}
+                          productTypes={productTypes}
                         />
                       ))}
                     </div>
@@ -418,41 +422,13 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 </DndContext>
               )}
 
-              {/* New uploads preview */}
-              {uploadPreviews.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {uploadPreviews.map((preview, index) => (
-                    <div key={`new-${index}`} className="relative group">
-                      <img
-                        src={preview}
-                        alt={`New ${index + 1}`}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-24 object-cover rounded-lg border border-primary/30"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removeUploadedFile(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               <Tabs value={imageTab} onValueChange={(v) => setImageTab(v as "upload" | "url")}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="upload" className="gap-2">
-                    <Upload className="h-4 w-4" />
-                    Upload New
+                    <Upload className="h-4 w-4" /> Upload New
                   </TabsTrigger>
                   <TabsTrigger value="url" className="gap-2">
-                    <Link className="h-4 w-4" />
-                    Add URL
+                    <Link className="h-4 w-4" /> Add URL
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="upload" className="mt-3">
@@ -496,11 +472,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 <FormItem>
                   <FormLabel>Prompt</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Describe the product image prompt..."
-                      className="min-h-[80px]"
-                      {...field}
-                    />
+                    <Textarea placeholder="Describe the product image prompt..." className="min-h-[80px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -521,7 +493,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="note"
@@ -538,17 +509,9 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleDialogClose(false)}
-              >
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={() => handleDialogClose(false)}>Cancel</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>
             </div>

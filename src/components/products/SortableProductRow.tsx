@@ -116,7 +116,7 @@ export function SortableProductRow({
       </TableCell>
       <TableCell>
         <span className="text-muted-foreground text-sm">
-          {(product as any).product_types?.name || "—"}
+          {product.image_urls?.length || 0} images
         </span>
       </TableCell>
       <TableCell>
