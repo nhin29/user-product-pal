@@ -383,7 +383,7 @@ export default function ProductsPage() {
                   <TableHead>Product</TableHead>
                   <TableHead>Image Style</TableHead>
                   <TableHead>Platform</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Images</TableHead>
                   <TableHead>Made By</TableHead>
                   <TableHead>Admin</TableHead>
                   <TableHead>Created</TableHead>
@@ -437,7 +437,7 @@ export default function ProductsPage() {
                       <TableHead>Product</TableHead>
                       <TableHead>Image Style</TableHead>
                       <TableHead>Platform</TableHead>
-                      <TableHead>Type</TableHead>
+                      <TableHead>Images</TableHead>
                       <TableHead>Made By</TableHead>
                       <TableHead>Admin</TableHead>
                       <TableHead>Created</TableHead>
