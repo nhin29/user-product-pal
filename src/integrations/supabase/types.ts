@@ -264,7 +264,6 @@ export type Database = {
           created_at: string
           dismissed_at: string | null
           ease_of_use: string | null
-          features_used: string[] | null
           id: string
           image_quality_rating: number | null
           improvements: string[] | null
@@ -277,7 +276,6 @@ export type Database = {
           created_at?: string
           dismissed_at?: string | null
           ease_of_use?: string | null
-          features_used?: string[] | null
           id?: string
           image_quality_rating?: number | null
           improvements?: string[] | null
@@ -290,7 +288,6 @@ export type Database = {
           created_at?: string
           dismissed_at?: string | null
           ease_of_use?: string | null
-          features_used?: string[] | null
           id?: string
           image_quality_rating?: number | null
           improvements?: string[] | null
