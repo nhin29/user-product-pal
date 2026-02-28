@@ -337,16 +337,20 @@ export default function UsersPage() {
                               loading="lazy"
                               decoding="async"
                               className={`h-10 w-10 rounded-full object-cover ring-[3px] ring-offset-2 ring-offset-background ${
-                                user.role === "admin"
-                                  ? "ring-yellow-500"
-                                  : "ring-emerald-500"
+                                user.is_refund
+                                  ? "ring-purple-500"
+                                  : user.role === "admin"
+                                    ? "ring-yellow-500"
+                                    : "ring-emerald-500"
                               }`}
                             />
                           ) : (
                             <div className={`flex h-10 w-10 items-center justify-center rounded-full border-[3px] ${
-                              user.role === "admin"
-                                ? "bg-yellow-500/25 border-yellow-500 text-yellow-700 dark:text-yellow-400"
-                                : "bg-emerald-500/25 border-emerald-500 text-emerald-700 dark:text-emerald-400"
+                              user.is_refund
+                                ? "bg-purple-500/25 border-purple-500 text-purple-700 dark:text-purple-400"
+                                : user.role === "admin"
+                                  ? "bg-yellow-500/25 border-yellow-500 text-yellow-700 dark:text-yellow-400"
+                                  : "bg-emerald-500/25 border-emerald-500 text-emerald-700 dark:text-emerald-400"
                             }`}>
                               <span className="text-sm font-bold">
                                 {getInitials(user.display_name)}
@@ -358,9 +362,6 @@ export default function UsersPage() {
                               <p className="font-medium text-foreground">
                                 {user.display_name || "Unnamed User"}
                               </p>
-                              {user.is_refund && (
-                                <span className="text-red-500" title="Refunded">♻️</span>
-                              )}
                               {powerUsers.has(user.user_id) && (
                                 <span className="text-amber-500" title="Power user: 10+ copies & generations">⭐</span>
                               )}
