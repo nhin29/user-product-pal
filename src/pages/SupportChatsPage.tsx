@@ -50,9 +50,11 @@ export default function SupportChatsPage() {
   // Filter conversations by selected folder
   const filteredConversations = useMemo(() => {
     if (selectedFolderId === null) {
-      // Inbox: conversations with no folder or folder that doesn't exist
+      // Inbox: conversations with no folder, invalid folder, OR unread messages in any folder
       const allFolderIds = new Set(folders.map((f) => f.id));
-      return conversations.filter((c) => !c.folder_id || !allFolderIds.has(c.folder_id));
+      return conversations.filter(
+        (c) => !c.folder_id || !allFolderIds.has(c.folder_id) || c.unread_count > 0
+      );
     }
     // Include subfolder conversations
     const getDescendants = (parentId: string): string[] => {
