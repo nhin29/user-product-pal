@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import type { GalleryImage } from "@/hooks/useGallery";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 40;
 
 export default function GalleryPage() {
   const { images, isLoading } = useGallery();
@@ -102,7 +102,7 @@ export default function GalleryPage() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Skeleton key={i} className="aspect-square rounded-xl" />
                 ))}
@@ -114,7 +114,7 @@ export default function GalleryPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                   {visible.map((img) => (
                     <div
                       key={img.id}
