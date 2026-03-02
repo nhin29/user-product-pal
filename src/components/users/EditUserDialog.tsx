@@ -27,10 +27,8 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const AMAZON_PRODUCT_OPTIONS = [
-  { id: "prod_TreWrcz8uVHqIT", label: "Home & Electronics" },
-  { id: "prod_TreWtW6ekESits", label: "Pets" },
-  { id: "prod_TreV0wplqggLBW", label: "Health & Beauty" },
-  { id: "prod_TmW6D8HwME3dsX", label: "Bundle (All)" },
+  { id: "prod_U4RqVgotWRlWFY", label: "30 Prompts" },
+  { id: "prod_TmW6D8HwME3dsX", label: "Full Access" },
 ];
 
 const SHOPIFY_PRODUCT_OPTIONS = [
@@ -41,6 +39,11 @@ const SHOPIFY_PRODUCT_OPTIONS = [
 const META_PRODUCT_OPTIONS = [
   { id: "prod_U1stXv6wWzqBVe", label: "30 Prompts" },
   { id: "prod_U1sv6wPAwnrTLZ", label: "100+ Prompts" },
+];
+
+const WOO_PRODUCT_OPTIONS = [
+  { id: "prod_U4Rs6EDtHY284g", label: "30 Prompts" },
+  { id: "prod_U4RtwRe75EKFQ3", label: "Full Access" },
 ];
 
 interface EditUserDialogProps {
@@ -277,6 +280,28 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
               <Label>Meta Product Access</Label>
               <div className="space-y-2 rounded-md border p-3">
                 {META_PRODUCT_OPTIONS.map((product) => (
+                  <div key={product.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={product.id}
+                      checked={selectedProductIds.includes(product.id)}
+                      onCheckedChange={(checked) => 
+                        handleProductToggle(product.id, checked as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor={product.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {product.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>WooCommerce Product Access</Label>
+              <div className="space-y-2 rounded-md border p-3">
+                {WOO_PRODUCT_OPTIONS.map((product) => (
                   <div key={product.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={product.id}

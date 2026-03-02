@@ -397,19 +397,22 @@ export default function UsersPage() {
                         {user.is_refund ? (
                           <span className="text-muted-foreground">—</span>
                         ) : (() => {
-                          const amazonIds = ["prod_TreWrcz8uVHqIT", "prod_TreWtW6ekESits", "prod_TreV0wplqggLBW", "prod_TmW6D8HwME3dsX"];
+                          const amazonIds = ["prod_U4RqVgotWRlWFY", "prod_TmW6D8HwME3dsX"];
                           const shopifyIds = ["prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j"];
                           const metaIds = ["prod_U1stXv6wWzqBVe", "prod_U1sv6wPAwnrTLZ"];
+                          const wooIds = ["prod_U4Rs6EDtHY284g", "prod_U4RtwRe75EKFQ3"];
                           const ids = user.product_ids || [];
                           const hasAmazon = ids.some((id: string) => amazonIds.includes(id));
                           const hasShopify = ids.some((id: string) => shopifyIds.includes(id));
                           const hasMeta = ids.some((id: string) => metaIds.includes(id));
-                          if (!hasAmazon && !hasShopify && !hasMeta) return <span className="text-muted-foreground">—</span>;
+                          const hasWoo = ids.some((id: string) => wooIds.includes(id));
+                          if (!hasAmazon && !hasShopify && !hasMeta && !hasWoo) return <span className="text-muted-foreground">—</span>;
                           return (
                           <div className="flex flex-col items-start gap-1">
                               {hasAmazon && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-orange-500 text-orange-700 bg-orange-500/15 whitespace-nowrap">Amazon</Badge>}
                               {hasShopify && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-teal-500 text-teal-700 bg-teal-500/15 whitespace-nowrap">Shopify</Badge>}
                               {hasMeta && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-sky-500 text-sky-700 bg-sky-500/15 whitespace-nowrap">Meta</Badge>}
+                              {hasWoo && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-purple-500 text-purple-700 bg-purple-500/15 whitespace-nowrap">Woo</Badge>}
                             </div>
                           );
                         })()}
