@@ -128,27 +128,25 @@ export default function GalleryPage() {
                           width={300}
                           height={300}
                           className="h-full w-full object-cover"
+                          aspectRatio="square"
                         />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6 border border-white/30">
-                            <AvatarImage src={img.user_avatar || undefined} />
-                            <AvatarFallback className="text-[10px]">
-                              {(img.user_name || "?").slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-white font-medium truncate">
-                            {img.user_name}
-                          </span>
-                          {img.rating !== null && (
-                            <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
-                              <Star className="h-3 w-3 mr-0.5 fill-yellow-400 text-yellow-400" />
-                              {img.rating}
-                            </Badge>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-2 p-2.5 bg-card">
+                        <Avatar className="h-6 w-6 border border-border shrink-0">
+                          <AvatarImage src={img.user_avatar || undefined} />
+                          <AvatarFallback className="text-[10px]">
+                            {(img.user_name || "?").slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-medium text-foreground truncate">
+                          {img.user_name}
+                        </span>
+                        {img.rating !== null && (
+                          <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 shrink-0">
+                            <Star className="h-3 w-3 mr-0.5 fill-yellow-400 text-yellow-400" />
+                            {img.rating}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ))}
