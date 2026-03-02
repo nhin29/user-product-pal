@@ -141,11 +141,12 @@ export default function GalleryPage() {
                         <span className="text-xs font-medium text-foreground truncate">
                           {img.user_name}
                         </span>
-                        {img.rating !== null && (
-                          <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0 shrink-0">
-                            <Star className="h-3 w-3 mr-0.5 fill-yellow-400 text-yellow-400" />
-                            {img.rating}
-                          </Badge>
+                        {img.rating !== null && img.rating > 0 && (
+                          <div className="ml-auto flex items-center gap-0.5 shrink-0">
+                            {Array.from({ length: img.rating }).map((_, i) => (
+                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
