@@ -15,6 +15,7 @@ import { OnboardingResponseCard } from "@/components/user-analytics/OnboardingRe
 import { ClearAnalyticsDialog } from "@/components/user-analytics/ClearAnalyticsDialog";
 import { GeneratedImageDetailDialog } from "@/components/user-analytics/GeneratedImageDetailDialog";
 import { UserFeedbackCard } from "@/components/user-analytics/UserFeedbackCard";
+import { UserPopupFeedbackCard } from "@/components/user-analytics/UserPopupFeedbackCard";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import type { GeneratedImageWithRating } from "@/hooks/useUserAnalytics";
 const StatCard = ({
@@ -435,6 +436,10 @@ export default function UserAnalyticsPage() {
             <TabsList>
               <TabsTrigger value="onboarding">Onboarding Responses</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
+              <TabsTrigger value="popup-feedback" className="flex items-center gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Pop-up Feedback
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="onboarding">
               <OnboardingResponseCard
@@ -444,6 +449,9 @@ export default function UserAnalyticsPage() {
             </TabsContent>
             <TabsContent value="feedback">
               <UserFeedbackCard userId={userId || ""} />
+            </TabsContent>
+            <TabsContent value="popup-feedback">
+              <UserPopupFeedbackCard userId={userId || ""} />
             </TabsContent>
           </Tabs>
         </div>
