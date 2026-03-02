@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.duplicate-product]
 verify_jwt = false
+
+[functions.notify-admin-support]
+verify_jwt = false
+
+[functions.resend-inbound-webhook]
+verify_jwt = false
