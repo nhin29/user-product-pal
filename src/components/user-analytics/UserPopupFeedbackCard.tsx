@@ -63,10 +63,10 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
               {formatDistanceToNowNY(fb.created_at, { addSuffix: true })}
             </span>
           </div>
-          <div className="divide-y">
+          <div className="grid grid-cols-2 gap-px bg-border">
             {/* Q1: Image Quality */}
             {fb.image_quality_rating !== null && (
-              <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Image Quality</span>
                 <div className="flex items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map((s) => (
@@ -85,7 +85,7 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
 
             {/* Q2: Ease of Use */}
             {fb.ease_of_use && (
-              <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Ease of Use</span>
                 <span className="text-sm font-medium">{easeOfUseLabels[fb.ease_of_use] || fb.ease_of_use}</span>
               </div>
@@ -93,9 +93,9 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
 
             {/* Q3: Improvements */}
             {fb.improvements && fb.improvements.length > 0 && (
-              <div className="px-6 py-3">
+              <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Would be more useful with</span>
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-1.5">
                   {fb.improvements.map((item) => (
                     <span key={item} className="text-xs font-medium bg-muted px-2.5 py-1 rounded-md border">
                       {usefulnessLabels[item] || item}
@@ -107,20 +107,20 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
 
             {/* Q4: NPS */}
             {fb.nps_score !== null && (
-              <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Recommendation Score</span>
                 <span className="text-sm font-medium">{fb.nps_score} / 10</span>
               </div>
             )}
-
-            {/* Q5: Additional Feedback */}
-            {fb.additional_feedback && (
-              <div className="px-6 py-3">
-                <span className="text-sm text-muted-foreground">Additional Feedback</span>
-                <p className="text-sm mt-1.5 p-3 bg-muted/50 rounded-lg">{fb.additional_feedback}</p>
-              </div>
-            )}
           </div>
+
+          {/* Q5: Additional Feedback - full width */}
+          {fb.additional_feedback && (
+            <div className="px-6 py-3 border-t">
+              <span className="text-sm text-muted-foreground">Additional Feedback</span>
+              <p className="text-sm mt-1.5 p-3 bg-muted/50 rounded-lg">{fb.additional_feedback}</p>
+            </div>
+          )}
         </Card>
       ))}
     </div>
