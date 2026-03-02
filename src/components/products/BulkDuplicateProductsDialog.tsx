@@ -32,6 +32,7 @@ const PLATFORMS = [
   { value: "amazon", label: "Amazon" },
   { value: "shopify", label: "Shopify" },
   { value: "meta", label: "Meta" },
+  { value: "woo", label: "WooCommerce" },
 ];
 
 export function BulkDuplicateProductsDialog({
