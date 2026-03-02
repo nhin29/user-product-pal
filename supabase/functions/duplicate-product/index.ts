@@ -57,6 +57,21 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Duplicate product_images for the new product
+  const { data: sourceImages } = await supabase
+    .from("product_images")
+    .select("*")
+    .eq("product_id", source_id)
+    .order("display_order", { ascending: true });
+
+  if (sourceImages && sourceImages.length > 0) {
+    const newImages = sourceImages.map(({ id, created_at, ...img }) => ({
+      ...img,
+      product_id: data.id,
+    }));
+    await supabase.from("product_images").insert(newImages);
+  }
+
   return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
