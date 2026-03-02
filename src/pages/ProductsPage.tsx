@@ -369,6 +369,7 @@ export default function ProductsPage() {
               <SelectItem value="amazon">Amazon</SelectItem>
               <SelectItem value="shopify">Shopify</SelectItem>
               <SelectItem value="meta">Meta</SelectItem>
+              <SelectItem value="woo">WooCommerce</SelectItem>
             </SelectContent>
           </Select>
 

@@ -134,7 +134,7 @@ const productSchema = z.object({
   category_id: z.string().min(1, "Category is required"),
   description: z.string().max(1000, "Description too long").optional(),
   prompt: z.string().min(1, "Prompt is required"),
-  platform: z.enum(["amazon", "shopify", "meta", "other"]),
+  platform: z.enum(["amazon", "shopify", "meta", "woo", "other"]),
   made_by: z.string().max(200, "Made by is too long").optional(),
   note: z.string().max(1000, "Note is too long").optional(),
 });
@@ -200,7 +200,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         category_id: product.category_id,
         description: product.description || "",
         prompt: product.prompt,
-        platform: product.platform as "amazon" | "shopify" | "meta" | "other",
+        platform: product.platform as "amazon" | "shopify" | "meta" | "woo" | "other",
         made_by: product.made_by || "",
         note: product.note || "",
       });
@@ -388,6 +388,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                         <SelectItem value="amazon">Amazon</SelectItem>
                         <SelectItem value="shopify">Shopify</SelectItem>
                         <SelectItem value="meta">Meta</SelectItem>
+                        <SelectItem value="woo">WooCommerce</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
