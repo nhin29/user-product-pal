@@ -24,15 +24,37 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Resend inbound webhook sends JSON payload
     const payload = await req.json();
-    console.log("Inbound webhook payload:", JSON.stringify(payload));
+    console.log("Inbound webhook payload type:", payload.type || "unknown");
 
-    // Extract fields from Resend inbound email
-    const toAddresses: string[] = Array.isArray(payload.to) ? payload.to : [payload.to];
-    const fromEmail: string = payload.from || "";
-    const textBody: string = payload.text || payload.html || "";
-    const subject: string = payload.subject || "";
+    // Only process actual inbound email events
+    // Ignore status events like email.sent, email.delivered, domain.created, domain.updated, etc.
+    if (payload.type && payload.type !== "email.received") {
+      console.log(`Ignoring non-inbound event type: ${payload.type}`);
+      return new Response(JSON.stringify({ ok: true, skipped: payload.type }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // For inbound emails, Resend sends the email data either at top level or nested in payload.data
+    const emailData = payload.data || payload;
+
+    const toAddresses: string[] = Array.isArray(emailData.to) ? emailData.to : 
+      (typeof emailData.to === "string" ? [emailData.to] : []);
+    const fromEmail: string = emailData.from || "";
+    const textBody: string = emailData.text || emailData.html || "";
+    const subject: string = emailData.subject || "";
+
+    console.log("Processing inbound email - From:", fromEmail, "To:", toAddresses, "Subject:", subject);
+
+    if (toAddresses.length === 0) {
+      console.error("No To addresses found in payload");
+      return new Response(JSON.stringify({ error: "No To addresses" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Extract conversation_id from the To address (support+{convo_id}@trypeelkit.com)
     let conversationId: string | null = null;
@@ -44,6 +66,20 @@ serve(async (req) => {
       }
     }
 
+    // Also check headers for Reply-To containing conversation ID
+    if (!conversationId && emailData.headers) {
+      const headers = Array.isArray(emailData.headers) ? emailData.headers : [];
+      for (const h of headers) {
+        if (h.name === "In-Reply-To" || h.name === "References") {
+          const match = h.value?.match(/support\+([a-f0-9-]+)@/i);
+          if (match) {
+            conversationId = match[1];
+            break;
+          }
+        }
+      }
+    }
+
     if (!conversationId) {
       console.error("No conversation ID found in To addresses:", toAddresses);
       return new Response(JSON.stringify({ error: "No conversation ID in address" }), {
@@ -51,6 +87,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("Found conversation ID:", conversationId);
 
     // Verify conversation exists
     const { data: convo, error: convoError } = await supabase
@@ -86,7 +124,7 @@ serve(async (req) => {
     // Insert message as admin reply
     const { error: insertError } = await supabase.from("chats").insert({
       conversation_id: conversationId,
-      sender_id: adminUser?.id || convo.user_id, // fallback to user_id if admin not found
+      sender_id: adminUser?.id || convo.user_id,
       sender_role: "admin",
       message: cleanedMessage,
     });
@@ -95,6 +133,8 @@ serve(async (req) => {
       console.error("Failed to insert chat:", insertError);
       throw insertError;
     }
+
+    console.log("Successfully inserted admin reply for conversation:", conversationId);
 
     // Update conversation timestamp
     await supabase
@@ -108,7 +148,6 @@ serve(async (req) => {
     const userEmail = userProfile?.email;
 
     if (userEmail) {
-      // Send notification email to user
       const emailRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -156,7 +195,6 @@ serve(async (req) => {
 
 /**
  * Strip quoted reply text from an email body.
- * Removes lines starting with "> " and common reply headers like "On ... wrote:"
  */
 function cleanReplyText(text: string): string {
   if (!text) return "";
@@ -165,16 +203,14 @@ function cleanReplyText(text: string): string {
   const cleanLines: string[] = [];
 
   for (const line of lines) {
-    // Stop at common reply delimiters
     if (
       line.match(/^On .+ wrote:$/i) ||
       line.match(/^-{3,}\s*Original Message/i) ||
       line.match(/^>{2,}/) ||
-      line.match(/^From:\s/i) && cleanLines.length > 0
+      (line.match(/^From:\s/i) && cleanLines.length > 0)
     ) {
       break;
     }
-    // Skip quoted lines
     if (line.startsWith("> ")) continue;
     cleanLines.push(line);
   }
