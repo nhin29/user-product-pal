@@ -26,6 +26,11 @@ const ROLE_OPTIONS = [
   { value: "viewer", label: "Viewer" },
 ] as const;
 
+const VIDEO_PRODUCT_OPTIONS = [
+  { id: "v_15", label: "15 Prompts" },
+  { id: "v_50", label: "50 Prompts" },
+];
+
 const AMAZON_PRODUCT_OPTIONS = [
   { id: "prod_U4RqVgotWRlWFY", label: "30 Prompts" },
   { id: "prod_TmW6D8HwME3dsX", label: "Full Access" },
@@ -252,6 +257,28 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
             </div>
             </div>
             <div className="space-y-4 sm:col-span-1">
+            <div className="grid gap-2">
+              <Label>Video Product Access</Label>
+              <div className="space-y-2 rounded-md border p-3">
+                {VIDEO_PRODUCT_OPTIONS.map((product) => (
+                  <div key={product.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={product.id}
+                      checked={selectedProductIds.includes(product.id)}
+                      onCheckedChange={(checked) => 
+                        handleProductToggle(product.id, checked as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor={product.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {product.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="grid gap-2">
               <Label>Amazon Product Access</Label>
               <div className="space-y-2 rounded-md border p-3">
