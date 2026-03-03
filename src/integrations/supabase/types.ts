@@ -1033,7 +1033,6 @@ export type Database = {
         Returns: boolean
       }
       increment_credits: { Args: { p_user_id: string }; Returns: number }
-      reset_monthly_credits: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
