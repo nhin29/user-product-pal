@@ -27,8 +27,8 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const VIDEO_PRODUCT_OPTIONS = [
-  { id: "v_15", label: "15 Prompts" },
-  { id: "v_50", label: "50 Prompts" },
+  { id: "prod_U552iYMyRrUwsG", label: "15 Prompts" },
+  { id: "prod_U552aJz8KOYu50", label: "50 Prompts" },
 ];
 
 const AMAZON_PRODUCT_OPTIONS = [
