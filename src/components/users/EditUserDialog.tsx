@@ -46,6 +46,12 @@ const WOO_PRODUCT_OPTIONS = [
   { id: "prod_U4RtwRe75EKFQ3", label: "Full Access" },
 ];
 
+const SUBSCRIPTION_PRODUCT_OPTIONS = [
+  { id: "prod_U3DJqmft6ONyxk", label: "Monthly (100 credits)" },
+  { id: "prod_U4sQ5jX7kNnc14", label: "Quarterly (300 credits)" },
+  { id: "prod_U4sSoxZsz5Ix9Z", label: "Yearly (1200 credits)" },
+];
+
 interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
@@ -302,6 +308,28 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
               <Label>WooCommerce Product Access</Label>
               <div className="space-y-2 rounded-md border p-3">
                 {WOO_PRODUCT_OPTIONS.map((product) => (
+                  <div key={product.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={product.id}
+                      checked={selectedProductIds.includes(product.id)}
+                      onCheckedChange={(checked) => 
+                        handleProductToggle(product.id, checked as boolean)
+                      }
+                    />
+                    <label
+                      htmlFor={product.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {product.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Subscription Access</Label>
+              <div className="space-y-2 rounded-md border p-3">
+                {SUBSCRIPTION_PRODUCT_OPTIONS.map((product) => (
                   <div key={product.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={product.id}
