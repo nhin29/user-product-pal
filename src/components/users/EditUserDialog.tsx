@@ -75,8 +75,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [isAnalytics, setIsAnalytics] = useState<boolean>(true);
   const [isRefund, setIsRefund] = useState<boolean>(false);
   
-  const [creditLimit, setCreditLimit] = useState<number>(100);
-  const [originalCreditLimit, setOriginalCreditLimit] = useState<number>(100);
+  const [creditLimit, setCreditLimit] = useState<number>(4);
+  const [originalCreditLimit, setOriginalCreditLimit] = useState<number>(4);
   const [usedCount, setUsedCount] = useState<number>(0);
   const [creditStatus, setCreditStatus] = useState<string>("trial");
   const [isLoadingCredits, setIsLoadingCredits] = useState(false);
@@ -99,7 +99,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
           .eq("user_id", user.user_id)
           .maybeSingle()
           .then(({ data }) => {
-            const limit = data?.credit_limit ?? 100;
+            const limit = data?.credit_limit ?? 4;
             setCreditLimit(limit);
             setOriginalCreditLimit(limit);
             setUsedCount(data?.used_count ?? 0);
