@@ -83,6 +83,14 @@ export function useUsers() {
       
       creditLimit?: number;
     }) => {
+      // Subscription product mapping
+      const SUBSCRIPTION_CREDIT_MAP: Record<string, number> = {
+        "prod_U3DJqmft6ONyxk": 100,   // monthly
+        "prod_U4sQ5jX7kNnc14": 300,   // quarterly
+        "prod_U4sSoxZsz5Ix9Z": 1200,  // yearly
+      };
+      const SUBSCRIPTION_IDS = Object.keys(SUBSCRIPTION_CREDIT_MAP);
+
       // Build update object
       const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean } = {
         display_name: displayName,
@@ -94,14 +102,12 @@ export function useUsers() {
       
       if (isRefund !== undefined) {
         updateData.is_refund = isRefund;
-        // When setting refund to true, clear all product access
         if (isRefund) {
           updateData.product_ids = [];
           productIds = [];
         }
       }
 
-      
       if (productIds !== undefined) {
         updateData.product_ids = productIds;
       }
@@ -134,19 +140,77 @@ export function useUsers() {
         if (roleError) throw roleError;
       }
 
+      // Handle subscription products
       if (productIds !== undefined) {
+        const selectedSub = productIds.find((id) => SUBSCRIPTION_IDS.includes(id));
+
+        if (selectedSub) {
+          // Upsert subscription
+          const { error: subError } = await supabase
+            .from("user_subscriptions")
+            .upsert(
+              {
+                user_id: userId,
+                stripe_subscription_id: `manual_${userId}`,
+                product_id: selectedSub,
+                status: "active",
+                current_period_start: new Date().toISOString(),
+              },
+              { onConflict: "stripe_subscription_id" }
+            );
+          if (subError) throw subError;
+
+          // Update credits
+          const newLimit = SUBSCRIPTION_CREDIT_MAP[selectedSub];
+          const { error: creditError } = await supabase
+            .from("user_credits")
+            .upsert(
+              { user_id: userId, credit_limit: newLimit, used_count: 0, status: "subscribed" },
+              { onConflict: "user_id" }
+            );
+          if (creditError) throw creditError;
+        } else {
+          // No subscription selected — check if user previously had one
+          const { data: existingSub } = await supabase
+            .from("user_subscriptions")
+            .select("id, status")
+            .eq("user_id", userId)
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (existingSub) {
+            // Cancel subscription
+            const { error: cancelError } = await supabase
+              .from("user_subscriptions")
+              .update({ status: "canceled", canceled_at: new Date().toISOString() })
+              .eq("id", existingSub.id);
+            if (cancelError) throw cancelError;
+
+            // Revert credits
+            const { error: creditError } = await supabase
+              .from("user_credits")
+              .upsert(
+                { user_id: userId, credit_limit: creditLimit ?? 4, status: "trial" },
+                { onConflict: "user_id" }
+              );
+            if (creditError) throw creditError;
+          }
+        }
+
+        // Handle stripe_subscribers sync for non-subscription products
         const currentUser = queryClient.getQueryData<UserProfile[]>(["users"])
           ?.find((u) => u.user_id === userId);
 
         if (currentUser && !currentUser.is_purchase) {
           const userEmail = email || currentUser.email;
+          const nonSubProductIds = productIds.filter((id) => !SUBSCRIPTION_IDS.includes(id));
           if (userEmail) {
-            if (productIds.length > 0) {
+            if (nonSubProductIds.length > 0) {
               const { error: subError } = await supabase
                 .from("stripe_subscribers")
                 .upsert({ email: userEmail }, { onConflict: "email" });
               if (subError) throw subError;
-            } else {
+            } else if (!selectedSub) {
               const { error: subError } = await supabase
                 .from("stripe_subscribers")
                 .delete()
@@ -157,8 +221,19 @@ export function useUsers() {
         }
       }
 
-      // Update credit limit if changed
-      if (creditLimit !== undefined) {
+      // Update credit limit if manually changed (and no subscription override)
+      if (creditLimit !== undefined && productIds !== undefined) {
+        const selectedSub = productIds.find((id) => SUBSCRIPTION_IDS.includes(id));
+        if (!selectedSub) {
+          const { error: creditError } = await supabase
+            .from("user_credits")
+            .upsert(
+              { user_id: userId, credit_limit: creditLimit },
+              { onConflict: "user_id" }
+            );
+          if (creditError) throw creditError;
+        }
+      } else if (creditLimit !== undefined) {
         const { error: creditError } = await supabase
           .from("user_credits")
           .upsert(

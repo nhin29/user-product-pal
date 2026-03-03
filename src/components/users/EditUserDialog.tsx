@@ -52,6 +52,8 @@ const SUBSCRIPTION_PRODUCT_OPTIONS = [
   { id: "prod_U4sSoxZsz5Ix9Z", label: "Yearly (1200 credits)" },
 ];
 
+const SUBSCRIPTION_IDS = SUBSCRIPTION_PRODUCT_OPTIONS.map((p) => p.id);
+
 interface EditUserDialogProps {
   user: UserProfile | null;
   open: boolean;
@@ -105,6 +107,18 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const handleProductToggle = (productId: string, checked: boolean) => {
     if (checked) {
       setSelectedProductIds((prev) => [...prev, productId]);
+    } else {
+      setSelectedProductIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  const handleSubscriptionToggle = (productId: string, checked: boolean) => {
+    if (checked) {
+      // Remove other subscription IDs, add this one (radio behavior)
+      setSelectedProductIds((prev) => [
+        ...prev.filter((id) => !SUBSCRIPTION_IDS.includes(id)),
+        productId,
+      ]);
     } else {
       setSelectedProductIds((prev) => prev.filter((id) => id !== productId));
     }
@@ -335,7 +349,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                       id={product.id}
                       checked={selectedProductIds.includes(product.id)}
                       onCheckedChange={(checked) => 
-                        handleProductToggle(product.id, checked as boolean)
+                        handleSubscriptionToggle(product.id, checked as boolean)
                       }
                     />
                     <label
