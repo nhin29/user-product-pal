@@ -812,6 +812,7 @@ export type Database = {
           created_at: string
           credit_limit: number
           id: string
+          period_reset_at: string
           status: string
           updated_at: string
           used_count: number
@@ -821,6 +822,7 @@ export type Database = {
           created_at?: string
           credit_limit?: number
           id?: string
+          period_reset_at?: string
           status?: string
           updated_at?: string
           used_count?: number
@@ -830,6 +832,7 @@ export type Database = {
           created_at?: string
           credit_limit?: number
           id?: string
+          period_reset_at?: string
           status?: string
           updated_at?: string
           used_count?: number
