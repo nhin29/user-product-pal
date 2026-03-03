@@ -387,7 +387,7 @@ export default function UsersPage() {
                             <div className="flex flex-col items-start gap-1">
                               <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-yellow-500 text-yellow-700 bg-yellow-500/15 whitespace-nowrap">Prompt</Badge>
                               {isSubscribed && (
-                                <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Software</Badge>
+                                <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Subscription</Badge>
                               )}
                             </div>
                           );
