@@ -32,7 +32,7 @@ import { useCreateProduct, useProductTypes, useCategories } from "@/hooks/usePro
 import { useSyncProductImages, type ProductImageInput } from "@/hooks/useProductImages";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload, Link, X, ImageIcon, Plus } from "lucide-react";
+import { Loader2, Upload, Link, X, ImageIcon, Plus, Video } from "lucide-react";
 
 interface ImageWithNiche {
   url: string;
@@ -82,10 +82,17 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     },
   });
 
+  const selectedCategoryId = form.watch("category_id");
+  const isVideoCategory = categories?.find(c => c.id === selectedCategoryId)?.name?.toLowerCase() === "video";
+  const mediaLabel = isVideoCategory ? "Videos" : "Images";
+  const acceptType = isVideoCategory ? "video/*" : "image/*";
+
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const imageFiles = files.filter(f => f.type.startsWith("image/"));
-    const newImages: ImageWithNiche[] = imageFiles.map(f => ({
+    const prefix = isVideoCategory ? "video/" : "image/";
+    const validFiles = files.filter(f => f.type.startsWith(prefix));
+    const newImages: ImageWithNiche[] = validFiles.map(f => ({
       url: "",
       file: f,
       preview: URL.createObjectURL(f),
@@ -135,7 +142,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const onSubmit = async (data: ProductFormData) => {
     if (images.length === 0) {
-      toast({ variant: "destructive", title: "Image required", description: "Please add at least one image" });
+      toast({ variant: "destructive", title: `${isVideoCategory ? "Video" : "Image"} required`, description: `Please add at least one ${isVideoCategory ? "video" : "image"}` });
       return;
     }
 
@@ -253,21 +260,29 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
             {/* Multi Image Upload/URL Section with per-image niche */}
             <div className="space-y-2">
-              <FormLabel>Product Images</FormLabel>
+              <FormLabel>Product {mediaLabel}</FormLabel>
               
               {/* Image list with niche selectors */}
               {images.length > 0 && (
                 <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                   {images.map((img, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30">
-                      <img
-                        src={img.preview || img.url}
-                        alt={`Image ${index + 1}`}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-14 w-14 rounded-md object-cover border flex-shrink-0"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
+                      {isVideoCategory ? (
+                        <video
+                          src={img.preview || img.url}
+                          className="h-14 w-14 rounded-md object-cover border flex-shrink-0"
+                          muted
+                        />
+                      ) : (
+                        <img
+                          src={img.preview || img.url}
+                          alt={`Image ${index + 1}`}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-14 w-14 rounded-md object-cover border flex-shrink-0"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-muted-foreground truncate mb-1">
                           {img.file?.name || img.url}
@@ -315,14 +330,18 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
-                    <p className="text-sm text-muted-foreground">Click to upload images</p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP — select multiple files</p>
+                    {isVideoCategory ? (
+                      <Video className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
+                    )}
+                    <p className="text-sm text-muted-foreground">Click to upload {isVideoCategory ? "videos" : "images"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{isVideoCategory ? "MP4, MOV, WEBM" : "PNG, JPG, WEBP"} — select multiple files</p>
                   </div>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept={acceptType}
                     multiple
                     className="hidden"
                     onChange={handleFileSelect}
