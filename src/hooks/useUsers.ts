@@ -85,9 +85,9 @@ export function useUsers() {
     }) => {
       // Subscription product mapping
       const SUBSCRIPTION_CREDIT_MAP: Record<string, number> = {
-        "prod_U3DJqmft6ONyxk": 100,   // monthly
-        "prod_U4sQ5jX7kNnc14": 300,   // quarterly
-        "prod_U4sSoxZsz5Ix9Z": 1200,  // yearly
+        "prod_U3DJqmft6ONyxk": 100,   // monthly — 100/mo
+        "prod_U4sQ5jX7kNnc14": 100,   // quarterly — 100/mo
+        "prod_U4sSoxZsz5Ix9Z": 100,   // yearly — 100/mo
       };
       const SUBSCRIPTION_IDS = Object.keys(SUBSCRIPTION_CREDIT_MAP);
 

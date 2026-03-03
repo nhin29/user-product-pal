@@ -52,9 +52,9 @@ const WOO_PRODUCT_OPTIONS = [
 ];
 
 const SUBSCRIPTION_PRODUCT_OPTIONS = [
-  { id: "prod_U3DJqmft6ONyxk", label: "Monthly (100 credits)" },
-  { id: "prod_U4sQ5jX7kNnc14", label: "Quarterly (300 credits)" },
-  { id: "prod_U4sSoxZsz5Ix9Z", label: "Yearly (1200 credits)" },
+  { id: "prod_U3DJqmft6ONyxk", label: "Monthly (100 credits/mo)" },
+  { id: "prod_U4sQ5jX7kNnc14", label: "Quarterly (100 credits/mo)" },
+  { id: "prod_U4sSoxZsz5Ix9Z", label: "Yearly (100 credits/mo)" },
 ];
 
 const SUBSCRIPTION_IDS = SUBSCRIPTION_PRODUCT_OPTIONS.map((p) => p.id);
