@@ -236,17 +236,26 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
             <div className="grid gap-2">
               <Label htmlFor="creditLimit">Credit Limit</Label>
               {creditStatus === "subscribed" ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium">100 credits / month</span>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      Used: {usedCount} / 100
+                <div className="rounded-md border border-emerald-200 bg-emerald-50/50 p-3 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border border-emerald-500 text-emerald-700 bg-emerald-500/15">
+                        Subscribed
+                      </span>
+                      <span className="text-sm font-medium">100 credits / mo</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {usedCount} / 100 used
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-muted-foreground">
-                      Remaining: {Math.max(0, 100 - usedCount)} credits this month
-                    </p>
+                  <div className="w-full bg-emerald-100 rounded-full h-1.5">
+                    <div
+                      className="bg-emerald-500 h-1.5 rounded-full transition-all"
+                      style={{ width: `${Math.min(100, (usedCount / 100) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{Math.max(0, 100 - usedCount)} credits remaining</span>
                     {(() => {
                       const PLAN_MONTHS: Record<string, number> = {
                         "prod_U3DJqmft6ONyxk": 1,
@@ -262,15 +271,10 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                         remainingMonths = Math.max(0, totalMonths - elapsed);
                       }
                       return totalMonths > 0 ? (
-                        <span className="text-xs text-muted-foreground">
-                          · {remainingMonths} / {totalMonths} months remaining
-                        </span>
+                        <span>{remainingMonths}/{totalMonths} mo left</span>
                       ) : null;
                     })()}
                   </div>
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border border-emerald-500 text-emerald-700 bg-emerald-500/15`}>
-                    Subscribed
-                  </span>
                 </div>
               ) : (
                 <>
