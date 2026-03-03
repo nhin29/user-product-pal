@@ -80,6 +80,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
   const [usedCount, setUsedCount] = useState<number>(0);
   const [creditStatus, setCreditStatus] = useState<string>("trial");
   const [isLoadingCredits, setIsLoadingCredits] = useState(false);
+  const [subscriptionProductId, setSubscriptionProductId] = useState<string | null>(null);
+  const [subscriptionStart, setSubscriptionStart] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -93,18 +95,28 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
       // Fetch credit limit for this user
       setIsLoadingCredits(true);
       import("@/integrations/supabase/client").then(({ supabase }) => {
-        supabase
-          .from("user_credits")
-          .select("credit_limit, used_count, status")
-          .eq("user_id", user.user_id)
-          .maybeSingle()
-          .then(({ data }) => {
-            const limit = data?.credit_limit ?? 4;
-            setCreditLimit(limit);
-            setOriginalCreditLimit(limit);
-            setUsedCount(data?.used_count ?? 0);
-            setCreditStatus((data as any)?.status ?? "trial");
-          });
+        Promise.all([
+          supabase
+            .from("user_credits")
+            .select("credit_limit, used_count, status")
+            .eq("user_id", user.user_id)
+            .maybeSingle(),
+          supabase
+            .from("user_subscriptions")
+            .select("product_id, current_period_start, status")
+            .eq("user_id", user.user_id)
+            .eq("status", "active")
+            .maybeSingle(),
+        ]).then(([creditsRes, subRes]) => {
+          const limit = creditsRes.data?.credit_limit ?? 4;
+          setCreditLimit(limit);
+          setOriginalCreditLimit(limit);
+          setUsedCount(creditsRes.data?.used_count ?? 0);
+          setCreditStatus((creditsRes.data as any)?.status ?? "trial");
+          setSubscriptionProductId(subRes.data?.product_id ?? null);
+          setSubscriptionStart(subRes.data?.current_period_start ?? null);
+          setIsLoadingCredits(false);
+        });
       });
     }
   }, [user]);
@@ -223,37 +235,76 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
             </div>
             <div className="grid gap-2">
               <Label htmlFor="creditLimit">Credit Limit</Label>
-              <div className="flex items-center gap-3">
-                <Input
-                  id="creditLimit"
-                  type="number"
-                  min={0}
-                  value={creditLimit}
-                  onChange={(e) => setCreditLimit(Number(e.target.value))}
-                  placeholder="Credit limit"
-                  disabled={isLoadingCredits}
-                  className="flex-1"
-                />
-                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  Used: {usedCount} / {creditLimit}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">
-                  Remaining: {Math.max(0, creditLimit - usedCount)} credits
-                </p>
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                  creditStatus === "subscribed" 
-                    ? "border-emerald-500 text-emerald-700 bg-emerald-500/15" 
-                    : creditStatus === "expired"
-                    ? "border-red-500 text-red-700 bg-red-500/15"
-                    : creditStatus === "free"
-                    ? "border-gray-400 text-gray-600 bg-gray-400/15"
-                    : "border-yellow-500 text-yellow-700 bg-yellow-500/15"
-                }`}>
-                  {creditStatus.charAt(0).toUpperCase() + creditStatus.slice(1)}
-                </span>
-              </div>
+              {creditStatus === "subscribed" ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium">100 credits / month</span>
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      Used: {usedCount} / 100
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      Remaining: {Math.max(0, 100 - usedCount)} credits this month
+                    </p>
+                    {(() => {
+                      const PLAN_MONTHS: Record<string, number> = {
+                        "prod_U3DJqmft6ONyxk": 1,
+                        "prod_U4sQ5jX7kNnc14": 3,
+                        "prod_U4sSoxZsz5Ix9Z": 12,
+                      };
+                      const totalMonths = subscriptionProductId ? PLAN_MONTHS[subscriptionProductId] ?? 0 : 0;
+                      let remainingMonths = totalMonths;
+                      if (subscriptionStart && totalMonths > 0) {
+                        const start = new Date(subscriptionStart);
+                        const now = new Date();
+                        const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+                        remainingMonths = Math.max(0, totalMonths - elapsed);
+                      }
+                      return totalMonths > 0 ? (
+                        <span className="text-xs text-muted-foreground">
+                          · {remainingMonths} / {totalMonths} months remaining
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border border-emerald-500 text-emerald-700 bg-emerald-500/15`}>
+                    Subscribed
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="creditLimit"
+                      type="number"
+                      min={0}
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(Number(e.target.value))}
+                      placeholder="Credit limit"
+                      disabled={isLoadingCredits}
+                      className="flex-1"
+                    />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      Used: {usedCount} / {creditLimit}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      Remaining: {Math.max(0, creditLimit - usedCount)} credits
+                    </p>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                      creditStatus === "expired"
+                      ? "border-red-500 text-red-700 bg-red-500/15"
+                      : creditStatus === "free"
+                      ? "border-gray-400 text-gray-600 bg-gray-400/15"
+                      : "border-yellow-500 text-yellow-700 bg-yellow-500/15"
+                    }`}>
+                      {creditStatus.charAt(0).toUpperCase() + creditStatus.slice(1)}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
             </div>
             <div className="space-y-4 sm:col-span-1">
