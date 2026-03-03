@@ -383,9 +383,20 @@ export default function UsersPage() {
                         ) : (() => {
                           const credit = userCredits[user.user_id];
                           const isSubscribed = credit?.status === 'subscribed';
+                          const platformProductIds = [
+                            "prod_U4RqVgotWRlWFY", "prod_TmW6D8HwME3dsX",
+                            "prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j",
+                            "prod_U1stXv6wWzqBVe", "prod_U1sv6wPAwnrTLZ",
+                            "prod_U4Rs6EDtHY284g", "prod_U4RtwRe75EKFQ3",
+                          ];
+                          const ids = user.product_ids || [];
+                          const hasPlatformAccess = ids.some((id: string) => platformProductIds.includes(id));
+                          if (!hasPlatformAccess && !isSubscribed) return <span className="text-muted-foreground">—</span>;
                           return (
                             <div className="flex flex-col items-start gap-1">
-                              <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-yellow-500 text-yellow-700 bg-yellow-500/15 whitespace-nowrap">Prompt</Badge>
+                              {hasPlatformAccess && (
+                                <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-yellow-500 text-yellow-700 bg-yellow-500/15 whitespace-nowrap">Prompt</Badge>
+                              )}
                               {isSubscribed && (
                                 <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Subscription</Badge>
                               )}

@@ -1033,6 +1033,18 @@ export type Database = {
         Returns: boolean
       }
       increment_credits: { Args: { p_user_id: string }; Returns: number }
+      merge_product_ids: {
+        Args: {
+          p_is_purchase?: boolean
+          p_new_ids: string[]
+          p_user_id: string
+        }
+        Returns: string[]
+      }
+      remove_product_ids: {
+        Args: { p_remove_ids: string[]; p_user_id: string }
+        Returns: string[]
+      }
       reset_monthly_credits: { Args: never; Returns: undefined }
     }
     Enums: {
