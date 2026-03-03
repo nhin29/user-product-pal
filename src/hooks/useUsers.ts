@@ -190,7 +190,7 @@ export function useUsers() {
             const { error: creditError } = await supabase
               .from("user_credits")
               .upsert(
-                { user_id: userId, credit_limit: creditLimit ?? 100, status: "trial" },
+                { user_id: userId, credit_limit: creditLimit ?? 4, status: "trial" },
                 { onConflict: "user_id" }
               );
             if (creditError) throw creditError;
