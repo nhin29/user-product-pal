@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { toLocaleDateStringNY } from "@/lib/dateUtils";
-import { GripVertical, MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
+import { GripVertical, MoreHorizontal, Edit, Trash2, Eye, Play } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,15 +67,15 @@ export function SortableProductRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isVideoCategory = (product as any).categories?.name?.toLowerCase() === "video";
+
   // Determine cover image based on selected niche
   let coverUrl: string | null = null;
   if (productImages.length > 0) {
     if (selectedNicheId) {
-      // Find the first image matching the selected niche (already sorted by display_order)
       const nicheImage = productImages.find(img => img.niche_id === selectedNicheId);
       coverUrl = nicheImage?.image_url || productImages[0].image_url;
     } else {
-      // No niche selected or "all" — show first image (cover)
       coverUrl = productImages[0].image_url;
     }
   } else {
@@ -116,16 +116,30 @@ export function SortableProductRow({
           onClick={() => onPreview(product)}
         >
           {coverUrl ? (
-            <img
-              src={coverUrl}
-              alt="Product"
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
+            isVideoCategory ? (
+              <div className="relative flex h-full w-full items-center justify-center bg-muted">
+                <video
+                  src={coverUrl}
+                  className="h-full w-full object-cover"
+                  muted
+                  preload="metadata"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <Play className="h-4 w-4 text-white fill-white" />
+                </div>
+              </div>
+            ) : (
+              <img
+                src={coverUrl}
+                alt="Product"
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            )
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-              IMG
+              {isVideoCategory ? <Play className="h-4 w-4" /> : "IMG"}
             </div>
           )}
         </div>
@@ -145,7 +159,7 @@ export function SortableProductRow({
       </TableCell>
       <TableCell>
         <span className="text-muted-foreground text-sm">
-          {imageCount} {imageCount === 1 ? "image" : "images"}
+          {imageCount} {imageCount === 1 ? (isVideoCategory ? "video" : "image") : (isVideoCategory ? "videos" : "images")}
         </span>
       </TableCell>
       <TableCell>
