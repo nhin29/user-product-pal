@@ -388,6 +388,7 @@ export default function UsersPage() {
                             "prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j",
                             "prod_U1stXv6wWzqBVe", "prod_U1sv6wPAwnrTLZ",
                             "prod_U4Rs6EDtHY284g", "prod_U4RtwRe75EKFQ3",
+                            "prod_U552iYMyRrUwsG", "prod_U552aJz8KOYu50",
                           ];
                           const ids = user.product_ids || [];
                           const hasPlatformAccess = ids.some((id: string) => platformProductIds.includes(id));
@@ -412,18 +413,21 @@ export default function UsersPage() {
                           const shopifyIds = ["prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j"];
                           const metaIds = ["prod_U1stXv6wWzqBVe", "prod_U1sv6wPAwnrTLZ"];
                           const wooIds = ["prod_U4Rs6EDtHY284g", "prod_U4RtwRe75EKFQ3"];
+                          const videoIds = ["prod_U552iYMyRrUwsG", "prod_U552aJz8KOYu50"];
                           const ids = user.product_ids || [];
                           const hasAmazon = ids.some((id: string) => amazonIds.includes(id));
                           const hasShopify = ids.some((id: string) => shopifyIds.includes(id));
                           const hasMeta = ids.some((id: string) => metaIds.includes(id));
                           const hasWoo = ids.some((id: string) => wooIds.includes(id));
-                          if (!hasAmazon && !hasShopify && !hasMeta && !hasWoo) return <span className="text-muted-foreground">—</span>;
+                          const hasVideo = ids.some((id: string) => videoIds.includes(id));
+                          if (!hasAmazon && !hasShopify && !hasMeta && !hasWoo && !hasVideo) return <span className="text-muted-foreground">—</span>;
                           return (
                           <div className="flex flex-col items-start gap-1">
                               {hasAmazon && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-orange-500 text-orange-700 bg-orange-500/15 whitespace-nowrap">Amazon</Badge>}
                               {hasShopify && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-teal-500 text-teal-700 bg-teal-500/15 whitespace-nowrap">Shopify</Badge>}
                               {hasMeta && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-sky-500 text-sky-700 bg-sky-500/15 whitespace-nowrap">Meta</Badge>}
                               {hasWoo && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-purple-500 text-purple-700 bg-purple-500/15 whitespace-nowrap">Woo</Badge>}
+                              {hasVideo && <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-red-500 text-red-700 bg-red-500/15 whitespace-nowrap">Video</Badge>}
                             </div>
                           );
                         })()}
