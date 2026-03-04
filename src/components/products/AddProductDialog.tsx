@@ -89,15 +89,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const selectedPlatform = form.watch("platform");
   const isVideoPlatform = selectedPlatform === "video";
-  const selectedCategoryId = form.watch("category_id");
-  const isVideoCategory = categories?.find(c => c.id === selectedCategoryId)?.name?.toLowerCase() === "video";
-  const mediaLabel = isVideoPlatform || isVideoCategory ? "Videos" : "Images";
-  const acceptType = isVideoPlatform || isVideoCategory ? "video/*" : "image/*";
+  const mediaLabel = isVideoPlatform ? "Videos" : "Images";
+  const acceptType = isVideoPlatform ? "video/*" : "image/*";
 
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const prefix = isVideoPlatform || isVideoCategory ? "video/" : "image/";
+    const prefix = isVideoPlatform ? "video/" : "image/";
     const validFiles = files.filter(f => f.type.startsWith(prefix));
     const newImages: ImageWithNiche[] = validFiles.map(f => ({
       url: "",
@@ -149,7 +147,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const onSubmit = async (data: ProductFormData) => {
     if (images.length === 0) {
-      toast({ variant: "destructive", title: `${isVideoPlatform || isVideoCategory ? "Video" : "Image"} required`, description: `Please add at least one ${isVideoPlatform || isVideoCategory ? "video" : "image"}` });
+      toast({ variant: "destructive", title: `${isVideoPlatform ? "Video" : "Image"} required`, description: `Please add at least one ${isVideoPlatform ? "video" : "image"}` });
       return;
     }
 
@@ -288,7 +286,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                   {images.map((img, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30">
-                      {isVideoPlatform || isVideoCategory ? (
+                      {isVideoPlatform ? (
                         <video
                           src={img.preview || img.url}
                           className="h-14 w-14 rounded-md object-cover border flex-shrink-0"
@@ -353,13 +351,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    {isVideoPlatform || isVideoCategory ? (
+                    {isVideoPlatform ? (
                       <Video className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
                     ) : (
                       <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
                     )}
-                    <p className="text-sm text-muted-foreground">Click to upload {isVideoPlatform || isVideoCategory ? "videos" : "images"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{isVideoPlatform || isVideoCategory ? "MP4, MOV, WEBM" : "PNG, JPG, WEBP"} — select multiple files</p>
+                    <p className="text-sm text-muted-foreground">Click to upload {isVideoPlatform ? "videos" : "images"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{isVideoPlatform ? "MP4, MOV, WEBM" : "PNG, JPG, WEBP"} — select multiple files</p>
                   </div>
                   <input
                     ref={fileInputRef}
