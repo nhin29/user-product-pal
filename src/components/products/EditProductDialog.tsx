@@ -313,7 +313,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
       await updateProduct.mutateAsync({
         id: product.id,
         updates: {
-          category_id: isVideo ? "" : (data.category_id || ""),
+          category_id: isVideo ? null : (data.category_id || null),
           image_urls: resolvedImages.map(i => i.image_url),
           prompt: data.prompt,
           platform: data.platform,

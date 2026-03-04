@@ -171,7 +171,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       }
 
       const product = await createProduct.mutateAsync({
-        category_id: categoryId || "",
+        category_id: categoryId || null,
         image_urls: resolvedImages.map(i => i.image_url),
         prompt: data.prompt,
         platform: data.platform,
