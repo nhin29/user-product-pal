@@ -64,6 +64,7 @@ function SortableImageCard({
   onRemove,
   onNicheChange,
   productTypes,
+  hideNiche,
 }: {
   id: string;
   img: ImageWithNiche;
@@ -71,6 +72,7 @@ function SortableImageCard({
   onRemove: (index: number) => void;
   onNicheChange: (index: number, nicheId: string | null) => void;
   productTypes: { id: string; name: string }[] | undefined;
+  hideNiche?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -102,20 +104,22 @@ function SortableImageCard({
         {index === 0 && (
           <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-medium mb-1 inline-block">Cover</span>
         )}
-        <Select
-          value={img.niche_id || "none"}
-          onValueChange={(v) => onNicheChange(index, v === "none" ? null : v)}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="Select niche" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No niche</SelectItem>
-            {productTypes?.map((type) => (
-              <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {!hideNiche && (
+          <Select
+            value={img.niche_id || "none"}
+            onValueChange={(v) => onNicheChange(index, v === "none" ? null : v)}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Select niche" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No niche</SelectItem>
+              {productTypes?.map((type) => (
+                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <Button
         type="button"
@@ -131,13 +135,18 @@ function SortableImageCard({
 }
 
 const productSchema = z.object({
-  category_id: z.string().min(1, "Category is required"),
+  category_id: z.string().optional(),
   description: z.string().max(1000, "Description too long").optional(),
   prompt: z.string().min(1, "Prompt is required"),
-  platform: z.enum(["amazon", "shopify", "meta", "woo", "other"]),
+  platform: z.enum(["amazon", "shopify", "meta", "woo", "video", "other"]),
   made_by: z.string().max(200, "Made by is too long").optional(),
   note: z.string().max(1000, "Note is too long").optional(),
-});
+}).refine((data) => {
+  if (data.platform !== "video" && (!data.category_id || data.category_id.length === 0)) {
+    return false;
+  }
+  return true;
+}, { message: "Category is required", path: ["category_id"] });
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -197,10 +206,10 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   useEffect(() => {
     if (product) {
       form.reset({
-        category_id: product.category_id,
+        category_id: product.category_id || "",
         description: product.description || "",
         prompt: product.prompt,
-        platform: product.platform as "amazon" | "shopify" | "meta" | "woo" | "other",
+        platform: product.platform as "amazon" | "shopify" | "meta" | "woo" | "video" | "other",
         made_by: product.made_by || "",
         note: product.note || "",
       });
@@ -229,7 +238,8 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const imageFiles = files.filter(f => f.type.startsWith("image/"));
+    const prefix = form.getValues("platform") === "video" ? "video/" : "image/";
+    const imageFiles = files.filter(f => f.type.startsWith(prefix));
     const newImages: ImageWithNiche[] = imageFiles.map(f => ({
       url: "",
       file: f,
@@ -299,10 +309,11 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
         resolvedImages.push({ image_url: url, niche_id: img.niche_id, display_order: i });
       }
 
+      const isVideo = data.platform === "video";
       await updateProduct.mutateAsync({
         id: product.id,
         updates: {
-          category_id: data.category_id,
+          category_id: isVideo ? "" : (data.category_id || ""),
           image_urls: resolvedImages.map(i => i.image_url),
           prompt: data.prompt,
           platform: data.platform,
@@ -339,6 +350,8 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
 
   const isPending = updateProduct.isPending || isUploading;
 
+  const isVideoPlatform = form.watch("platform") === "video";
+
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -351,34 +364,16 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image Style</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select image style" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories?.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="platform"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Platform</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={(v) => {
+                      field.onChange(v);
+                      if (v === "video") {
+                        form.setValue("category_id", "");
+                      }
+                    }} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select platform" />
@@ -389,6 +384,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                         <SelectItem value="shopify">Shopify</SelectItem>
                         <SelectItem value="meta">Meta</SelectItem>
                         <SelectItem value="woo">WooCommerce</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -396,12 +392,39 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   </FormItem>
                 )}
               />
+
+              {!isVideoPlatform && (
+                <FormField
+                  control={form.control}
+                  name="category_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image Style</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select image style" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories?.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Image list with per-image niche and drag-and-drop */}
             <div className="space-y-2">
-              <FormLabel>Product Images</FormLabel>
-              <p className="text-xs text-muted-foreground">Drag to reorder. First image is the cover. Each image can have its own niche.</p>
+              <FormLabel>Product {isVideoPlatform ? "Videos" : "Images"}</FormLabel>
+              {!isVideoPlatform && (
+                <p className="text-xs text-muted-foreground">Drag to reorder. First image is the cover. Each image can have its own niche.</p>
+              )}
               
               {images.length > 0 && (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -416,6 +439,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                           onRemove={removeImage}
                           onNicheChange={updateImageNiche}
                           productTypes={productTypes}
+                          hideNiche={isVideoPlatform}
                         />
                       ))}
                     </div>
@@ -438,13 +462,13 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
-                    <p className="text-sm text-muted-foreground">Click to upload images</p>
-                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP — select multiple</p>
+                    <p className="text-sm text-muted-foreground">Click to upload {isVideoPlatform ? "videos" : "images"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{isVideoPlatform ? "MP4, MOV, WEBM" : "PNG, JPG, WEBP"} — select multiple</p>
                   </div>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept={isVideoPlatform ? "video/*" : "image/*"}
                     multiple
                     className="hidden"
                     onChange={handleFileSelect}

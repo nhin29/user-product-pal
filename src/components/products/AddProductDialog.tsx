@@ -42,13 +42,18 @@ interface ImageWithNiche {
 }
 
 const productSchema = z.object({
-  category_id: z.string().min(1, "Category is required"),
+  category_id: z.string().optional(),
   description: z.string().max(1000, "Description too long").optional(),
   prompt: z.string().min(1, "Prompt is required"),
-  platform: z.enum(["amazon", "shopify", "meta", "woo", "other"]),
+  platform: z.enum(["amazon", "shopify", "meta", "woo", "video", "other"]),
   made_by: z.string().max(200, "Made by is too long").optional(),
   note: z.string().max(1000, "Note is too long").optional(),
-});
+}).refine((data) => {
+  if (data.platform !== "video" && (!data.category_id || data.category_id.length === 0)) {
+    return false;
+  }
+  return true;
+}, { message: "Category is required", path: ["category_id"] });
 
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -82,15 +87,17 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     },
   });
 
+  const selectedPlatform = form.watch("platform");
+  const isVideoPlatform = selectedPlatform === "video";
   const selectedCategoryId = form.watch("category_id");
   const isVideoCategory = categories?.find(c => c.id === selectedCategoryId)?.name?.toLowerCase() === "video";
-  const mediaLabel = isVideoCategory ? "Videos" : "Images";
-  const acceptType = isVideoCategory ? "video/*" : "image/*";
+  const mediaLabel = isVideoPlatform || isVideoCategory ? "Videos" : "Images";
+  const acceptType = isVideoPlatform || isVideoCategory ? "video/*" : "image/*";
 
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const prefix = isVideoCategory ? "video/" : "image/";
+    const prefix = isVideoPlatform || isVideoCategory ? "video/" : "image/";
     const validFiles = files.filter(f => f.type.startsWith(prefix));
     const newImages: ImageWithNiche[] = validFiles.map(f => ({
       url: "",
@@ -142,9 +149,12 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
 
   const onSubmit = async (data: ProductFormData) => {
     if (images.length === 0) {
-      toast({ variant: "destructive", title: `${isVideoCategory ? "Video" : "Image"} required`, description: `Please add at least one ${isVideoCategory ? "video" : "image"}` });
+      toast({ variant: "destructive", title: `${isVideoPlatform || isVideoCategory ? "Video" : "Image"} required`, description: `Please add at least one ${isVideoPlatform || isVideoCategory ? "video" : "image"}` });
       return;
     }
+
+    // For video platform, clear category_id
+    const categoryId = isVideoPlatform ? undefined : data.category_id;
 
     try {
       setIsUploading(true);
@@ -161,7 +171,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
       }
 
       const product = await createProduct.mutateAsync({
-        category_id: data.category_id,
+        category_id: categoryId || "",
         image_urls: resolvedImages.map(i => i.image_url),
         prompt: data.prompt,
         platform: data.platform,
@@ -170,10 +180,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
         note: data.note || null,
       });
 
-      // Sync to product_images table
+      // Sync to product_images table (skip niche for video platform)
+      const imagesToSync = isVideoPlatform
+        ? resolvedImages.map(img => ({ ...img, niche_id: null }))
+        : resolvedImages;
       await syncProductImages.mutateAsync({
         productId: product.id,
-        images: resolvedImages,
+        images: imagesToSync,
       });
 
       toast({ title: "Product created", description: "The product has been added successfully." });
@@ -211,34 +224,16 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image Style</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select image style" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories?.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="platform"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Platform</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(v) => {
+                      field.onChange(v);
+                      if (v === "video") {
+                        form.setValue("category_id", "");
+                      }
+                    }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select platform" />
@@ -249,6 +244,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                         <SelectItem value="shopify">Shopify</SelectItem>
                         <SelectItem value="meta">Meta</SelectItem>
                         <SelectItem value="woo">WooCommerce</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -256,6 +252,31 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   </FormItem>
                 )}
               />
+
+              {!isVideoPlatform && (
+                <FormField
+                  control={form.control}
+                  name="category_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image Style</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select image style" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories?.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Multi Image Upload/URL Section with per-image niche */}
@@ -267,7 +288,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                   {images.map((img, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30">
-                      {isVideoCategory ? (
+                      {isVideoPlatform || isVideoCategory ? (
                         <video
                           src={img.preview || img.url}
                           className="h-14 w-14 rounded-md object-cover border flex-shrink-0"
@@ -287,20 +308,22 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                         <p className="text-xs text-muted-foreground truncate mb-1">
                           {img.file?.name || img.url}
                         </p>
-                        <Select
-                          value={img.niche_id || "none"}
-                          onValueChange={(v) => updateImageNiche(index, v === "none" ? null : v)}
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Select niche" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No niche</SelectItem>
-                            {productTypes?.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {!isVideoPlatform && (
+                          <Select
+                            value={img.niche_id || "none"}
+                            onValueChange={(v) => updateImageNiche(index, v === "none" ? null : v)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Select niche" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No niche</SelectItem>
+                              {productTypes?.map((type) => (
+                                <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <Button
                         type="button"
@@ -330,13 +353,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                     className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    {isVideoCategory ? (
+                    {isVideoPlatform || isVideoCategory ? (
                       <Video className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
                     ) : (
                       <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-1" />
                     )}
-                    <p className="text-sm text-muted-foreground">Click to upload {isVideoCategory ? "videos" : "images"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{isVideoCategory ? "MP4, MOV, WEBM" : "PNG, JPG, WEBP"} — select multiple files</p>
+                    <p className="text-sm text-muted-foreground">Click to upload {isVideoPlatform || isVideoCategory ? "videos" : "images"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{isVideoPlatform || isVideoCategory ? "MP4, MOV, WEBM" : "PNG, JPG, WEBP"} — select multiple files</p>
                   </div>
                   <input
                     ref={fileInputRef}

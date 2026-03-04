@@ -370,6 +370,7 @@ export default function ProductsPage() {
               <SelectItem value="shopify">Shopify</SelectItem>
               <SelectItem value="meta">Meta</SelectItem>
               <SelectItem value="woo">WooCommerce</SelectItem>
+              <SelectItem value="video">Video</SelectItem>
             </SelectContent>
           </Select>
 
