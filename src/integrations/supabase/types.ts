@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_extraction_cache: {
+        Row: {
+          created_at: string
+          fields: Json
+          id: string
+          product_id: string | null
+          prompt_hash: string
+        }
+        Insert: {
+          created_at?: string
+          fields?: Json
+          id?: string
+          product_id?: string | null
+          prompt_hash: string
+        }
+        Update: {
+          created_at?: string
+          fields?: Json
+          id?: string
+          product_id?: string | null
+          prompt_hash?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
