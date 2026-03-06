@@ -619,6 +619,13 @@ export default function ProductsPage() {
           productIds={selectedIds}
           onSuccess={() => setSelectedIds([])}
         />
+        <MoveToPositionDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          productId={moveProduct?.product.id || null}
+          currentPosition={moveProduct?.position || 0}
+          totalCount={totalCount}
+        />
       </div>
     </AdminLayout>
   );
