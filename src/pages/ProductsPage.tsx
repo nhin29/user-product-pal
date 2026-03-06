@@ -75,6 +75,8 @@ export default function ProductsPage() {
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [moveProduct, setMoveProduct] = useState<{ product: Product; position: number } | null>(null);
 
   const { data, isLoading, isFetching, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, "", platformFilter);
   const { data: categories } = useCategories();
