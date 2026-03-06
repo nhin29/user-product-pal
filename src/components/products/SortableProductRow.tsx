@@ -200,6 +200,12 @@ export function SortableProductRow({
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
+            {onMoveToPosition && (
+              <DropdownMenuItem onClick={() => onMoveToPosition(product)}>
+                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                Move to Position
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => onDelete(product)}
