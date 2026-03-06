@@ -40,6 +40,7 @@ interface SortableProductRowProps {
   onPreview: (product: Product) => void;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
+  onMoveToPosition?: (product: Product) => void;
 }
 
 export function SortableProductRow({
