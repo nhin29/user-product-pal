@@ -53,6 +53,7 @@ export function SortableProductRow({
   onPreview,
   onEdit,
   onDelete,
+  onMoveToPosition,
 }: SortableProductRowProps) {
   const updateProduct = useUpdateProduct();
   const {
