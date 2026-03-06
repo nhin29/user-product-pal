@@ -505,6 +505,7 @@ export default function ProductsPage() {
                             onPreview={handlePreview}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onMoveToPosition={handleMoveToPosition}
                           />
                         ))}
                       </SortableContext>
