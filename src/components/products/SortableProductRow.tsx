@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ArrowRightLeft } from "lucide-react";
 import { Product, useUpdateProduct } from "@/hooks/useProducts";
 
 const platformColors: Record<string, string> = {
