@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ArrowRightLeft } from "lucide-react";
 import { Product, useUpdateProduct } from "@/hooks/useProducts";
 
 const platformColors: Record<string, string> = {
@@ -39,6 +40,7 @@ interface SortableProductRowProps {
   onPreview: (product: Product) => void;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
+  onMoveToPosition?: (product: Product) => void;
 }
 
 export function SortableProductRow({
@@ -51,6 +53,7 @@ export function SortableProductRow({
   onPreview,
   onEdit,
   onDelete,
+  onMoveToPosition,
 }: SortableProductRowProps) {
   const updateProduct = useUpdateProduct();
   const {
@@ -197,6 +200,12 @@ export function SortableProductRow({
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
+            {onMoveToPosition && (
+              <DropdownMenuItem onClick={() => onMoveToPosition(product)}>
+                <ArrowRightLeft className="mr-2 h-4 w-4" />
+                Move to Position
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => onDelete(product)}

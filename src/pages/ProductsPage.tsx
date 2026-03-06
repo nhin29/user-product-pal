@@ -46,6 +46,7 @@ import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog
 import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
 import { SortableProductRow } from "@/components/products/SortableProductRow";
 import { GoogleSheetsSyncDialog } from "@/components/products/GoogleSheetsSyncDialog";
+import { MoveToPositionDialog } from "@/components/products/MoveToPositionDialog";
 import { BulkDuplicateProductsDialog } from "@/components/products/BulkDuplicateProductsDialog";
 import { useSettings, useUpdateSetting } from "@/hooks/useSettings";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -74,6 +75,8 @@ export default function ProductsPage() {
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [moveProduct, setMoveProduct] = useState<{ product: Product; position: number } | null>(null);
 
   const { data, isLoading, isFetching, error } = useProducts(currentPage, pageSize, debouncedSearch, categoryFilter, "", platformFilter);
   const { data: categories } = useCategories();
@@ -224,6 +227,13 @@ export default function ProductsPage() {
 
   const handleBulkDeleteSuccess = () => {
     setSelectedIds([]);
+  };
+
+  const handleMoveToPosition = (product: Product) => {
+    const idx = products.findIndex(p => p.id === product.id);
+    const position = (currentPage - 1) * pageSize + idx + 1;
+    setMoveProduct({ product, position });
+    setMoveDialogOpen(true);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -495,6 +505,7 @@ export default function ProductsPage() {
                             onPreview={handlePreview}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onMoveToPosition={handleMoveToPosition}
                           />
                         ))}
                       </SortableContext>
@@ -607,6 +618,13 @@ export default function ProductsPage() {
           onOpenChange={setDuplicateDialogOpen}
           productIds={selectedIds}
           onSuccess={() => setSelectedIds([])}
+        />
+        <MoveToPositionDialog
+          open={moveDialogOpen}
+          onOpenChange={setMoveDialogOpen}
+          productId={moveProduct?.product.id || null}
+          currentPosition={moveProduct?.position || 0}
+          totalCount={totalCount}
         />
       </div>
     </AdminLayout>
