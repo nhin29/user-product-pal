@@ -229,6 +229,13 @@ export default function ProductsPage() {
     setSelectedIds([]);
   };
 
+  const handleMoveToPosition = (product: Product) => {
+    const idx = products.findIndex(p => p.id === product.id);
+    const position = (currentPage - 1) * pageSize + idx + 1;
+    setMoveProduct({ product, position });
+    setMoveDialogOpen(true);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
