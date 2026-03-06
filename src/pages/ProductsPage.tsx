@@ -46,6 +46,7 @@ import { ProductPreviewDialog } from "@/components/products/ProductPreviewDialog
 import { BulkDeleteProductsDialog } from "@/components/products/BulkDeleteProductsDialog";
 import { SortableProductRow } from "@/components/products/SortableProductRow";
 import { GoogleSheetsSyncDialog } from "@/components/products/GoogleSheetsSyncDialog";
+import { MoveToPositionDialog } from "@/components/products/MoveToPositionDialog";
 import { BulkDuplicateProductsDialog } from "@/components/products/BulkDuplicateProductsDialog";
 import { useSettings, useUpdateSetting } from "@/hooks/useSettings";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
