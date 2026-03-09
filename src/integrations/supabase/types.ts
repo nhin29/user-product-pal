@@ -996,6 +996,27 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_last_active_dates: {
+        Args: never
+        Returns: {
+          last_date: string
+          user_id: string
+        }[]
+      }
+      get_last_seen_by_users: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          last_seen: string
+          user_id: string
+        }[]
+      }
+      get_power_user_ids: {
+        Args: { p_threshold?: number }
+        Returns: {
+          total_count: number
+          user_id: string
+        }[]
+      }
       get_profiles_with_email: {
         Args: never
         Returns: {
