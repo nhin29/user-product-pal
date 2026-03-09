@@ -68,55 +68,21 @@ export default function UsersPage() {
         }
       });
 
-    // Fetch copy counts + generation counts to determine power users (10+)
-    Promise.all([
-      supabase
-        .from("prompt_interactions")
-        .select("user_id")
-        .eq("interaction_type", "copy"),
-      supabase
-        .from("generated_images")
-        .select("user_id"),
-    ]).then(([copiesRes, gensRes]) => {
-      const counts: Record<string, number> = {};
-      copiesRes.data?.forEach((r) => {
-        if (r.user_id) counts[r.user_id] = (counts[r.user_id] || 0) + 1;
-      });
-      gensRes.data?.forEach((r) => {
-        if (r.user_id) counts[r.user_id] = (counts[r.user_id] || 0) + 1;
-      });
+    // Fetch power user IDs via server-side RPC
+    supabase.rpc("get_power_user_ids", { p_threshold: 10 }).then(({ data }) => {
       const set = new Set<string>();
-      Object.entries(counts).forEach(([uid, count]) => {
-        if (count > 10) set.add(uid);
-      });
+      (data || []).forEach((r: any) => set.add(r.user_id));
       setPowerUsers(set);
     });
 
-    // Fetch last active dates (paginate to bypass 1000-row limit)
-    const fetchAllLastActive = async () => {
+    // Fetch last active dates via server-side RPC
+    supabase.rpc("get_last_active_dates").then(({ data }) => {
       const map: Record<string, string> = {};
-      let offset = 0;
-      const batchSize = 1000;
-      let hasMore = true;
-      while (hasMore) {
-        const { data } = await supabase
-          .from("daily_time_tracking")
-          .select("user_id, date")
-          .order("date", { ascending: false })
-          .range(offset, offset + batchSize - 1);
-        if (data && data.length > 0) {
-          data.forEach((r) => {
-            if (!map[r.user_id]) map[r.user_id] = r.date;
-          });
-          offset += batchSize;
-          hasMore = data.length === batchSize;
-        } else {
-          hasMore = false;
-        }
-      }
+      (data || []).forEach((r: any) => {
+        map[r.user_id] = r.last_date;
+      });
       setLastActive(map);
-    };
-    fetchAllLastActive();
+    });
   }, [users]);
 
   // Filters
