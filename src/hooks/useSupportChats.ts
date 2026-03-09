@@ -24,16 +24,17 @@ export interface UserConversation {
   avatar_url: string | null;
   status: string;
   folder_id: string | null;
-  messages: ChatMessage[];
   unread_count: number;
   last_message_at: string;
   last_seen: string | null;
+  last_message_preview: string | null;
 }
 
 export function useSupportChats() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch conversation list (lightweight — no full messages)
   const {
     data: conversations = [],
     isLoading,
@@ -50,59 +51,54 @@ export function useSupportChats() {
       if (convoError) throw convoError;
       if (!convos || convos.length === 0) return [];
 
-      // Fetch all chats for these conversations
+      // Fetch only last message + unread count per conversation (not all messages)
       const convoIds = convos.map((c) => c.id);
       const { data: allChats, error: chatsError } = await supabase
         .from("chats")
-        .select("*")
+        .select("conversation_id, sender_role, read_at, created_at, message")
         .in("conversation_id", convoIds)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
 
       if (chatsError) throw chatsError;
 
-      // Fetch user profiles
+      // Build per-conversation summary
+      const convoSummary = new Map<string, { unread_count: number; last_message_at: string; last_message_preview: string | null }>();
+      (allChats || []).forEach((chat) => {
+        const existing = convoSummary.get(chat.conversation_id);
+        if (!existing) {
+          convoSummary.set(chat.conversation_id, {
+            unread_count: chat.sender_role === "user" && !chat.read_at ? 1 : 0,
+            last_message_at: chat.created_at,
+            last_message_preview: chat.message?.substring(0, 100) || null,
+          });
+        } else {
+          if (chat.sender_role === "user" && !chat.read_at) {
+            existing.unread_count++;
+          }
+        }
+      });
+
+      // Fetch user profiles (shared query key with useUsers)
       const { data: profiles } = await supabase.rpc("get_profiles_with_email");
       const profileMap = new Map(
         (profiles || []).map((p) => [p.user_id, p])
       );
 
-      // Fetch last seen from analytics_events in a single query
+      // Fetch last seen via RPC
       const userIds = [...new Set(convos.map((c) => c.user_id))];
       const lastSeenMap = new Map<string, string>();
       if (userIds.length > 0) {
-        const { data: lastSeenData } = await supabase
-          .from("analytics_events")
-          .select("user_id, created_at")
-          .in("user_id", userIds)
-          .order("created_at", { ascending: false });
-        
-        // Take only the first (most recent) entry per user
-        (lastSeenData || []).forEach((row) => {
-          if (row.user_id && !lastSeenMap.has(row.user_id)) {
-            lastSeenMap.set(row.user_id, row.created_at);
-          }
+        const { data: lastSeenData } = await supabase.rpc("get_last_seen_by_users", {
+          p_user_ids: userIds,
+        });
+        (lastSeenData || []).forEach((row: any) => {
+          lastSeenMap.set(row.user_id, row.last_seen);
         });
       }
 
-      // Group chats by conversation
-      const chatsByConvo = new Map<string, ChatMessage[]>();
-      (allChats || []).forEach((chat) => {
-        if (!chatsByConvo.has(chat.conversation_id)) {
-          chatsByConvo.set(chat.conversation_id, []);
-        }
-        chatsByConvo.get(chat.conversation_id)!.push(chat);
-      });
-
       return convos.map((convo): UserConversation => {
         const profile = profileMap.get(convo.user_id);
-        const messages = chatsByConvo.get(convo.id) || [];
-        
-        // Count unread = user messages where read_at is null
-        const unreadCount = messages.filter(
-          (m) => m.sender_role === "user" && !m.read_at
-        ).length;
-
-        const lastMsg = messages[messages.length - 1];
+        const summary = convoSummary.get(convo.id);
 
         return {
           conversation_id: convo.id,
@@ -112,16 +108,36 @@ export function useSupportChats() {
           avatar_url: profile?.avatar_url || null,
           status: convo.status,
           folder_id: convo.folder_id || null,
-          messages,
-          unread_count: unreadCount,
-          last_message_at: lastMsg?.created_at || convo.created_at,
+          unread_count: summary?.unread_count || 0,
+          last_message_at: summary?.last_message_at || convo.created_at,
           last_seen: lastSeenMap.get(convo.user_id) || null,
+          last_message_preview: summary?.last_message_preview || null,
         };
       }).sort(
         (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
       );
     },
+    staleTime: 30 * 1000,
   });
+
+  // Fetch messages for a specific conversation (lazy-loaded)
+  function useConversationMessages(conversationId: string | null) {
+    return useQuery({
+      queryKey: ["conversation-messages", conversationId],
+      queryFn: async (): Promise<ChatMessage[]> => {
+        if (!conversationId) return [];
+        const { data, error } = await supabase
+          .from("chats")
+          .select("*")
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        return data || [];
+      },
+      enabled: !!conversationId,
+      staleTime: 10 * 1000,
+    });
+  }
 
   // Real-time subscription
   useEffect(() => {
@@ -130,7 +146,12 @@ export function useSupportChats() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chats" },
-        () => {
+        (payload: any) => {
+          // Invalidate the specific conversation messages
+          const convoId = payload.new?.conversation_id || payload.old?.conversation_id;
+          if (convoId) {
+            queryClient.invalidateQueries({ queryKey: ["conversation-messages", convoId] });
+          }
           queryClient.invalidateQueries({ queryKey: ["support-conversations"] });
         }
       )
@@ -187,7 +208,8 @@ export function useSupportChats() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["conversation-messages", variables.conversationId] });
       queryClient.invalidateQueries({ queryKey: ["support-conversations"] });
     },
     onError: (error) => {
@@ -201,7 +223,6 @@ export function useSupportChats() {
 
   const deleteConversation = useMutation({
     mutationFn: async (conversationId: string) => {
-      // Delete chats first, then conversation
       const { error: chatsError } = await supabase
         .from("chats")
         .delete()
@@ -237,5 +258,6 @@ export function useSupportChats() {
     sendMessage,
     deleteConversation,
     markAsRead,
+    useConversationMessages,
   };
 }
