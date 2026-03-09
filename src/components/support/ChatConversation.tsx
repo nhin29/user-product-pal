@@ -18,6 +18,7 @@ import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 import { EmojiPicker } from "./EmojiPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChatConversationProps {
   conversation: UserConversation;
@@ -25,7 +26,8 @@ interface ChatConversationProps {
 }
 
 export function ChatConversation({ conversation, onChatDeleted }: ChatConversationProps) {
-  const { sendMessage, deleteConversation } = useSupportChats();
+  const { sendMessage, deleteConversation, useConversationMessages } = useSupportChats();
+  const { data: messages = [], isLoading: messagesLoading } = useConversationMessages(conversation.conversation_id);
   const { folders, moveConversation } = useSupportFolders();
   const { toast } = useToast();
   const [message, setMessage] = useState("");
@@ -39,7 +41,7 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation.conversation_id, conversation.messages]);
+  }, [conversation.conversation_id, messages]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,7 +49,6 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
 
     setAttachmentFile(file);
 
-    // Generate preview for images
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (ev) => setAttachmentPreview(ev.target?.result as string);
@@ -122,7 +123,6 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
       const end = textarea.selectionEnd;
       const newMsg = message.slice(0, start) + emoji + message.slice(end);
       setMessage(newMsg);
-      // Set cursor after emoji
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(start + emoji.length, start + emoji.length);
@@ -210,9 +210,19 @@ export function ChatConversation({ conversation, onChatDeleted }: ChatConversati
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {conversation.messages.map((msg) => (
-            <MessageBubble key={msg.id} msg={msg} />
-          ))}
+          {messagesLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                  <Skeleton className="h-16 w-[60%] rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <MessageBubble key={msg.id} msg={msg} />
+            ))
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
@@ -309,7 +319,6 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
             : "bg-muted"
         }`}
       >
-        {/* Inline attachment */}
         {hasAttachment && isImage && (
           <a href={msg.attachment_url!} target="_blank" rel="noopener noreferrer" className="block mb-2">
             <img
@@ -334,7 +343,6 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
           </a>
         )}
 
-        {/* Message text (hide if it's just the auto-generated attachment label) */}
         {msg.message && !(hasAttachment && msg.message.startsWith("📎 ")) && (
           <p className="whitespace-pre-wrap">{msg.message}</p>
         )}

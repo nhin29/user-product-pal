@@ -19,7 +19,6 @@ export function UserChatList({
     <div className="divide-y">
       {conversations.map((convo) => {
         const isSelected = selectedConversationId === convo.conversation_id;
-        const lastMsg = convo.messages[convo.messages.length - 1];
 
         return (
           <button
@@ -51,7 +50,7 @@ export function UserChatList({
               </p>
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                  {lastMsg?.message}
+                  {convo.last_message_preview}
                 </p>
                 <span className="text-xs text-muted-foreground shrink-0">
                   {formatDistanceToNowNY(convo.last_message_at, {

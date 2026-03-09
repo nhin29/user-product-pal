@@ -73,7 +73,7 @@ export default function SupportChatsPage() {
       (c) =>
         c.user_name.toLowerCase().includes(q) ||
         c.user_email.toLowerCase().includes(q) ||
-        c.messages.some((m) => m.message.toLowerCase().includes(q))
+        (c.last_message_preview && c.last_message_preview.toLowerCase().includes(q))
     );
   }, [filteredConversations, searchQuery]);
 

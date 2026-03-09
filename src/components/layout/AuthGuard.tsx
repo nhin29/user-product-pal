@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Loader2, ShieldX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Cache admin role check to avoid repeated queries
+  const adminCacheRef = useRef<{ userId: string; isAdmin: boolean } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -22,23 +25,31 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const { data, error } = await supabase.auth.getSession();
       if (!isMounted) return;
 
-      // If user session is missing/invalid, treat as logged out
       const authed = !!data.session && !error;
       setIsAuthenticated(authed);
 
       if (authed && data.session) {
-        // Check if user has admin role
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.session.user.id)
-          .single();
+        const userId = data.session.user.id;
+        
+        // Use cached result if same user
+        if (adminCacheRef.current?.userId === userId) {
+          setIsAdmin(adminCacheRef.current.isAdmin);
+        } else {
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .single();
 
-        if (isMounted) {
-          setIsAdmin(roleData?.role === "admin");
+          if (isMounted) {
+            const admin = roleData?.role === "admin";
+            setIsAdmin(admin);
+            adminCacheRef.current = { userId, isAdmin: admin };
+          }
         }
       } else {
         setIsAdmin(false);
+        adminCacheRef.current = null;
       }
 
       setIsChecking(false);
@@ -50,8 +61,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      // Keep the UI in sync if token refresh / sign-out happens
+    } = supabase.auth.onAuthStateChange((_event) => {
+      // Invalidate cache on sign out
+      if (_event === "SIGNED_OUT") {
+        adminCacheRef.current = null;
+      }
       void syncSession();
     });
 
@@ -80,7 +94,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return null;
   }
 
-  // Show access denied if authenticated but not admin
   if (isAuthenticated && !isAdmin && location.pathname !== "/login") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
