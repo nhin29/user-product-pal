@@ -178,11 +178,14 @@ export default function GalleryPage() {
           {selected && (
             <div className="space-y-4">
               <div className="rounded-xl overflow-hidden border border-border flex items-center justify-center bg-muted">
-                <img
+                <OptimizedImage
                   src={selected.image_url}
                   alt="Generated"
-                  loading="eager"
+                  width={800}
+                  height={800}
+                  priority
                   className="w-full h-auto object-contain max-h-[500px]"
+                  aspectRatio="auto"
                 />
               </div>
 
