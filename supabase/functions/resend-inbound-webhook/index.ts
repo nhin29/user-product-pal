@@ -146,6 +146,7 @@ async function handleReply(
     sender_id: adminUser?.id || convo.user_id,
     sender_role: "admin",
     message,
+    source: "email",
   });
 
   if (insertError) {

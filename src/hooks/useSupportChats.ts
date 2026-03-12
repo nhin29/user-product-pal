@@ -118,6 +118,7 @@ export function useSupportChats() {
           last_message_at: summary?.last_message_at || convo.created_at,
           last_seen: lastSeenMap.get(convo.user_id) || null,
           last_message_preview: summary?.last_message_preview || null,
+          has_email_messages: summary?.has_email_messages || false,
         };
       }).sort(
         (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
