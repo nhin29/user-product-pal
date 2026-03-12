@@ -119,7 +119,7 @@ export default function GalleryPage() {
                       className="group relative cursor-pointer rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg transition-shadow"
                       onClick={() => setSelected(img)}
                     >
-                      <div className="aspect-square">
+                      <div className="aspect-square relative">
                         <OptimizedImage
                           src={img.image_url}
                           alt="Generated"
@@ -128,6 +128,16 @@ export default function GalleryPage() {
                           className="h-full w-full object-cover"
                           aspectRatio="square"
                         />
+                        {(() => {
+                          const fv = img.field_values as Record<string, unknown> | null;
+                          const hasOrigin = img.origin_image || 
+                            (fv && Object.values(fv).some((v) => typeof v === "string" && v.startsWith("https://")));
+                          return hasOrigin ? (
+                            <Badge variant="secondary" className="absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0.5 bg-background/80 backdrop-blur-sm">
+                              Edited
+                            </Badge>
+                          ) : null;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 p-2.5 bg-card">
                         <Avatar className="h-6 w-6 border border-border shrink-0">
