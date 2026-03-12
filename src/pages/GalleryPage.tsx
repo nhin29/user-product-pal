@@ -218,9 +218,9 @@ export default function GalleryPage() {
                 )}
                 {(() => {
                   const fv = selected.field_values as Record<string, unknown> | null;
-                  const hasOrigin = selected.origin_image || selected.analyzed_url ||
-                    (fv && Object.values(fv).some((v) => typeof v === "string" && v.startsWith("https://")));
-                  return hasOrigin ? (
+                  const hasOriginUrl = fv && Object.values(fv).some((v) => typeof v === "string" && v.startsWith("https://"));
+                  const noOrigin = !selected.origin_image && !hasOriginUrl;
+                  return noOrigin ? (
                     <Badge variant="secondary" className="ml-1">Edited</Badge>
                   ) : null;
                 })()}
