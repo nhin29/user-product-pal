@@ -194,7 +194,7 @@ export default function GalleryPage() {
                   width={800}
                   height={800}
                   priority
-                  className="w-full h-auto object-contain max-h-[500px]"
+                  className="w-full h-auto object-contain"
                   aspectRatio="auto"
                 />
               </div>
