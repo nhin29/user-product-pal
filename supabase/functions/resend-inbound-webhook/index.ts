@@ -146,6 +146,7 @@ async function handleReply(
     sender_id: adminUser?.id || convo.user_id,
     sender_role: "admin",
     message,
+    source: "email",
   });
 
   if (insertError) {
@@ -226,12 +227,13 @@ async function handleDirectEmail(
     console.log("Created new conversation:", conversationId);
   }
 
-  // Insert the message as a user message
+  // Insert the message as a user message (tagged as email source)
   const { error: insertError } = await supabase.from("chats").insert({
     conversation_id: conversationId,
     sender_id: userId,
     sender_role: "user",
     message: subject ? `[${subject}]\n\n${message}` : message,
+    source: "email",
   });
 
   if (insertError) {

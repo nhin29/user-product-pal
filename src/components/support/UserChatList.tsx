@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
-import { Folder } from "lucide-react";
+import { Folder, Mail } from "lucide-react";
 
 interface FolderInfo {
   id: string;
@@ -59,6 +59,12 @@ export function UserChatList({
                     >
                       <Folder className="h-2.5 w-2.5" />
                       {folder.name}
+                    </span>
+                  )}
+                  {convo.has_email_messages && (
+                    <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                      <Mail className="h-2.5 w-2.5" />
+                      Email
                     </span>
                   )}
                   {convo.unread_count > 0 && (

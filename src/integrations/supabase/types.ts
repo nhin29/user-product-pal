@@ -145,6 +145,7 @@ export type Database = {
           read_at: string | null
           sender_id: string
           sender_role: string
+          source: string
         }
         Insert: {
           attachment_name?: string | null
@@ -157,6 +158,7 @@ export type Database = {
           read_at?: string | null
           sender_id: string
           sender_role?: string
+          source?: string
         }
         Update: {
           attachment_name?: string | null
@@ -169,6 +171,7 @@ export type Database = {
           read_at?: string | null
           sender_id?: string
           sender_role?: string
+          source?: string
         }
         Relationships: [
           {

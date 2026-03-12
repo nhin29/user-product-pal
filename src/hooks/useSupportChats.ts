@@ -14,6 +14,7 @@ export interface ChatMessage {
   attachment_url: string | null;
   attachment_type: string | null;
   attachment_name: string | null;
+  source: string;
 }
 
 export interface UserConversation {
@@ -28,6 +29,7 @@ export interface UserConversation {
   last_message_at: string;
   last_seen: string | null;
   last_message_preview: string | null;
+  has_email_messages: boolean;
 }
 
 export function useSupportChats() {
@@ -55,25 +57,29 @@ export function useSupportChats() {
       const convoIds = convos.map((c) => c.id);
       const { data: allChats, error: chatsError } = await supabase
         .from("chats")
-        .select("conversation_id, sender_role, read_at, created_at, message")
+        .select("conversation_id, sender_role, read_at, created_at, message, source")
         .in("conversation_id", convoIds)
         .order("created_at", { ascending: false });
 
       if (chatsError) throw chatsError;
 
       // Build per-conversation summary
-      const convoSummary = new Map<string, { unread_count: number; last_message_at: string; last_message_preview: string | null }>();
-      (allChats || []).forEach((chat) => {
+      const convoSummary = new Map<string, { unread_count: number; last_message_at: string; last_message_preview: string | null; has_email_messages: boolean }>();
+      (allChats || []).forEach((chat: any) => {
         const existing = convoSummary.get(chat.conversation_id);
         if (!existing) {
           convoSummary.set(chat.conversation_id, {
             unread_count: chat.sender_role === "user" && !chat.read_at ? 1 : 0,
             last_message_at: chat.created_at,
             last_message_preview: chat.message?.substring(0, 100) || null,
+            has_email_messages: chat.source === "email",
           });
         } else {
           if (chat.sender_role === "user" && !chat.read_at) {
             existing.unread_count++;
+          }
+          if (chat.source === "email") {
+            existing.has_email_messages = true;
           }
         }
       });
@@ -112,6 +118,7 @@ export function useSupportChats() {
           last_message_at: summary?.last_message_at || convo.created_at,
           last_seen: lastSeenMap.get(convo.user_id) || null,
           last_message_preview: summary?.last_message_preview || null,
+          has_email_messages: summary?.has_email_messages || false,
         };
       }).sort(
         (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()

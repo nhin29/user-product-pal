@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Send, Loader2, Trash2, FolderInput, Inbox, Paperclip, X, FileText, Download } from "lucide-react";
+import { Send, Loader2, Trash2, FolderInput, Inbox, Paperclip, X, FileText, Download, Mail } from "lucide-react";
 import { formatNY, formatDistanceToNowNY } from "@/lib/dateUtils";
 import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 import { EmojiPicker } from "./EmojiPicker";
@@ -348,6 +348,14 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         )}
 
         <div className={`flex items-center gap-1.5 mt-1 ${isAdmin ? "justify-end" : ""}`}>
+          {msg.source === "email" && (
+            <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full ${
+              isAdmin ? "bg-primary-foreground/15 text-primary-foreground/80" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+            }`}>
+              <Mail className="h-2.5 w-2.5" />
+              Email
+            </span>
+          )}
           <span className={`text-xs ${isAdmin ? "opacity-70" : "text-muted-foreground"}`}>
             {formatNY(msg.created_at, "MMM d, h:mm a")}
           </span>
