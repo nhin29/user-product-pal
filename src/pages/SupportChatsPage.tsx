@@ -103,11 +103,30 @@ export default function SupportChatsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Support Chats</h1>
-          <p className="text-muted-foreground">
-            View and respond to user support questions
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Support Chats</h1>
+            <p className="text-muted-foreground">
+              View and respond to user support questions
+            </p>
+          </div>
+          <div className="relative w-64 shrink-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search all chats..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-220px)]">
@@ -127,29 +146,14 @@ export default function SupportChatsPage() {
 
           {/* User List */}
           <div className="lg:col-span-3 border rounded-lg overflow-hidden flex flex-col">
-            <div className="p-3 border-b bg-muted/50 space-y-2">
+            <div className="p-3 border-b bg-muted/50">
               <h2 className="font-semibold text-sm">
-                {selectedFolderId === null
+                {searchQuery.trim()
+                  ? "Search Results"
+                  : selectedFolderId === null
                   ? "Inbox"
                   : folders.find((f) => f.id === selectedFolderId)?.name || "Folder"}
               </h2>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search chats..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 pl-8 pr-8 text-xs"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
             </div>
             <div className="flex-1 overflow-auto">
               {isLoading ? (
