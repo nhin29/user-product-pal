@@ -216,6 +216,14 @@ export default function GalleryPage() {
                     {selected.rating}
                   </Badge>
                 )}
+                {(() => {
+                  const fv = selected.field_values as Record<string, unknown> | null;
+                  const hasOrigin = selected.origin_image || selected.analyzed_url ||
+                    (fv && Object.values(fv).some((v) => typeof v === "string" && v.startsWith("https://")));
+                  return hasOrigin ? (
+                    <Badge variant="secondary" className="ml-1">Edited</Badge>
+                  ) : null;
+                })()}
                 <span className="ml-auto text-xs text-muted-foreground">
                   {formatDistanceToNowNY(selected.created_at, { addSuffix: true })}
                 </span>
