@@ -130,7 +130,7 @@ export default function GalleryPage() {
                         />
                         {(() => {
                           const fv = img.field_values as Record<string, unknown> | null;
-                          const hasOrigin = img.origin_image || 
+                          const hasOrigin = img.origin_image || img.analyzed_url ||
                             (fv && Object.values(fv).some((v) => typeof v === "string" && v.startsWith("https://")));
                           return hasOrigin ? (
                             <Badge variant="secondary" className="absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0.5 bg-background/80 backdrop-blur-sm">
