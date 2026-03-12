@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Send, Loader2, Trash2, FolderInput, Inbox, Paperclip, X, FileText, Download } from "lucide-react";
+import { Send, Loader2, Trash2, FolderInput, Inbox, Paperclip, X, FileText, Download, Mail } from "lucide-react";
 import { formatNY, formatDistanceToNowNY } from "@/lib/dateUtils";
 import { DeleteChatHistoryDialog } from "./DeleteChatHistoryDialog";
 import { EmojiPicker } from "./EmojiPicker";
