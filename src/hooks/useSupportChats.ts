@@ -14,6 +14,7 @@ export interface ChatMessage {
   attachment_url: string | null;
   attachment_type: string | null;
   attachment_name: string | null;
+  source: string;
 }
 
 export interface UserConversation {
