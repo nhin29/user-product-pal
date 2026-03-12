@@ -65,17 +65,17 @@ export default function SupportChatsPage() {
     return conversations.filter((c) => c.folder_id && ids.has(c.folder_id));
   }, [conversations, folders, selectedFolderId]);
 
-  // Apply search filter
+  // Apply search filter — search across ALL conversations, not just current folder
   const searchedConversations = useMemo(() => {
     if (!searchQuery.trim()) return filteredConversations;
     const q = searchQuery.toLowerCase();
-    return filteredConversations.filter(
+    return conversations.filter(
       (c) =>
         c.user_name.toLowerCase().includes(q) ||
         c.user_email.toLowerCase().includes(q) ||
         (c.last_message_preview && c.last_message_preview.toLowerCase().includes(q))
     );
-  }, [filteredConversations, searchQuery]);
+  }, [conversations, filteredConversations, searchQuery]);
 
   const conversationsWithReadState = searchedConversations.map((convo) => ({
     ...convo,
