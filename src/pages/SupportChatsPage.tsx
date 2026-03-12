@@ -178,6 +178,7 @@ export default function SupportChatsPage() {
                   conversations={conversationsWithReadState}
                   selectedConversationId={selectedConvoId}
                   onSelectConversation={handleSelectConvo}
+                  folders={folders}
                 />
               )}
             </div>
