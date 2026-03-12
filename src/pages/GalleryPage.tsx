@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useGallery } from "@/hooks/useGallery";
@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { Images, Star, Search, ArrowUpDown } from "lucide-react";
+import { Images, Star, Search, ArrowUpDown, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,23 +25,26 @@ import {
 } from "@/components/ui/dialog";
 import type { GalleryImage } from "@/hooks/useGallery";
 
-const PAGE_SIZE = 40;
-
 export default function GalleryPage() {
-  const { images, isLoading } = useGallery();
+  const { images, isLoading, isLoadingMore, hasMore, loadMore, totalCount } = useGallery();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<GalleryImage | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [sortBy, setSortBy] = useState<string>("newest");
 
-  const filtered = images
-    .filter(
-      (img) =>
-        img.user_name.toLowerCase().includes(search.toLowerCase()) ||
-        img.user_email.toLowerCase().includes(search.toLowerCase()) ||
-        (img.completed_prompt || "").toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase();
+    const result = term
+      ? images.filter(
+          (img) =>
+            img.user_name.toLowerCase().includes(term) ||
+            img.user_email.toLowerCase().includes(term) ||
+            (img.completed_prompt || "").toLowerCase().includes(term)
+        )
+      : images;
+
+    if (sortBy === "newest") return result; // already sorted from DB
+    
+    return [...result].sort((a, b) => {
       switch (sortBy) {
         case "rating_high":
           return (b.rating ?? 0) - (a.rating ?? 0);
@@ -51,16 +53,12 @@ export default function GalleryPage() {
         case "oldest":
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return 0;
       }
     });
+  }, [images, search, sortBy]);
 
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
-
-  const handleLoadMore = useCallback(() => {
-    setVisibleCount((prev) => prev + PAGE_SIZE);
-  }, []);
+  const remaining = totalCount !== null ? Math.max(0, totalCount - images.length) : null;
 
   return (
     <AdminLayout>
@@ -74,7 +72,7 @@ export default function GalleryPage() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-4 flex-wrap">
             <CardTitle className="flex items-center gap-2">
               <Images className="h-5 w-5" />
-              Images ({filtered.length})
+              Images ({totalCount !== null ? totalCount : filtered.length})
             </CardTitle>
             <div className="flex items-center gap-3">
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -115,7 +113,7 @@ export default function GalleryPage() {
             ) : (
               <>
                 <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                  {visible.map((img) => (
+                  {filtered.map((img) => (
                     <div
                       key={img.id}
                       className="group relative cursor-pointer rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg transition-shadow"
@@ -154,8 +152,15 @@ export default function GalleryPage() {
                 </div>
                 {hasMore && (
                   <div className="flex justify-center mt-6">
-                    <Button variant="outline" onClick={handleLoadMore}>
-                      {`Load more (${filtered.length - visibleCount} remaining)`}
+                    <Button variant="outline" onClick={loadMore} disabled={isLoadingMore}>
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        `Load more${remaining !== null ? ` (${remaining} remaining)` : ''}`
+                      )}
                     </Button>
                   </div>
                 )}
@@ -202,7 +207,6 @@ export default function GalleryPage() {
                   {formatDistanceToNowNY(selected.created_at, { addSuffix: true })}
                 </span>
               </div>
-
 
               {selected.analyzed_url && (
                 <div>
