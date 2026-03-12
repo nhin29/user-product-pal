@@ -3,22 +3,34 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
+import { Folder } from "lucide-react";
+
+interface FolderInfo {
+  id: string;
+  name: string;
+  color: string | null;
+}
 
 interface UserChatListProps {
   conversations: UserConversation[];
   selectedConversationId: string | null;
   onSelectConversation: (convo: UserConversation) => void;
+  folders?: FolderInfo[];
 }
 
 export function UserChatList({
   conversations,
   selectedConversationId,
   onSelectConversation,
+  folders = [],
 }: UserChatListProps) {
+  const folderMap = new Map(folders.map((f) => [f.id, f]));
+
   return (
     <div className="divide-y">
       {conversations.map((convo) => {
         const isSelected = selectedConversationId === convo.conversation_id;
+        const folder = convo.folder_id ? folderMap.get(convo.folder_id) : null;
 
         return (
           <button
@@ -39,11 +51,22 @@ export function UserChatList({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium truncate">{convo.user_name}</span>
-                {convo.unread_count > 0 && (
-                  <Badge variant="default" className="shrink-0">
-                    {convo.unread_count}
-                  </Badge>
-                )}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {folder && (
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground"
+                      style={folder.color ? { color: folder.color } : undefined}
+                    >
+                      <Folder className="h-2.5 w-2.5" />
+                      {folder.name}
+                    </span>
+                  )}
+                  {convo.unread_count > 0 && (
+                    <Badge variant="default" className="shrink-0">
+                      {convo.unread_count}
+                    </Badge>
+                  )}
+                </div>
               </div>
               <p className="text-sm text-muted-foreground truncate">
                 {convo.user_email}
