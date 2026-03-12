@@ -64,18 +64,22 @@ export function useSupportChats() {
       if (chatsError) throw chatsError;
 
       // Build per-conversation summary
-      const convoSummary = new Map<string, { unread_count: number; last_message_at: string; last_message_preview: string | null }>();
-      (allChats || []).forEach((chat) => {
+      const convoSummary = new Map<string, { unread_count: number; last_message_at: string; last_message_preview: string | null; has_email_messages: boolean }>();
+      (allChats || []).forEach((chat: any) => {
         const existing = convoSummary.get(chat.conversation_id);
         if (!existing) {
           convoSummary.set(chat.conversation_id, {
             unread_count: chat.sender_role === "user" && !chat.read_at ? 1 : 0,
             last_message_at: chat.created_at,
             last_message_preview: chat.message?.substring(0, 100) || null,
+            has_email_messages: chat.source === "email",
           });
         } else {
           if (chat.sender_role === "user" && !chat.read_at) {
             existing.unread_count++;
+          }
+          if (chat.source === "email") {
+            existing.has_email_messages = true;
           }
         }
       });
