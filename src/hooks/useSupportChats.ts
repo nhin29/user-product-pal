@@ -29,6 +29,7 @@ export interface UserConversation {
   last_message_at: string;
   last_seen: string | null;
   last_message_preview: string | null;
+  has_email_messages: boolean;
 }
 
 export function useSupportChats() {
