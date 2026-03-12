@@ -207,6 +207,13 @@ export function useSupportChats() {
       } as any);
 
       if (error) throw error;
+
+      // Notify user via email (fire-and-forget)
+      supabase.functions.invoke("notify-user-reply", {
+        body: { conversationId, message },
+      }).catch((err: any) => {
+        console.error("Failed to send email notification:", err);
+      });
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["conversation-messages", variables.conversationId] });
