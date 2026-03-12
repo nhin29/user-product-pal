@@ -57,7 +57,7 @@ export function useSupportChats() {
       const convoIds = convos.map((c) => c.id);
       const { data: allChats, error: chatsError } = await supabase
         .from("chats")
-        .select("conversation_id, sender_role, read_at, created_at, message")
+        .select("conversation_id, sender_role, read_at, created_at, message, source")
         .in("conversation_id", convoIds)
         .order("created_at", { ascending: false });
 
