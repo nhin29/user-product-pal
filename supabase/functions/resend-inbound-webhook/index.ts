@@ -28,7 +28,6 @@ serve(async (req) => {
     console.log("Inbound webhook payload type:", payload.type || "unknown");
 
     // Only process actual inbound email events
-    // Ignore status events like email.sent, email.delivered, domain.created, domain.updated, etc.
     if (payload.type && payload.type !== "email.received") {
       console.log(`Ignoring non-inbound event type: ${payload.type}`);
       return new Response(JSON.stringify({ ok: true, skipped: payload.type }), {
@@ -37,26 +36,28 @@ serve(async (req) => {
       });
     }
 
-    // For inbound emails, Resend sends the email data either at top level or nested in payload.data
     const emailData = payload.data || payload;
 
-    const toAddresses: string[] = Array.isArray(emailData.to) ? emailData.to : 
-      (typeof emailData.to === "string" ? [emailData.to] : []);
-    const fromEmail: string = emailData.from || "";
+    const toAddresses: string[] = Array.isArray(emailData.to)
+      ? emailData.to
+      : typeof emailData.to === "string"
+      ? [emailData.to]
+      : [];
+    const fromEmail: string = extractEmailAddress(emailData.from || "");
     const textBody: string = emailData.text || emailData.html || "";
     const subject: string = emailData.subject || "";
 
     console.log("Processing inbound email - From:", fromEmail, "To:", toAddresses, "Subject:", subject);
 
-    if (toAddresses.length === 0) {
-      console.error("No To addresses found in payload");
-      return new Response(JSON.stringify({ error: "No To addresses" }), {
+    if (!fromEmail) {
+      console.error("No sender email found");
+      return new Response(JSON.stringify({ error: "No sender email" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Extract conversation_id from the To address (support+{convo_id}@trypeelkit.com)
+    // Try to extract conversation_id from To address (reply flow)
     let conversationId: string | null = null;
     for (const addr of toAddresses) {
       const match = addr.match(/support\+([a-f0-9-]+)@/i);
@@ -80,109 +81,28 @@ serve(async (req) => {
       }
     }
 
-    if (!conversationId) {
-      console.error("No conversation ID found in To addresses:", toAddresses);
-      return new Response(JSON.stringify({ error: "No conversation ID in address" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    console.log("Found conversation ID:", conversationId);
-
-    // Verify conversation exists
-    const { data: convo, error: convoError } = await supabase
-      .from("conversations")
-      .select("id, user_id")
-      .eq("id", conversationId)
-      .single();
-
-    if (convoError || !convo) {
-      console.error("Conversation not found:", conversationId);
-      return new Response(JSON.stringify({ error: "Conversation not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Clean the reply text - remove quoted/forwarded content
     const cleanedMessage = cleanReplyText(textBody);
-
     if (!cleanedMessage.trim()) {
-      return new Response(JSON.stringify({ error: "Empty reply" }), {
+      return new Response(JSON.stringify({ error: "Empty message" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Find admin user by email
-    const { data: adminUsers } = await supabase.auth.admin.listUsers();
-    const adminUser = adminUsers?.users?.find(
-      (u) => u.email === "support@trypeelkit.com"
-    );
-
-    // Insert message as admin reply
-    const { error: insertError } = await supabase.from("chats").insert({
-      conversation_id: conversationId,
-      sender_id: adminUser?.id || convo.user_id,
-      sender_role: "admin",
-      message: cleanedMessage,
-    });
-
-    if (insertError) {
-      console.error("Failed to insert chat:", insertError);
-      throw insertError;
+    // ============================================================
+    // CASE 1: Reply to existing conversation (has conversation ID)
+    // ============================================================
+    if (conversationId) {
+      console.log("Reply flow - conversation ID:", conversationId);
+      return await handleReply(supabase, conversationId, fromEmail, cleanedMessage, RESEND_API_KEY);
     }
 
-    console.log("Successfully inserted admin reply for conversation:", conversationId);
+    // ============================================================
+    // CASE 2: Direct email (no conversation ID) - create new conversation
+    // ============================================================
+    console.log("Direct email flow - from:", fromEmail);
+    return await handleDirectEmail(supabase, fromEmail, cleanedMessage, subject, RESEND_API_KEY);
 
-    // Update conversation timestamp
-    await supabase
-      .from("conversations")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", conversationId);
-
-    // Get user email to notify them
-    const { data: profiles } = await supabase.rpc("get_profiles_with_email");
-    const userProfile = profiles?.find((p: any) => p.user_id === convo.user_id);
-    const userEmail = userProfile?.email;
-
-    if (userEmail) {
-      const emailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "PeelKit Support <support@trypeelkit.com>",
-          to: [userEmail],
-          subject: "You have a new reply from PeelKit Support",
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #333;">Support Reply</h2>
-              <p style="color: #666;">Our team has responded to your message:</p>
-              <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
-                <p style="margin: 0; white-space: pre-wrap;">${cleanedMessage}</p>
-              </div>
-              <p style="color: #999; font-size: 12px;">
-                You can view the full conversation in the app.
-              </p>
-            </div>
-          `,
-        }),
-      });
-
-      if (!emailRes.ok) {
-        const errBody = await emailRes.text();
-        console.error("Failed to notify user via email:", errBody);
-      }
-    }
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (error: unknown) {
     console.error("Error in resend-inbound-webhook:", error);
     const msg = error instanceof Error ? error.message : "Unknown error";
@@ -193,9 +113,241 @@ serve(async (req) => {
   }
 });
 
-/**
- * Strip quoted reply text from an email body.
- */
+// ---- Reply to existing conversation (admin replying via email) ----
+async function handleReply(
+  supabase: any,
+  conversationId: string,
+  fromEmail: string,
+  message: string,
+  resendApiKey: string
+) {
+  const { data: convo, error: convoError } = await supabase
+    .from("conversations")
+    .select("id, user_id")
+    .eq("id", conversationId)
+    .single();
+
+  if (convoError || !convo) {
+    console.error("Conversation not found:", conversationId);
+    return new Response(JSON.stringify({ error: "Conversation not found" }), {
+      status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Find admin user by email
+  const { data: adminUsers } = await supabase.auth.admin.listUsers();
+  const adminUser = adminUsers?.users?.find(
+    (u: any) => u.email === "support@trypeelkit.com"
+  );
+
+  const { error: insertError } = await supabase.from("chats").insert({
+    conversation_id: conversationId,
+    sender_id: adminUser?.id || convo.user_id,
+    sender_role: "admin",
+    message,
+  });
+
+  if (insertError) {
+    console.error("Failed to insert chat:", insertError);
+    throw insertError;
+  }
+
+  console.log("Inserted admin reply for conversation:", conversationId);
+
+  await supabase
+    .from("conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", conversationId);
+
+  // Notify user via email
+  await notifyUserByEmail(supabase, convo.user_id, message, resendApiKey);
+
+  return new Response(JSON.stringify({ success: true, flow: "reply" }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+// ---- Direct email from user - create conversation ----
+async function handleDirectEmail(
+  supabase: any,
+  fromEmail: string,
+  message: string,
+  subject: string,
+  resendApiKey: string
+) {
+  // Look up user by email
+  const { data: authUsers } = await supabase.auth.admin.listUsers();
+  const matchedUser = authUsers?.users?.find(
+    (u: any) => u.email?.toLowerCase() === fromEmail.toLowerCase()
+  );
+
+  if (!matchedUser) {
+    console.log("No registered user found for email:", fromEmail);
+    // Still accept the email - notify admin about unregistered sender
+    await sendUnregisteredNotification(fromEmail, message, subject, resendApiKey);
+    return new Response(
+      JSON.stringify({ success: true, flow: "direct_unregistered", note: "Sender not registered" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const userId = matchedUser.id;
+  console.log("Matched user:", userId, "email:", fromEmail);
+
+  // Check for existing open conversation
+  const { data: existingConvos } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "open")
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  let conversationId: string;
+
+  if (existingConvos && existingConvos.length > 0) {
+    conversationId = existingConvos[0].id;
+    console.log("Using existing conversation:", conversationId);
+  } else {
+    // Create new conversation
+    const { data: newConvo, error: convoCreateError } = await supabase
+      .from("conversations")
+      .insert({ user_id: userId, status: "open" })
+      .select("id")
+      .single();
+
+    if (convoCreateError || !newConvo) {
+      console.error("Failed to create conversation:", convoCreateError);
+      throw convoCreateError || new Error("Failed to create conversation");
+    }
+    conversationId = newConvo.id;
+    console.log("Created new conversation:", conversationId);
+  }
+
+  // Insert the message as a user message
+  const { error: insertError } = await supabase.from("chats").insert({
+    conversation_id: conversationId,
+    sender_id: userId,
+    sender_role: "user",
+    message: subject ? `[${subject}]\n\n${message}` : message,
+  });
+
+  if (insertError) {
+    console.error("Failed to insert chat:", insertError);
+    throw insertError;
+  }
+
+  // Update conversation timestamp
+  await supabase
+    .from("conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", conversationId);
+
+  console.log("Inserted direct email message for conversation:", conversationId);
+
+  return new Response(
+    JSON.stringify({ success: true, flow: "direct_registered", conversationId }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+// ---- Notify user by email when admin replies ----
+async function notifyUserByEmail(
+  supabase: any,
+  userId: string,
+  message: string,
+  resendApiKey: string
+) {
+  const { data: profiles } = await supabase.rpc("get_profiles_with_email");
+  const userProfile = profiles?.find((p: any) => p.user_id === userId);
+  const userEmail = userProfile?.email;
+
+  if (!userEmail) {
+    console.log("No email found for user:", userId);
+    return;
+  }
+
+  const emailRes = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "PeelKit Support <support@trypeelkit.com>",
+      to: [userEmail],
+      subject: "You have a new reply from PeelKit Support",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Support Reply</h2>
+          <p style="color: #666;">Our team has responded to your message:</p>
+          <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+          </div>
+          <p style="color: #999; font-size: 12px;">
+            You can view the full conversation in the app.
+          </p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!emailRes.ok) {
+    const errBody = await emailRes.text();
+    console.error("Failed to notify user via email:", errBody);
+  }
+}
+
+// ---- Notify admin about unregistered email sender ----
+async function sendUnregisteredNotification(
+  fromEmail: string,
+  message: string,
+  subject: string,
+  resendApiKey: string
+) {
+  const emailRes = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "PeelKit Support <noreply@trypeelkit.com>",
+      to: ["support@trypeelkit.com"],
+      subject: `Direct email from unregistered user: ${fromEmail}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Email from Unregistered User</h2>
+          <p style="color: #666;">From: <strong>${fromEmail}</strong></p>
+          ${subject ? `<p style="color: #666;">Subject: ${subject}</p>` : ""}
+          <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+          </div>
+          <p style="color: #999; font-size: 12px;">
+            This sender is not a registered user. Reply directly to this email to respond.
+          </p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!emailRes.ok) {
+    const errBody = await emailRes.text();
+    console.error("Failed to send unregistered notification:", errBody);
+  }
+}
+
+// ---- Utility: extract email from "Name <email>" format ----
+function extractEmailAddress(from: string): string {
+  const match = from.match(/<([^>]+)>/);
+  if (match) return match[1].toLowerCase();
+  if (from.includes("@")) return from.trim().toLowerCase();
+  return "";
+}
+
+// ---- Utility: strip quoted reply text ----
 function cleanReplyText(text: string): string {
   if (!text) return "";
 
