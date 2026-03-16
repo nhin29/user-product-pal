@@ -1080,7 +1080,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_credits: { Args: { p_user_id: string }; Returns: number }
+      increment_credits:
+        | { Args: { p_user_id: string }; Returns: number }
+        | { Args: { p_amount?: number; p_user_id: string }; Returns: number }
       merge_product_ids: {
         Args: {
           p_is_purchase?: boolean
