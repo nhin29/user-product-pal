@@ -181,7 +181,7 @@ export default function PopupFeedbackTab() {
   return (
     <div className="space-y-6">
       {dateFilter}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <StatCard icon={Users} label="Total Responses" value={data.totalResponses} />
         <StatCard icon={CheckCircle} label="Completed" value={data.completedCount} />
         <StatCard
@@ -189,22 +189,12 @@ export default function PopupFeedbackTab() {
           label="Avg NPS Score"
           value={data.avgNps !== null ? data.avgNps.toFixed(1) : "—"}
         />
+        <StatCard
+          icon={Star}
+          label="Avg Image Quality"
+          value={data.avgImageQuality !== null ? `${data.avgImageQuality.toFixed(1)} / 5` : "—"}
+        />
       </div>
-
-      {/* Avg Image Quality */}
-      {data.avgImageQuality !== null && (
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Star className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Avg Image Quality Rating</p>
-              <p className="text-xl font-bold text-foreground">{data.avgImageQuality.toFixed(1)} / 5</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Charts - Q1 to Q4 */}
       <div className="grid md:grid-cols-2 gap-4">
