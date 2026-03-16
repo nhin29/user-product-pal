@@ -134,6 +134,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         npsDistribution,
         imageQualityDistribution,
         easeOfUseCounts,
+        templateCustomizationCounts,
         usefulnessCounts,
         additionalFeedback,
       };
