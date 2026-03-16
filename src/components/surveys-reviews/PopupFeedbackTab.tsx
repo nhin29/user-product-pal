@@ -181,9 +181,14 @@ export default function PopupFeedbackTab() {
   return (
     <div className="space-y-6">
       {dateFilter}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <StatCard icon={Users} label="Total Responses" value={data.totalResponses} />
         <StatCard icon={CheckCircle} label="Completed" value={data.completedCount} />
+        <StatCard
+          icon={TrendingUp}
+          label="Avg NPS Score"
+          value={data.avgNps !== null ? data.avgNps.toFixed(1) : "—"}
+        />
       </div>
 
       {/* Avg Image Quality */}
