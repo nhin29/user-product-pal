@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   usePopupFeedbackAnalytics,
   easeOfUseLabels,
+  templateCustomizationLabels,
   usefulnessLabels,
 } from "@/hooks/usePopupFeedbackAnalytics";
 import {
