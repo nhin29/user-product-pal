@@ -94,7 +94,16 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         }
       });
 
-      // Q3: Usefulness / Improvements (multi-select)
+      // Q3: Template Customization
+      const templateCustomizationCounts: Record<string, number> = {};
+      Object.keys(templateCustomizationLabels).forEach((k) => (templateCustomizationCounts[k] = 0));
+      rows.forEach((r) => {
+        if (r.template_customization && r.template_customization in templateCustomizationLabels) {
+          templateCustomizationCounts[r.template_customization] += 1;
+        }
+      });
+
+      // Q4: Usefulness / Improvements (multi-select)
       const usefulnessCounts: Record<string, number> = {};
       Object.keys(usefulnessLabels).forEach((k) => (usefulnessCounts[k] = 0));
       rows.forEach((r) => {
