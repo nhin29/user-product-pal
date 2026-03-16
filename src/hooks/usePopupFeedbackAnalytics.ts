@@ -58,7 +58,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
     queryFn: async (): Promise<PopupFeedbackData> => {
       let query = supabase
         .from("feedback_questionnaire")
-        .select("nps_score, image_quality_rating, ease_of_use, improvements, additional_feedback, completed_at, dismissed_at, created_at");
+        .select("nps_score, image_quality_rating, ease_of_use, template_customization, improvements, additional_feedback, completed_at, dismissed_at, created_at");
 
       if (startDate) {
         query = query.gte("created_at", startDate.toISOString());
