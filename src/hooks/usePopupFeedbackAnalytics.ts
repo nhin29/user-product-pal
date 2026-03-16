@@ -45,6 +45,7 @@ interface RawFeedback {
   nps_score: number | null;
   image_quality_rating: number | null;
   ease_of_use: string | null;
+  template_customization: string | null;
   improvements: string[] | null;
   additional_feedback: string | null;
   completed_at: string | null;
