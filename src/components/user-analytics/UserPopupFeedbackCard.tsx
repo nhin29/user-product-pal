@@ -92,7 +92,15 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
               </div>
             )}
 
-            {/* Q3: Improvements */}
+            {/* Q3: Template Customization */}
+            {fb.template_customization && (
+              <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
+                <span className="text-sm text-muted-foreground">Template Customization</span>
+                <span className="text-sm font-medium">{templateCustomizationLabels[fb.template_customization] || fb.template_customization}</span>
+              </div>
+            )}
+
+            {/* Q4: Improvements */}
             {fb.improvements && fb.improvements.length > 0 && (
               <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Would be more useful with</span>
