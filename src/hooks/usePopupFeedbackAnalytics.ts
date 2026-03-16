@@ -10,6 +10,7 @@ export interface PopupFeedbackData {
   npsDistribution: Record<number, number>;
   imageQualityDistribution: Record<number, number>;
   easeOfUseCounts: Record<string, number>;
+  templateCustomizationCounts: Record<string, number>;
   usefulnessCounts: Record<string, number>;
   additionalFeedback: string[];
 }
