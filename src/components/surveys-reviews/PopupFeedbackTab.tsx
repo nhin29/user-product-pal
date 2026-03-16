@@ -199,7 +199,7 @@ export default function PopupFeedbackTab() {
       {/* Charts - Q1 to Q4 */}
       <div className="grid md:grid-cols-2 gap-4">
         <BarChartCard title="Q1: Image Quality Rating (1-5 ⭐)" data={qualityData} />
-        <BarChartCard title="Q2: Ease of Finding Template & Generating" data={easeData} />
+        <BarChartCard title="Q2: Ease of Finding Template" data={easeData} />
         <BarChartCard title="Q3: What Would Make PeelKit More Useful (multi-select)" data={usefulnessData} />
         <BarChartCard title="Q4: Likelihood to Recommend (1-10)" data={npsData} />
       </div>
