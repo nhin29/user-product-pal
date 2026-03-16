@@ -212,10 +212,10 @@ export default function PopupFeedbackTab() {
         <BarChartCard title="Q5: Likelihood to Recommend (1-10)" data={npsData} />
       </div>
 
-      {/* Q5: Additional Feedback */}
+      {/* Q6: Additional Feedback */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Q5: Additional Feedback</CardTitle>
+          <CardTitle className="text-sm font-medium">Q6: Additional Feedback</CardTitle>
         </CardHeader>
         <CardContent>
           {data.additionalFeedback.length === 0 ? (

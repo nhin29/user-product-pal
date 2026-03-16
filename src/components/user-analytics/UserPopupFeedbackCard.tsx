@@ -123,7 +123,7 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
             )}
           </div>
 
-          {/* Q5: Additional Feedback - full width */}
+          {/* Q6: Additional Feedback - full width */}
           {fb.additional_feedback && (
             <div className="px-6 py-3 border-t">
               <span className="text-sm text-muted-foreground">Additional Feedback</span>
