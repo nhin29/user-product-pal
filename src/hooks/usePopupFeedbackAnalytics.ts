@@ -23,6 +23,14 @@ const easeOfUseLabels: Record<string, string> = {
   very_difficult: "Very Difficult",
 };
 
+const templateCustomizationLabels: Record<string, string> = {
+  very_easy: "Very Easy",
+  easy: "Easy",
+  neutral: "Neutral",
+  difficult: "Difficult",
+  very_difficult: "Very Difficult",
+};
+
 const usefulnessLabels: Record<string, string> = {
   more_categories: "More Template Categories",
   better_quality: "Better Image Quality",
@@ -31,7 +39,7 @@ const usefulnessLabels: Record<string, string> = {
   video_content: "Video Content",
 };
 
-export { easeOfUseLabels, usefulnessLabels };
+export { easeOfUseLabels, templateCustomizationLabels, usefulnessLabels };
 
 interface RawFeedback {
   nps_score: number | null;
