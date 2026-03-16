@@ -120,7 +120,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
       for (let i = 1; i <= 10; i++) npsDistribution[i] = 0;
       npsValues.forEach((v) => { npsDistribution[v] = (npsDistribution[v] || 0) + 1; });
 
-      // Q5: Additional feedback (text)
+      // Q6: Additional feedback (text)
       const additionalFeedback = rows
         .map((r) => r.additional_feedback)
         .filter((v): v is string => !!v && v.trim().length > 0);
