@@ -167,13 +167,19 @@ export default function PopupFeedbackTab() {
     count,
   }));
 
-  // Q3: What would make PeelKit more useful
+  // Q3: Template Customization
+  const customizationData = Object.entries(data.templateCustomizationCounts).map(([key, count]) => ({
+    name: templateCustomizationLabels[key] || key,
+    count,
+  }));
+
+  // Q4: What would make PeelKit more useful
   const usefulnessData = Object.entries(data.usefulnessCounts).map(([key, count]) => ({
     name: usefulnessLabels[key] || key,
     count,
   }));
 
-  // Q4: NPS (1-10)
+  // Q5: NPS (1-10)
   const npsData = Object.entries(data.npsDistribution).map(([score, count]) => ({
     name: score,
     count,
