@@ -6,6 +6,7 @@ import { MessageSquare, Star } from "lucide-react";
 import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import {
   easeOfUseLabels,
+  templateCustomizationLabels,
   usefulnessLabels,
 } from "@/hooks/usePopupFeedbackAnalytics";
 
