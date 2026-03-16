@@ -114,7 +114,7 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
               </div>
             )}
 
-            {/* Q4: NPS */}
+            {/* Q5: NPS */}
             {fb.nps_score !== null && (
               <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Recommendation Score</span>
