@@ -10,11 +10,20 @@ export interface PopupFeedbackData {
   npsDistribution: Record<number, number>;
   imageQualityDistribution: Record<number, number>;
   easeOfUseCounts: Record<string, number>;
+  templateCustomizationCounts: Record<string, number>;
   usefulnessCounts: Record<string, number>;
   additionalFeedback: string[];
 }
 
 const easeOfUseLabels: Record<string, string> = {
+  very_easy: "Very Easy",
+  easy: "Easy",
+  neutral: "Neutral",
+  difficult: "Difficult",
+  very_difficult: "Very Difficult",
+};
+
+const templateCustomizationLabels: Record<string, string> = {
   very_easy: "Very Easy",
   easy: "Easy",
   neutral: "Neutral",
@@ -30,12 +39,13 @@ const usefulnessLabels: Record<string, string> = {
   video_content: "Video Content",
 };
 
-export { easeOfUseLabels, usefulnessLabels };
+export { easeOfUseLabels, templateCustomizationLabels, usefulnessLabels };
 
 interface RawFeedback {
   nps_score: number | null;
   image_quality_rating: number | null;
   ease_of_use: string | null;
+  template_customization: string | null;
   improvements: string[] | null;
   additional_feedback: string | null;
   completed_at: string | null;
@@ -48,7 +58,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
     queryFn: async (): Promise<PopupFeedbackData> => {
       let query = supabase
         .from("feedback_questionnaire")
-        .select("nps_score, image_quality_rating, ease_of_use, improvements, additional_feedback, completed_at, dismissed_at, created_at");
+        .select("nps_score, image_quality_rating, ease_of_use, template_customization, improvements, additional_feedback, completed_at, dismissed_at, created_at");
 
       if (startDate) {
         query = query.gte("created_at", startDate.toISOString());
@@ -84,7 +94,16 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         }
       });
 
-      // Q3: Usefulness / Improvements (multi-select)
+      // Q3: Template Customization
+      const templateCustomizationCounts: Record<string, number> = {};
+      Object.keys(templateCustomizationLabels).forEach((k) => (templateCustomizationCounts[k] = 0));
+      rows.forEach((r) => {
+        if (r.template_customization && r.template_customization in templateCustomizationLabels) {
+          templateCustomizationCounts[r.template_customization] += 1;
+        }
+      });
+
+      // Q4: Usefulness / Improvements (multi-select)
       const usefulnessCounts: Record<string, number> = {};
       Object.keys(usefulnessLabels).forEach((k) => (usefulnessCounts[k] = 0));
       rows.forEach((r) => {
@@ -94,14 +113,14 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         });
       });
 
-      // Q4: NPS (1-10)
+      // Q5: NPS (1-10)
       const npsValues = rows.map((r) => r.nps_score).filter((v): v is number => v !== null);
       const avgNps = npsValues.length > 0 ? npsValues.reduce((a, b) => a + b, 0) / npsValues.length : null;
       const npsDistribution: Record<number, number> = {};
       for (let i = 1; i <= 10; i++) npsDistribution[i] = 0;
       npsValues.forEach((v) => { npsDistribution[v] = (npsDistribution[v] || 0) + 1; });
 
-      // Q5: Additional feedback (text)
+      // Q6: Additional feedback (text)
       const additionalFeedback = rows
         .map((r) => r.additional_feedback)
         .filter((v): v is string => !!v && v.trim().length > 0);
@@ -115,6 +134,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         npsDistribution,
         imageQualityDistribution,
         easeOfUseCounts,
+        templateCustomizationCounts,
         usefulnessCounts,
         additionalFeedback,
       };

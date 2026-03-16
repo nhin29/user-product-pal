@@ -295,6 +295,7 @@ export type Database = {
           image_quality_rating: number | null
           improvements: string[] | null
           nps_score: number | null
+          template_customization: string | null
           user_id: string
         }
         Insert: {
@@ -307,6 +308,7 @@ export type Database = {
           image_quality_rating?: number | null
           improvements?: string[] | null
           nps_score?: number | null
+          template_customization?: string | null
           user_id: string
         }
         Update: {
@@ -319,6 +321,7 @@ export type Database = {
           image_quality_rating?: number | null
           improvements?: string[] | null
           nps_score?: number | null
+          template_customization?: string | null
           user_id?: string
         }
         Relationships: []

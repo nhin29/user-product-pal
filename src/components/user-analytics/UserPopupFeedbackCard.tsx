@@ -6,6 +6,7 @@ import { MessageSquare, Star } from "lucide-react";
 import { formatDistanceToNowNY } from "@/lib/dateUtils";
 import {
   easeOfUseLabels,
+  templateCustomizationLabels,
   usefulnessLabels,
 } from "@/hooks/usePopupFeedbackAnalytics";
 
@@ -91,7 +92,15 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
               </div>
             )}
 
-            {/* Q3: Improvements */}
+            {/* Q3: Template Customization */}
+            {fb.template_customization && (
+              <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
+                <span className="text-sm text-muted-foreground">Template Customization</span>
+                <span className="text-sm font-medium">{templateCustomizationLabels[fb.template_customization] || fb.template_customization}</span>
+              </div>
+            )}
+
+            {/* Q4: Improvements */}
             {fb.improvements && fb.improvements.length > 0 && (
               <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Would be more useful with</span>
@@ -105,7 +114,7 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
               </div>
             )}
 
-            {/* Q4: NPS */}
+            {/* Q5: NPS */}
             {fb.nps_score !== null && (
               <div className="flex flex-col gap-1.5 px-6 py-3 bg-card">
                 <span className="text-sm text-muted-foreground">Recommendation Score</span>
@@ -114,7 +123,7 @@ export function UserPopupFeedbackCard({ userId }: UserPopupFeedbackProps) {
             )}
           </div>
 
-          {/* Q5: Additional Feedback - full width */}
+          {/* Q6: Additional Feedback - full width */}
           {fb.additional_feedback && (
             <div className="px-6 py-3 border-t">
               <span className="text-sm text-muted-foreground">Additional Feedback</span>

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   usePopupFeedbackAnalytics,
   easeOfUseLabels,
+  templateCustomizationLabels,
   usefulnessLabels,
 } from "@/hooks/usePopupFeedbackAnalytics";
 import {
@@ -166,13 +167,19 @@ export default function PopupFeedbackTab() {
     count,
   }));
 
-  // Q3: What would make PeelKit more useful
+  // Q3: Template Customization
+  const customizationData = Object.entries(data.templateCustomizationCounts).map(([key, count]) => ({
+    name: templateCustomizationLabels[key] || key,
+    count,
+  }));
+
+  // Q4: What would make PeelKit more useful
   const usefulnessData = Object.entries(data.usefulnessCounts).map(([key, count]) => ({
     name: usefulnessLabels[key] || key,
     count,
   }));
 
-  // Q4: NPS (1-10)
+  // Q5: NPS (1-10)
   const npsData = Object.entries(data.npsDistribution).map(([score, count]) => ({
     name: score,
     count,
@@ -196,18 +203,19 @@ export default function PopupFeedbackTab() {
         />
       </div>
 
-      {/* Charts - Q1 to Q4 */}
+      {/* Charts - Q1 to Q5 */}
       <div className="grid md:grid-cols-2 gap-4">
         <BarChartCard title="Q1: Image Quality Rating (1-5 ⭐)" data={qualityData} />
         <BarChartCard title="Q2: Ease of Finding Template" data={easeData} />
-        <BarChartCard title="Q3: What Would Make PeelKit More Useful (multi-select)" data={usefulnessData} />
-        <BarChartCard title="Q4: Likelihood to Recommend (1-10)" data={npsData} />
+        <BarChartCard title="Q3: Ease of Customizing Templates" data={customizationData} />
+        <BarChartCard title="Q4: What Would Make PeelKit More Useful (multi-select)" data={usefulnessData} />
+        <BarChartCard title="Q5: Likelihood to Recommend (1-10)" data={npsData} />
       </div>
 
-      {/* Q5: Additional Feedback */}
+      {/* Q6: Additional Feedback */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Q5: Additional Feedback</CardTitle>
+          <CardTitle className="text-sm font-medium">Q6: Additional Feedback</CardTitle>
         </CardHeader>
         <CardContent>
           {data.additionalFeedback.length === 0 ? (
