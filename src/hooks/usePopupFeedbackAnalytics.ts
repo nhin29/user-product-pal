@@ -113,7 +113,7 @@ export function usePopupFeedbackAnalytics(startDate?: Date, endDate?: Date) {
         });
       });
 
-      // Q4: NPS (1-10)
+      // Q5: NPS (1-10)
       const npsValues = rows.map((r) => r.nps_score).filter((v): v is number => v !== null);
       const avgNps = npsValues.length > 0 ? npsValues.reduce((a, b) => a + b, 0) / npsValues.length : null;
       const npsDistribution: Record<number, number> = {};
