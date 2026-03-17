@@ -2,18 +2,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toLocaleDateStringNY } from "@/lib/dateUtils";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClipboardList, Target, Palette, DollarSign, ShoppingCart, Store, AlertCircle, MessageSquare } from "lucide-react";
+import { ClipboardList, Briefcase, Store, ShoppingCart, Clock, ImageIcon, Layout, Sparkles, MessageSquare } from "lucide-react";
 
 interface OnboardingResponse {
-  niche: string[] | null;
-  niche_other: string | null;
-  primary_goal: string | null;
-  design_goal: string[] | null;
-  monthly_revenue: string | null;
-  products_monthly: string | null;
-  sales_channels: string[] | null;
-  problems_before: string[] | null;
-  why_peelkit: string[] | null;
+  business_type: string | null;
+  business_type_other: string | null;
+  niche_text: string | null;
+  products_count: string | null;
+  usage_frequency: string | null;
+  images_monthly: string | null;
+  output_type: string | null;
+  output_type_other: string | null;
+  future_features: string[] | null;
+  future_features_other: string | null;
+  hoping_for: string | null;
   completed_at: string | null;
 }
 
@@ -22,70 +24,47 @@ interface OnboardingResponseCardProps {
   isLoading: boolean;
 }
 
-const nicheLabels: Record<string, string> = {
-  health_beauty: "Health & Beauty",
-  wellness_supplements: "Wellness & Supplements",
-  home_electronics: "Home & Electronics",
-  pets: "Pets",
+const businessTypeLabels: Record<string, string> = {
+  brand_owner: "Brand owner",
+  dropshipping: "Dropshipping store owner",
+  amazon_seller: "Amazon seller",
+  agency: "Agency",
+  freelancer: "Freelancer (designer, etc.)",
+  multiple_brands: "Multiple brands owner",
 };
 
-const whyPeelkitLabels: Record<string, string> = {
-  price: "Price (best value)",
-  speed: "Speed (fastest solution)",
-  amazon_compliance: "Amazon compliance",
-  one_time: "One-time payment (no monthly fees)",
-  recommended: "Recommended by someone",
-  only_option: "Only option I found for this",
-};
-
-const designGoalLabels: Record<string, string> = {
-  solo: "I do it myself (solo)",
-  in_house: "In-house designer / team member",
-  freelancer: "Freelancer (Fiverr, Upwork, etc.)",
-  agency: "Design agency",
-  not_started: "Haven't started yet",
-};
-
-const productsMonthlyLabels: Record<string, string> = {
-  less_than_1: "<1",
-  "1_2": "1-2",
-  "3_5": "3-5",
-  "5_10": "5-10",
+const productsCountLabels: Record<string, string> = {
+  "1": "1",
+  "2_5": "2–5",
+  "6_10": "6–10",
   "10_plus": "10+",
 };
 
-const monthlyRevenueLabels: Record<string, string> = {
-  under_1k: "Under $1,000",
-  "1k_5k": "$1K-$5K",
-  "5k_20k": "$5K-$20K",
-  "20k_50k": "$20K-$50K",
-  "50k_plus": "$50K+",
-  not_selling: "Not selling yet / new to this",
+const usageFrequencyLabels: Record<string, string> = {
+  one_time: "One-time project",
+  occasional: "Occasional use",
+  monthly: "Monthly use",
+  weekly: "Weekly use",
+  daily: "Daily / ongoing use",
 };
 
-const salesChannelsLabels: Record<string, string> = {
-  amazon_only: "Amazon only",
-  shopify: "Shopify",
-  etsy: "Etsy",
-  tiktok: "TikTok Shop",
-  not_amazon: "I don't sell on Amazon yet",
+const imagesMonthlyLabels: Record<string, string> = {
+  "1_10": "1–10",
+  "10_30": "10–30",
+  "30_100": "30–100",
+  "100_plus": "100+",
 };
 
-const problemsBeforeLabels: Record<string, string> = {
-  high_costs: "High design costs",
-  low_converting: "Low-converting images",
-  time_consuming: "Time-consuming development",
-  low_quality: "Low-quality design",
-  amazon_compliance: "Amazon compliance confusion",
+const outputTypeLabels: Record<string, string> = {
+  few_high_quality: "A few high-quality images",
+  larger_number: "A larger number of images",
 };
 
-const primaryGoalLabels: Record<string, string> = {
-  launch_faster: "Launch new products faster",
-  replace_design_team: "Replace design team",
-  improve_ctr: "Improve CTR on existing products",
-  scale_catalog: "Scale catalog (10+ SKUs)",
-  reduce_costs: "Reduce image costs",
-  experimenting: "Just experimenting",
+const futureFeaturesLabels: Record<string, string> = {
+  video_ugc: "Video/UGC generation",
+  advertorial_builder: "Advertorial page builder",
+  meta_ads: "Image ad generation for Meta",
+  email_builder: "Email design builder",
 };
 
 const getLabel = (value: string | null, labels: Record<string, string>): string => {
@@ -172,10 +151,18 @@ export function OnboardingResponseCard({ data, isLoading }: OnboardingResponseCa
     );
   }
 
-  const niches = [
-    ...(data.niche || []).map(n => getLabel(n, nicheLabels)),
-    data.niche_other,
-  ].filter(Boolean) as string[];
+  const businessDisplay = data.business_type_other
+    ? `${getLabel(data.business_type, businessTypeLabels)} (${data.business_type_other})`
+    : getLabel(data.business_type, businessTypeLabels);
+
+  const outputDisplay = data.output_type_other
+    ? `${getLabel(data.output_type, outputTypeLabels)} (${data.output_type_other})`
+    : getLabel(data.output_type, outputTypeLabels);
+
+  const futureItems = [
+    ...getArrayLabels(data.future_features, futureFeaturesLabels),
+    ...(data.future_features_other ? [data.future_features_other] : []),
+  ];
 
   return (
     <Card>
@@ -195,14 +182,14 @@ export function OnboardingResponseCard({ data, isLoading }: OnboardingResponseCa
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 md:grid-cols-2">
-          <ResponseItem icon={Store} question="Q1: Which niche are you in?" value={<BadgeList items={niches} />} />
-          <ResponseItem icon={MessageSquare} question="Q2: Why did you choose PeelKit over alternatives?" value={<BadgeList items={getArrayLabels(data.why_peelkit, whyPeelkitLabels)} />} />
-          <ResponseItem icon={Palette} question="Q3: Who currently handles your product design & imagery?" value={<BadgeList items={getArrayLabels(data.design_goal, designGoalLabels)} />} />
-          <ResponseItem icon={ShoppingCart} question="Q4: How many products are you launching monthly?" value={<p className="text-sm font-medium">{getLabel(data.products_monthly, productsMonthlyLabels)}</p>} />
-          <ResponseItem icon={DollarSign} question="Q5: What's your monthly Amazon revenue right now?" value={<p className="text-sm font-medium">{getLabel(data.monthly_revenue, monthlyRevenueLabels)}</p>} />
-          <ResponseItem icon={Store} question="Q6: Where else do you sell your products?" value={<BadgeList items={getArrayLabels(data.sales_channels, salesChannelsLabels)} />} />
-          <ResponseItem icon={AlertCircle} question="Q7: What was your biggest problem BEFORE PeelKit?" value={<BadgeList items={getArrayLabels(data.problems_before, problemsBeforeLabels)} />} />
-          <ResponseItem icon={Target} question="Q8: What's your primary goal with PeelKit?" value={<p className="text-sm font-medium">{getLabel(data.primary_goal, primaryGoalLabels)}</p>} />
+          <ResponseItem icon={Briefcase} question="Q1: What best describes your business?" value={<p className="text-sm font-medium">{businessDisplay}</p>} />
+          <ResponseItem icon={Store} question="Q2: Which niche are you in?" value={<p className="text-sm font-medium">{data.niche_text || "Not specified"}</p>} />
+          <ResponseItem icon={ShoppingCart} question="Q3: How many products do you currently sell?" value={<p className="text-sm font-medium">{getLabel(data.products_count, productsCountLabels)}</p>} />
+          <ResponseItem icon={Clock} question="Q4: One-time or ongoing image creation?" value={<p className="text-sm font-medium">{getLabel(data.usage_frequency, usageFrequencyLabels)}</p>} />
+          <ResponseItem icon={ImageIcon} question="Q5: How many product images monthly?" value={<p className="text-sm font-medium">{getLabel(data.images_monthly, imagesMonthlyLabels)}</p>} />
+          <ResponseItem icon={Layout} question="Q6: What kind of output are you looking for?" value={<p className="text-sm font-medium">{outputDisplay}</p>} />
+          <ResponseItem icon={Sparkles} question="Q7: Which future features excite you most?" value={<BadgeList items={futureItems} />} />
+          <ResponseItem icon={MessageSquare} question="Q8: What are you hoping PeelKit will help you do?" value={<p className="text-sm font-medium">{data.hoping_for || "Not specified"}</p>} />
         </div>
       </CardContent>
     </Card>
