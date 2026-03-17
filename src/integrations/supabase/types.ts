@@ -334,7 +334,7 @@ export type Database = {
           field_values: Json | null
           id: string
           image_url: string
-          product_id: string
+          product_id: string | null
           prompt_snapshot: string | null
           user_id: string
         }
@@ -345,7 +345,7 @@ export type Database = {
           field_values?: Json | null
           id?: string
           image_url: string
-          product_id: string
+          product_id?: string | null
           prompt_snapshot?: string | null
           user_id: string
         }
@@ -356,7 +356,7 @@ export type Database = {
           field_values?: Json | null
           id?: string
           image_url?: string
-          product_id?: string
+          product_id?: string | null
           prompt_snapshot?: string | null
           user_id?: string
         }
