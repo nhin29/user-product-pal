@@ -154,7 +154,7 @@ export function useUserAnalytics(userId: string) {
     queryFn: async (): Promise<OnboardingResponse | null> => {
       const { data, error } = await supabase
         .from("onboarding_responses")
-        .select("niche, niche_other, primary_goal, design_goal, monthly_revenue, products_monthly, sales_channels, problems_before, why_peelkit, completed_at")
+        .select("business_type, business_type_other, niche_text, products_count, usage_frequency, images_monthly, output_type, output_type_other, future_features, future_features_other, hoping_for, completed_at")
         .eq("user_id", userId)
         .maybeSingle();
 
