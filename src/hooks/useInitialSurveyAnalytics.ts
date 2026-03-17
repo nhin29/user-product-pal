@@ -59,8 +59,8 @@ const imagesMonthlyLabels: Record<string, string> = {
 
 // Q6: Output type
 const outputTypeLabels: Record<string, string> = {
-  few_high_quality: "A few high-quality images",
-  larger_number: "A larger number of images",
+  high_quality_few: "A few high-quality images",
+  large_volume: "A larger number of images",
 };
 
 // Q7: Future features
