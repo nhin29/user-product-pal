@@ -175,16 +175,23 @@ export default function InitialSurveyTab() {
         </CardContent>
       </Card>
 
-      {/* Chart questions grid */}
+      {/* All questions in order Q1-Q8 */}
       <div className="grid gap-6 md:grid-cols-2">
-        {data.questions.map((q, i) => (
-          <SurveyQuestionCard key={q.questionKey} data={q} index={i === 0 ? 0 : i + 1} />
-        ))}
-      </div>
-
-      {/* Free text questions */}
-      <div className="grid gap-6 md:grid-cols-2">
+        {/* Q1: Business type (chart) */}
+        <SurveyQuestionCard data={data.questions[0]} index={0} />
+        {/* Q2: Niche (free text) */}
         <FreeTextQuestionCard data={data.freeTextQuestions[0]} questionNumber={2} />
+        {/* Q3: Products count (chart) */}
+        <SurveyQuestionCard data={data.questions[1]} index={2} />
+        {/* Q4: Usage frequency (chart) */}
+        <SurveyQuestionCard data={data.questions[2]} index={3} />
+        {/* Q5: Images monthly (chart) */}
+        <SurveyQuestionCard data={data.questions[3]} index={4} />
+        {/* Q6: Output type (chart) */}
+        <SurveyQuestionCard data={data.questions[4]} index={5} />
+        {/* Q7: Future features (chart) */}
+        <SurveyQuestionCard data={data.questions[5]} index={6} />
+        {/* Q8: Hoping for (free text) */}
         <FreeTextQuestionCard data={data.freeTextQuestions[1]} questionNumber={8} />
       </div>
     </div>
