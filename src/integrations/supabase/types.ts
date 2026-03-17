@@ -372,52 +372,58 @@ export type Database = {
       }
       onboarding_responses: {
         Row: {
+          business_type: string | null
+          business_type_other: string | null
           completed_at: string | null
           created_at: string
-          design_goal: string[] | null
+          future_features: string[] | null
+          future_features_other: string | null
+          hoping_for: string | null
           id: string
-          monthly_revenue: string | null
-          niche: string[] | null
-          niche_other: string | null
-          primary_goal: string | null
-          problems_before: string[] | null
-          products_monthly: string | null
-          sales_channels: string[] | null
+          images_monthly: string | null
+          niche_text: string | null
+          output_type: string | null
+          output_type_other: string | null
+          products_count: string | null
           updated_at: string
+          usage_frequency: string | null
           user_id: string
-          why_peelkit: string[] | null
         }
         Insert: {
+          business_type?: string | null
+          business_type_other?: string | null
           completed_at?: string | null
           created_at?: string
-          design_goal?: string[] | null
+          future_features?: string[] | null
+          future_features_other?: string | null
+          hoping_for?: string | null
           id?: string
-          monthly_revenue?: string | null
-          niche?: string[] | null
-          niche_other?: string | null
-          primary_goal?: string | null
-          problems_before?: string[] | null
-          products_monthly?: string | null
-          sales_channels?: string[] | null
+          images_monthly?: string | null
+          niche_text?: string | null
+          output_type?: string | null
+          output_type_other?: string | null
+          products_count?: string | null
           updated_at?: string
+          usage_frequency?: string | null
           user_id: string
-          why_peelkit?: string[] | null
         }
         Update: {
+          business_type?: string | null
+          business_type_other?: string | null
           completed_at?: string | null
           created_at?: string
-          design_goal?: string[] | null
+          future_features?: string[] | null
+          future_features_other?: string | null
+          hoping_for?: string | null
           id?: string
-          monthly_revenue?: string | null
-          niche?: string[] | null
-          niche_other?: string | null
-          primary_goal?: string | null
-          problems_before?: string[] | null
-          products_monthly?: string | null
-          sales_channels?: string[] | null
+          images_monthly?: string | null
+          niche_text?: string | null
+          output_type?: string | null
+          output_type_other?: string | null
+          products_count?: string | null
           updated_at?: string
+          usage_frequency?: string | null
           user_id?: string
-          why_peelkit?: string[] | null
         }
         Relationships: []
       }
