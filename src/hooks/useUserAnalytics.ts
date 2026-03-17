@@ -31,15 +31,17 @@ interface ActivityEvent {
 }
 
 export interface OnboardingResponse {
-  niche: string[] | null;
-  niche_other: string | null;
-  primary_goal: string | null;
-  design_goal: string[] | null;
-  monthly_revenue: string | null;
-  products_monthly: string | null;
-  sales_channels: string[] | null;
-  problems_before: string[] | null;
-  why_peelkit: string[] | null;
+  business_type: string | null;
+  business_type_other: string | null;
+  niche_text: string | null;
+  products_count: string | null;
+  usage_frequency: string | null;
+  images_monthly: string | null;
+  output_type: string | null;
+  output_type_other: string | null;
+  future_features: string[] | null;
+  future_features_other: string | null;
+  hoping_for: string | null;
   completed_at: string | null;
 }
 
@@ -152,7 +154,7 @@ export function useUserAnalytics(userId: string) {
     queryFn: async (): Promise<OnboardingResponse | null> => {
       const { data, error } = await supabase
         .from("onboarding_responses")
-        .select("niche, niche_other, primary_goal, design_goal, monthly_revenue, products_monthly, sales_channels, problems_before, why_peelkit, completed_at")
+        .select("business_type, business_type_other, niche_text, products_count, usage_frequency, images_monthly, output_type, output_type_other, future_features, future_features_other, hoping_for, completed_at")
         .eq("user_id", userId)
         .maybeSingle();
 

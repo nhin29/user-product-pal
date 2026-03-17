@@ -1,9 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useInitialSurveyAnalytics, type SurveyQuestionData } from "@/hooks/useInitialSurveyAnalytics";
-import { Users, TrendingUp, TrendingDown } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { useInitialSurveyAnalytics, type SurveyQuestionData, type FreeTextQuestionData } from "@/hooks/useInitialSurveyAnalytics";
+import { Users, TrendingUp, TrendingDown, MessageSquare } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -28,7 +28,6 @@ function SurveyQuestionCard({ data, index }: { data: SurveyQuestionData; index: 
 
   const mostCommon = entries[0];
   const leastCommon = entries.filter(e => e.count > 0).slice(-1)[0];
-  const usePie = false;
 
   return (
     <Card>
@@ -43,7 +42,6 @@ function SurveyQuestionCard({ data, index }: { data: SurveyQuestionData; index: 
             </CardDescription>
           </div>
         </div>
-        {/* Most/Least common badges */}
         <div className="flex flex-wrap gap-2 mt-2">
           {mostCommon && mostCommon.count > 0 && (
             <Badge variant="outline" className="text-[11px] border-emerald-500 text-emerald-700 bg-emerald-500/10 gap-1">
@@ -60,65 +58,71 @@ function SurveyQuestionCard({ data, index }: { data: SurveyQuestionData; index: 
         </div>
       </CardHeader>
       <CardContent>
-        {usePie ? (
-          <div className="flex items-center gap-4">
-            <div className="w-[180px] h-[180px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={entries.filter(e => e.count > 0)}
-                    dataKey="count"
-                    nameKey="label"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    innerRadius={40}
-                  >
-                    {entries.filter(e => e.count > 0).map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => [`${value} (${data.totalResponses > 0 ? Math.round((value / data.totalResponses) * 100) : 0}%)`, name]}
-                    contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex-1 space-y-1.5">
-              {entries.map((entry, i) => (
-                <div key={entry.key} className="flex items-center gap-2 text-sm">
-                  <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  <span className="truncate flex-1 text-foreground/80">{entry.label}</span>
-                  <span className="text-muted-foreground font-medium">{entry.count}</span>
-                  <span className="text-muted-foreground text-xs w-10 text-right">{entry.percentage}%</span>
-                </div>
-              ))}
-            </div>
+        <div className="h-[220px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={entries} layout="vertical" margin={{ left: 20, right: 16, top: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis
+                dataKey="label"
+                type="category"
+                width={200}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              />
+              <Tooltip
+                formatter={(value: number) => [`${value} (${data.totalResponses > 0 ? Math.round((value / data.totalResponses) * 100) : 0}%)`, "Responses"]}
+                contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
+              />
+              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                {entries.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FreeTextQuestionCard({ data, questionNumber }: { data: FreeTextQuestionData; questionNumber: number }) {
+  const displayEntries = data.entries.slice(0, 20);
+  const uniqueCount = data.entries.length;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              Q{questionNumber}: {data.question}
+            </CardTitle>
+            <CardDescription className="mt-1">
+              {data.entries.reduce((sum, e) => sum + e.count, 0)} responses • {uniqueCount} unique answers
+            </CardDescription>
           </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {displayEntries.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">No responses yet</p>
         ) : (
-          <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={entries} layout="vertical" margin={{ left: 20, right: 16, top: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis
-                  dataKey="label"
-                  type="category"
-                  width={200}
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                />
-                <Tooltip
-                  formatter={(value: number) => [`${value} (${data.totalResponses > 0 ? Math.round((value / data.totalResponses) * 100) : 0}%)`, "Responses"]}
-                  contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                  {entries.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            {displayEntries.map((entry, i) => (
+              <div key={i} className="flex items-start justify-between gap-3 p-2.5 rounded-md bg-muted/50 border border-border/50">
+                <p className="text-sm text-foreground/90 flex-1 capitalize">{entry.text}</p>
+                {entry.count > 1 && (
+                  <Badge variant="secondary" className="text-[10px] shrink-0">×{entry.count}</Badge>
+                )}
+              </div>
+            ))}
+            {data.entries.length > 20 && (
+              <p className="text-xs text-muted-foreground text-center pt-1">
+                +{data.entries.length - 20} more responses
+              </p>
+            )}
           </div>
         )}
       </CardContent>
@@ -171,11 +175,17 @@ export default function InitialSurveyTab() {
         </CardContent>
       </Card>
 
-      {/* Question cards grid */}
+      {/* Chart questions grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {data.questions.map((q, i) => (
-          <SurveyQuestionCard key={q.questionKey} data={q} index={i} />
+          <SurveyQuestionCard key={q.questionKey} data={q} index={i === 0 ? 0 : i + 1} />
         ))}
+      </div>
+
+      {/* Free text questions */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <FreeTextQuestionCard data={data.freeTextQuestions[0]} questionNumber={2} />
+        <FreeTextQuestionCard data={data.freeTextQuestions[1]} questionNumber={8} />
       </div>
     </div>
   );
