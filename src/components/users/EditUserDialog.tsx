@@ -57,6 +57,11 @@ const SUBSCRIPTION_PRODUCT_OPTIONS = [
   { id: "prod_U4sSoxZsz5Ix9Z", label: "Yearly (100 credits/mo)" },
 ];
 
+const ONETIME_CREDIT_OPTIONS = [
+  { id: "prod_onetime_30", label: "30 credits" },
+  { id: "prod_onetime_100", label: "100 credits" },
+];
+
 const SUBSCRIPTION_IDS = SUBSCRIPTION_PRODUCT_OPTIONS.map((p) => p.id);
 
 interface EditUserDialogProps {
@@ -312,136 +317,118 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
             </div>
             </div>
             <div className="space-y-4 sm:col-span-1">
-            <div className="grid gap-2">
-              <Label>Video Product Access</Label>
-              <div className="space-y-2 rounded-md border p-3">
-                {VIDEO_PRODUCT_OPTIONS.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={product.id}
-                      checked={selectedProductIds.includes(product.id)}
-                      onCheckedChange={(checked) => 
-                        handleProductToggle(product.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={product.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {product.label}
-                    </label>
-                  </div>
-                ))}
+            {/* PROMPT ACCESS */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground border-b pb-1">Prompt Access</h3>
+              <div className="grid gap-2">
+                <Label>Video</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {VIDEO_PRODUCT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Amazon</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {AMAZON_PRODUCT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Shopify</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {SHOPIFY_PRODUCT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Meta</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {META_PRODUCT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>WooCommerce</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {WOO_PRODUCT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label>Amazon Product Access</Label>
-              <div className="space-y-2 rounded-md border p-3">
-                {AMAZON_PRODUCT_OPTIONS.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={product.id}
-                      checked={selectedProductIds.includes(product.id)}
-                      onCheckedChange={(checked) => 
-                        handleProductToggle(product.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={product.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {product.label}
-                    </label>
-                  </div>
-                ))}
+
+            {/* GENERATION ACCESS */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-sm font-semibold text-foreground border-b pb-1">Generation Access</h3>
+              <div className="grid gap-2">
+                <Label>Subscription</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {SUBSCRIPTION_PRODUCT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleSubscriptionToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>Shopify Product Access</Label>
-              <div className="space-y-2 rounded-md border p-3">
-                {SHOPIFY_PRODUCT_OPTIONS.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={product.id}
-                      checked={selectedProductIds.includes(product.id)}
-                      onCheckedChange={(checked) => 
-                        handleProductToggle(product.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={product.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {product.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>Meta Product Access</Label>
-              <div className="space-y-2 rounded-md border p-3">
-                {META_PRODUCT_OPTIONS.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={product.id}
-                      checked={selectedProductIds.includes(product.id)}
-                      onCheckedChange={(checked) => 
-                        handleProductToggle(product.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={product.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {product.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>WooCommerce Product Access</Label>
-              <div className="space-y-2 rounded-md border p-3">
-                {WOO_PRODUCT_OPTIONS.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={product.id}
-                      checked={selectedProductIds.includes(product.id)}
-                      onCheckedChange={(checked) => 
-                        handleProductToggle(product.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={product.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {product.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label>Subscription Access</Label>
-              <div className="space-y-2 rounded-md border p-3">
-                {SUBSCRIPTION_PRODUCT_OPTIONS.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={product.id}
-                      checked={selectedProductIds.includes(product.id)}
-                      onCheckedChange={(checked) => 
-                        handleSubscriptionToggle(product.id, checked as boolean)
-                      }
-                    />
-                    <label
-                      htmlFor={product.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {product.label}
-                    </label>
-                  </div>
-                ))}
+              <div className="grid gap-2">
+                <Label>One-time</Label>
+                <div className="space-y-2 rounded-md border p-3">
+                  {ONETIME_CREDIT_OPTIONS.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={product.id}
+                        checked={selectedProductIds.includes(product.id)}
+                        onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                      />
+                      <label htmlFor={product.id} className="text-sm font-medium leading-none cursor-pointer">{product.label}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             </div>
