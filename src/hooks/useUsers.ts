@@ -91,6 +91,13 @@ export function useUsers() {
       };
       const SUBSCRIPTION_IDS = Object.keys(SUBSCRIPTION_CREDIT_MAP);
 
+      // One-time credit package mapping
+      const ONETIME_CREDIT_MAP: Record<string, number> = {
+        "prod_UAkro7xtZ7WWVV": 30,
+        "prod_UAktSMnUZSNut0": 50,
+      };
+      const ONETIME_IDS = Object.keys(ONETIME_CREDIT_MAP);
+
       // Build update object
       const updateData: { display_name: string; product_ids?: string[]; is_analytics?: boolean; is_refund?: boolean } = {
         display_name: displayName,
