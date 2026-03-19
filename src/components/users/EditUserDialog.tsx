@@ -317,8 +317,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Generation Access</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Subscription (100 credits/month)</Label>
+                  <div className="space-y-0.5">
+                    <Label className="text-xs text-muted-foreground">Subscription</Label>
+                    <p className="text-[10px] text-muted-foreground/70">100 credits/month</p>
                     <div className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
                       {SUBSCRIPTION_PRODUCT_OPTIONS.map((product) => (
                         <div key={product.id} className="flex items-center space-x-2">
