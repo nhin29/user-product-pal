@@ -355,7 +355,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                           <Checkbox
                             id={product.id}
                             checked={selectedProductIds.includes(product.id)}
-                            onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                            onCheckedChange={(checked) => handleOnetimeToggle(product.id, checked as boolean)}
                           />
                           <label htmlFor={product.id} className="text-xs font-medium leading-none cursor-pointer">{product.label}</label>
                         </div>
