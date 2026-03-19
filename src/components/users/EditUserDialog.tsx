@@ -57,6 +57,11 @@ const SUBSCRIPTION_PRODUCT_OPTIONS = [
   { id: "prod_U4sSoxZsz5Ix9Z", label: "Yearly (100 credits/mo)" },
 ];
 
+const ONETIME_CREDIT_OPTIONS = [
+  { id: "prod_onetime_30", label: "30 credits" },
+  { id: "prod_onetime_100", label: "100 credits" },
+];
+
 const SUBSCRIPTION_IDS = SUBSCRIPTION_PRODUCT_OPTIONS.map((p) => p.id);
 
 interface EditUserDialogProps {
