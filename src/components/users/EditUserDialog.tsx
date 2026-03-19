@@ -58,9 +58,11 @@ const SUBSCRIPTION_PRODUCT_OPTIONS = [
 ];
 
 const ONETIME_CREDIT_OPTIONS = [
-  { id: "prod_onetime_30", label: "30 credits" },
-  { id: "prod_onetime_100", label: "100 credits" },
+  { id: "prod_UAkro7xtZ7WWVV", label: "30 credits" },
+  { id: "prod_UAktSMnUZSNut0", label: "50 credits" },
 ];
+
+const ONETIME_IDS = ONETIME_CREDIT_OPTIONS.map((p) => p.id);
 
 const SUBSCRIPTION_IDS = SUBSCRIPTION_PRODUCT_OPTIONS.map((p) => p.id);
 
