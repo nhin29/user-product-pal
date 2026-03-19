@@ -138,9 +138,21 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
 
   const handleSubscriptionToggle = (productId: string, checked: boolean) => {
     if (checked) {
-      // Remove other subscription IDs, add this one (radio behavior)
+      // Remove other subscription IDs AND one-time IDs (mutually exclusive), add this one
       setSelectedProductIds((prev) => [
-        ...prev.filter((id) => !SUBSCRIPTION_IDS.includes(id)),
+        ...prev.filter((id) => !SUBSCRIPTION_IDS.includes(id) && !ONETIME_IDS.includes(id)),
+        productId,
+      ]);
+    } else {
+      setSelectedProductIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  const handleOnetimeToggle = (productId: string, checked: boolean) => {
+    if (checked) {
+      // Remove other one-time IDs AND subscription IDs (mutually exclusive), add this one
+      setSelectedProductIds((prev) => [
+        ...prev.filter((id) => !ONETIME_IDS.includes(id) && !SUBSCRIPTION_IDS.includes(id)),
         productId,
       ]);
     } else {
