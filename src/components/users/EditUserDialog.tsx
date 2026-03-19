@@ -58,9 +58,11 @@ const SUBSCRIPTION_PRODUCT_OPTIONS = [
 ];
 
 const ONETIME_CREDIT_OPTIONS = [
-  { id: "prod_onetime_30", label: "30 credits" },
-  { id: "prod_onetime_100", label: "100 credits" },
+  { id: "prod_UAkro7xtZ7WWVV", label: "30 credits" },
+  { id: "prod_UAktSMnUZSNut0", label: "50 credits" },
 ];
+
+const ONETIME_IDS = ONETIME_CREDIT_OPTIONS.map((p) => p.id);
 
 const SUBSCRIPTION_IDS = SUBSCRIPTION_PRODUCT_OPTIONS.map((p) => p.id);
 
@@ -136,9 +138,21 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
 
   const handleSubscriptionToggle = (productId: string, checked: boolean) => {
     if (checked) {
-      // Remove other subscription IDs, add this one (radio behavior)
+      // Remove other subscription IDs AND one-time IDs (mutually exclusive), add this one
       setSelectedProductIds((prev) => [
-        ...prev.filter((id) => !SUBSCRIPTION_IDS.includes(id)),
+        ...prev.filter((id) => !SUBSCRIPTION_IDS.includes(id) && !ONETIME_IDS.includes(id)),
+        productId,
+      ]);
+    } else {
+      setSelectedProductIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  const handleOnetimeToggle = (productId: string, checked: boolean) => {
+    if (checked) {
+      // Remove other one-time IDs AND subscription IDs (mutually exclusive), add this one
+      setSelectedProductIds((prev) => [
+        ...prev.filter((id) => !ONETIME_IDS.includes(id) && !SUBSCRIPTION_IDS.includes(id)),
         productId,
       ]);
     } else {
@@ -264,6 +278,32 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                       })()}
                     </div>
                   </div>
+                ) : creditStatus === "one_time" || creditStatus === "finished" ? (
+                  <div className={`rounded-lg border p-3 space-y-2.5 ${
+                    creditStatus === "finished" 
+                      ? "border-gray-300 bg-gray-50/50" 
+                      : "border-blue-200 bg-blue-50/50"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                          creditStatus === "finished"
+                            ? "border-gray-500 text-gray-700 bg-gray-500/15"
+                            : "border-blue-500 text-blue-700 bg-blue-500/15"
+                        }`}>
+                          {creditStatus === "finished" ? "Finished" : "One-time"}
+                        </span>
+                        <span className="text-sm font-medium">{creditLimit} credits</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{usedCount} / {creditLimit} used</span>
+                    </div>
+                    <div className={`w-full rounded-full h-1.5 ${creditStatus === "finished" ? "bg-gray-200" : "bg-blue-100"}`}>
+                      <div className={`h-1.5 rounded-full transition-all ${creditStatus === "finished" ? "bg-gray-500" : "bg-blue-500"}`} style={{ width: `${Math.min(100, (usedCount / creditLimit) * 100)}%` }} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {creditStatus === "finished" ? "All credits used" : `${Math.max(0, creditLimit - usedCount)} remaining`}
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -341,7 +381,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                           <Checkbox
                             id={product.id}
                             checked={selectedProductIds.includes(product.id)}
-                            onCheckedChange={(checked) => handleProductToggle(product.id, checked as boolean)}
+                            onCheckedChange={(checked) => handleOnetimeToggle(product.id, checked as boolean)}
                           />
                           <label htmlFor={product.id} className="text-xs font-medium leading-none cursor-pointer">{product.label}</label>
                         </div>
