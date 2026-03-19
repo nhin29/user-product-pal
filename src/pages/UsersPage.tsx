@@ -349,6 +349,8 @@ export default function UsersPage() {
                         ) : (() => {
                           const credit = userCredits[user.user_id];
                           const isSubscribed = credit?.status === 'subscribed';
+                          const isOneTime = credit?.status === 'one_time';
+                          const isFinished = credit?.status === 'finished';
                           const platformProductIds = [
                             "prod_U4RqVgotWRlWFY", "prod_TmW6D8HwME3dsX",
                             "prod_TxMHw09aCtGsOM", "prod_TxzgveYwNQur3j",
@@ -358,7 +360,7 @@ export default function UsersPage() {
                           ];
                           const ids = user.product_ids || [];
                           const hasPlatformAccess = ids.some((id: string) => platformProductIds.includes(id));
-                          if (!hasPlatformAccess && !isSubscribed) return <span className="text-muted-foreground">—</span>;
+                          if (!hasPlatformAccess && !isSubscribed && !isOneTime && !isFinished) return <span className="text-muted-foreground">—</span>;
                           return (
                             <div className="flex flex-col items-start gap-1">
                               {hasPlatformAccess && (
@@ -366,6 +368,12 @@ export default function UsersPage() {
                               )}
                               {isSubscribed && (
                                 <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-violet-500 text-violet-700 bg-violet-500/15 whitespace-nowrap">Subscription</Badge>
+                              )}
+                              {isOneTime && (
+                                <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-blue-500 text-blue-700 bg-blue-500/15 whitespace-nowrap">One-time</Badge>
+                              )}
+                              {isFinished && (
+                                <Badge variant="outline" className="text-[11px] font-semibold px-2 py-0.5 border-gray-500 text-gray-700 bg-gray-500/15 whitespace-nowrap">Finished</Badge>
                               )}
                             </div>
                           );

@@ -150,6 +150,7 @@ export function useUsers() {
       // Handle subscription products
       if (productIds !== undefined) {
         const selectedSub = productIds.find((id) => SUBSCRIPTION_IDS.includes(id));
+        const selectedOnetime = productIds.find((id) => ONETIME_IDS.includes(id));
 
         if (selectedSub) {
           // Upsert subscription
@@ -176,8 +177,34 @@ export function useUsers() {
               { onConflict: "user_id" }
             );
           if (creditError) throw creditError;
+        } else if (selectedOnetime) {
+          // One-time credit package selected
+          const newLimit = ONETIME_CREDIT_MAP[selectedOnetime];
+          const { error: creditError } = await supabase
+            .from("user_credits")
+            .upsert(
+              { user_id: userId, credit_limit: newLimit, used_count: 0, status: "one_time" },
+              { onConflict: "user_id" }
+            );
+          if (creditError) throw creditError;
+
+          // Cancel any active subscription
+          const { data: existingSub } = await supabase
+            .from("user_subscriptions")
+            .select("id, status")
+            .eq("user_id", userId)
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (existingSub) {
+            const { error: cancelError } = await supabase
+              .from("user_subscriptions")
+              .update({ status: "canceled", canceled_at: new Date().toISOString() })
+              .eq("id", existingSub.id);
+            if (cancelError) throw cancelError;
+          }
         } else {
-          // No subscription selected — check if user previously had one
+          // No subscription or one-time selected — check if user previously had one
           const { data: existingSub } = await supabase
             .from("user_subscriptions")
             .select("id, status")
