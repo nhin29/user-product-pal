@@ -94,7 +94,7 @@ export function useUsers() {
       // One-time credit package mapping
       const ONETIME_CREDIT_MAP: Record<string, number> = {
         "prod_UAkro7xtZ7WWVV": 30,
-        "prod_UAktSMnUZSNut0": 50,
+        "prod_UAktSMnUZSNut0": 100,
       };
       const ONETIME_IDS = Object.keys(ONETIME_CREDIT_MAP);
 
