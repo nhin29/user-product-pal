@@ -431,8 +431,6 @@ export function EditUserDialog({ user, open, onOpenChange, onSave, isLoading }: 
                 </div>
               </div>
             </div>
-            </div>
-            </div>
           </div>
           <DialogFooter>
             <Button
