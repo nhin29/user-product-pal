@@ -556,6 +556,69 @@ export type Database = {
           },
         ]
       }
+      products_duplicate: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          image_urls: string[]
+          is_admin: boolean
+          made_by: string | null
+          note: string | null
+          platform: string
+          product_type_id: string | null
+          prompt: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_urls?: string[]
+          is_admin?: boolean
+          made_by?: string | null
+          note?: string | null
+          platform?: string
+          product_type_id?: string | null
+          prompt: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_urls?: string[]
+          is_admin?: boolean
+          made_by?: string | null
+          note?: string | null
+          platform?: string
+          product_type_id?: string | null
+          prompt?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_duplicate_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_duplicate_product_type_id_fkey"
+            columns: ["product_type_id"]
+            isOneToOne: false
+            referencedRelation: "product_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
