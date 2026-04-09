@@ -95,16 +95,17 @@ export function useGallery() {
   });
 
   const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
+    if (isLoadingMore || !hasMore || allImages.length === 0) return;
     setIsLoadingMore(true);
 
     try {
-      const offset = allImages.length;
+      const lastImage = allImages[allImages.length - 1];
       const { data, error } = await supabase
         .from("generated_images")
         .select("*")
         .order("created_at", { ascending: false })
-        .range(offset, offset + PAGE_SIZE - 1);
+        .lt("created_at", lastImage.created_at)
+        .limit(PAGE_SIZE);
 
       if (error) throw error;
 
@@ -114,7 +115,7 @@ export function useGallery() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [allImages.length, hasMore, isLoadingMore]);
+  }, [allImages, hasMore, isLoadingMore]);
 
   return { images: allImages, isLoading, isLoadingMore, hasMore, loadMore, totalCount };
 }
