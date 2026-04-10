@@ -97,10 +97,11 @@ serve(async (req) => {
     }
 
     // Send email notification to user
-    const emailRes = await fetch("https://api.resend.com/emails", {
+    const emailRes = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": RESEND_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
