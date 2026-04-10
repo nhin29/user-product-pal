@@ -26,8 +26,10 @@ serve(async (req) => {
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // Verify caller is admin
     const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -95,10 +97,11 @@ serve(async (req) => {
     }
 
     // Send email notification to user
-    const emailRes = await fetch("https://api.resend.com/emails", {
+    const emailRes = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": RESEND_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
